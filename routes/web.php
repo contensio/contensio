@@ -104,6 +104,7 @@ Route::prefix(config('cms.route_prefix'))
 
         // Appearance — Themes
         Route::get('/themes',                    [ThemeController::class, 'index'])->name('themes.index');
+        Route::get('/themes/screenshot',         [ThemeController::class, 'screenshot'])->name('themes.screenshot');
         Route::post('/themes/activate',          [ThemeController::class, 'activate'])->name('themes.activate');
         Route::post('/themes/install',           [ThemeController::class, 'install'])->name('themes.install');
         Route::post('/themes/uninstall',         [ThemeController::class, 'uninstall'])->name('themes.uninstall');
@@ -138,10 +139,13 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/languages/{id}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
 
         // Plugins
-        Route::get('/plugins',           [PluginController::class, 'index'])->name('plugins.index');
-        Route::post('/plugins/enable',   [PluginController::class, 'enable'])->name('plugins.enable');
-        Route::post('/plugins/disable',  [PluginController::class, 'disable'])->name('plugins.disable');
-        Route::post('/plugins/install',  [PluginController::class, 'install'])->name('plugins.install');
-        Route::post('/plugins/uninstall',[PluginController::class, 'uninstall'])->name('plugins.uninstall');
+        Route::get('/plugins',                  [PluginController::class, 'index'])->name('plugins.index');
+        Route::post('/plugins/enable',          [PluginController::class, 'enable'])->name('plugins.enable');
+        Route::post('/plugins/disable',         [PluginController::class, 'disable'])->name('plugins.disable');
+        Route::post('/plugins/install',         [PluginController::class, 'install'])->name('plugins.install');
+        Route::post('/plugins/uninstall',       [PluginController::class, 'uninstall'])->name('plugins.uninstall');
+        Route::get('/plugins/settings',         [PluginController::class, 'settings'])->name('plugins.settings');
+        Route::post('/plugins/settings',        [PluginController::class, 'saveSettings'])->name('plugins.settings.save');
+        Route::post('/plugins/settings/reset',  [PluginController::class, 'resetSettings'])->name('plugins.settings.reset');
 
     });

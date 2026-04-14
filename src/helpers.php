@@ -27,6 +27,7 @@
  */
 
 use Contensio\Cms\Support\MenuRenderer;
+use Contensio\Cms\Support\PluginOptions;
 use Contensio\Cms\Support\ThemeOptions;
 use Contensio\Cms\Support\ThemeRegistry;
 
@@ -74,5 +75,19 @@ if (! function_exists('theme_option')) {
     function theme_option(string $key, mixed $default = null): mixed
     {
         return ThemeOptions::get($key, $default);
+    }
+}
+
+if (! function_exists('plugin_option')) {
+    /**
+     * Return a configuration value for a plugin, falling back to the
+     * provided default if the key isn't set.
+     *
+     * Usage inside a plugin's code:
+     *   $apiKey = plugin_option('acme/seo', 'google_verification', '');
+     */
+    function plugin_option(string $plugin, string $key, mixed $default = null): mixed
+    {
+        return PluginOptions::get($plugin, $key, $default);
     }
 }

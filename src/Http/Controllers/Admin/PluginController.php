@@ -28,6 +28,7 @@
 
 namespace Contensio\Cms\Http\Controllers\Admin;
 
+use Contensio\Cms\Support\PluginOptions;
 use Contensio\Cms\Support\PluginRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -138,6 +139,92 @@ class PluginController extends Controller
         }
 
         return back()->with('success', "Plugin \"{$pluginName}\" installed. Activate it when ready.");
+    }
+
+    /**
+     * Plugin settings page — dynamic form driven by the plugin's settings schema.
+     */
+    public function settings(Request $request)
+    {
+        $name   = (string) $request->query('plugin', '');
+        $plugin = PluginRegistry::get($name);
+
+        if (! $plugin) {
+            return redirect()
+                ->route('cms.admin.plugins.index')
+                ->withErrors(['plugin' => 'Plugin not found.']);
+        }
+
+        if (! PluginRegistry::isEnabled($name)) {
+            return redirect()
+                ->route('cms.admin.plugins.index')
+                ->withErrors(['plugin' => 'Enable the plugin first to configure it.']);
+        }
+
+        $sections = PluginOptions::schema($name);
+
+        if (empty($sections)) {
+            return redirect()
+                ->route('cms.admin.plugins.index')
+                ->withErrors(['plugin' => 'This plugin does not declare any settings.']);
+        }
+
+        $values = PluginOptions::all($name);
+
+        return view('cms::admin.plugins.settings', compact('name', 'plugin', 'sections', 'values'));
+    }
+
+    /**
+     * Save plugin settings. Walks the declared schema so unknown keys
+     * from the request are ignored and each field is cast to its type.
+     */
+    public function saveSettings(Request $request)
+    {
+        $data = $request->validate(['plugin' => 'required|string']);
+        $name = $data['plugin'];
+
+        if (! PluginRegistry::get($name)) {
+            return redirect()
+                ->route('cms.admin.plugins.index')
+                ->withErrors(['plugin' => 'Plugin not found.']);
+        }
+
+        $sections = PluginOptions::schema($name);
+        $values   = [];
+
+        foreach ($sections as $section) {
+            foreach ($section['fields'] ?? [] as $field) {
+                $key = $field['key'] ?? null;
+                if (! $key) {
+                    continue;
+                }
+                $type = $field['type'] ?? 'text';
+                $raw  = $request->input("options.{$key}");
+
+                $values[$key] = match ($type) {
+                    'checkbox'        => $request->boolean("options.{$key}"),
+                    'number', 'range' => is_numeric($raw) ? 0 + $raw : ($field['default'] ?? 0),
+                    default           => is_scalar($raw) || is_null($raw) ? (string) ($raw ?? '') : '',
+                };
+            }
+        }
+
+        PluginOptions::save($name, $values);
+
+        return redirect()
+            ->route('cms.admin.plugins.settings', ['plugin' => $name])
+            ->with('success', 'Plugin settings saved.');
+    }
+
+    /** Reset a plugin's settings to its declared defaults. */
+    public function resetSettings(Request $request)
+    {
+        $data = $request->validate(['plugin' => 'required|string']);
+        PluginOptions::reset($data['plugin']);
+
+        return redirect()
+            ->route('cms.admin.plugins.settings', ['plugin' => $data['plugin']])
+            ->with('success', 'Plugin settings reset to defaults.');
     }
 
     /** Uninstall a local plugin (Composer-installed plugins can't be removed via admin). */

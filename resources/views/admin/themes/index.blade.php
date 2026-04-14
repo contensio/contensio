@@ -94,12 +94,24 @@
             </div>
             @endif
 
-            {{-- Thumbnail placeholder --}}
+            {{-- Thumbnail — screenshot served via /admin/themes/screenshot?theme=vendor/name,
+                 falls back to an icon if the theme doesn't ship one. --}}
+            @php
+                $hasScreenshot = false;
+                if (! empty($theme['path'])) {
+                    foreach (['screenshot.svg', 'screenshot.png', 'screenshot.jpg', 'screenshot.webp'] as $f) {
+                        if (is_file(rtrim($theme['path'], '/\\') . '/public/' . $f)) {
+                            $hasScreenshot = true;
+                            break;
+                        }
+                    }
+                }
+            @endphp
             <div class="h-36 bg-gradient-to-br
                         {{ $isActive ? 'from-blue-50 to-blue-100' : 'from-gray-50 to-gray-100' }}
-                        flex items-center justify-center border-b border-gray-100">
-                @if(! empty($theme['assetUrl']) && file_exists(public_path($theme['assetUrl'] . '/screenshot.png')))
-                <img src="{{ asset($theme['assetUrl'] . '/screenshot.png') }}"
+                        flex items-center justify-center border-b border-gray-100 overflow-hidden">
+                @if($hasScreenshot)
+                <img src="{{ route('cms.admin.themes.screenshot', ['theme' => $name]) }}"
                      alt="{{ $label }}"
                      class="w-full h-full object-cover">
                 @else

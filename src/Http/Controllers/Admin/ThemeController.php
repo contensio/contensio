@@ -37,6 +37,28 @@ use ZipArchive;
 
 class ThemeController extends Controller
 {
+    /**
+     * Serve a theme's screenshot from its public/ directory.
+     * Tries screenshot.svg, .png, .jpg, .webp in that order.
+     * Accepts the theme identifier via ?theme=vendor/name to sidestep slashes in route params.
+     */
+    public function screenshot(Request $request)
+    {
+        $theme = ThemeRegistry::get((string) $request->query('theme', ''));
+        if (! $theme || empty($theme['path'])) {
+            abort(404);
+        }
+
+        foreach (['screenshot.svg', 'screenshot.png', 'screenshot.jpg', 'screenshot.webp'] as $filename) {
+            $path = rtrim($theme['path'], '/\\') . '/public/' . $filename;
+            if (is_file($path)) {
+                return response()->file($path, ['Cache-Control' => 'public, max-age=3600']);
+            }
+        }
+
+        abort(404);
+    }
+
     /** List all discovered themes. */
     public function index()
     {
