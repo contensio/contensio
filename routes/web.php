@@ -10,6 +10,7 @@ use Contensio\Cms\Http\Controllers\Admin\LanguageController;
 use Contensio\Cms\Http\Controllers\Admin\MediaController;
 use Contensio\Cms\Http\Controllers\Admin\MenuController;
 use Contensio\Cms\Http\Controllers\Admin\PluginController;
+use Contensio\Cms\Http\Controllers\Admin\RoleController;
 use Contensio\Cms\Http\Controllers\Admin\SettingController;
 use Contensio\Cms\Http\Controllers\Admin\ThemeController;
 use Contensio\Cms\Http\Controllers\Admin\UserController;
@@ -122,7 +123,20 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/menus/{id}/items/reorder',    [MenuController::class, 'reorderItems'])->name('menus.items.reorder');
 
         // Users
-        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users',                [UserController::class, 'index'])->middleware('cms.permission:users.view')->name('users.index');
+        Route::get('/users/create',         [UserController::class, 'create'])->middleware('cms.permission:users.create')->name('users.create');
+        Route::post('/users',               [UserController::class, 'store'])->middleware('cms.permission:users.create')->name('users.store');
+        Route::get('/users/{id}/edit',      [UserController::class, 'edit'])->middleware('cms.permission:users.update')->name('users.edit');
+        Route::put('/users/{id}',           [UserController::class, 'update'])->middleware('cms.permission:users.update')->name('users.update');
+        Route::delete('/users/{id}',        [UserController::class, 'destroy'])->middleware('cms.permission:users.delete')->name('users.destroy');
+
+        // Roles
+        Route::get('/roles',                [RoleController::class, 'index'])->middleware('cms.permission:roles.manage')->name('roles.index');
+        Route::get('/roles/create',         [RoleController::class, 'create'])->middleware('cms.permission:roles.manage')->name('roles.create');
+        Route::post('/roles',               [RoleController::class, 'store'])->middleware('cms.permission:roles.manage')->name('roles.store');
+        Route::get('/roles/{id}/edit',      [RoleController::class, 'edit'])->middleware('cms.permission:roles.manage')->name('roles.edit');
+        Route::put('/roles/{id}',           [RoleController::class, 'update'])->middleware('cms.permission:roles.manage')->name('roles.update');
+        Route::delete('/roles/{id}',        [RoleController::class, 'destroy'])->middleware('cms.permission:roles.manage')->name('roles.destroy');
 
         // Settings / configuration hub
         Route::get('/settings',          [SettingController::class, 'index'])->name('settings.index');

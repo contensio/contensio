@@ -32,9 +32,11 @@ use Contensio\Cms\Console\Commands\InstallCommand;
 use Contensio\Cms\Console\Commands\SeedBlockTypesCommand;
 use Contensio\Cms\Http\Middleware\AdminAuthenticate;
 use Contensio\Cms\Http\Middleware\RequireAdminRole;
+use Contensio\Cms\Http\Middleware\RequirePermission;
 use Contensio\Cms\Models\ContentType;
 use Contensio\Cms\Services\Install\EnvWriter;
 use Contensio\Cms\Services\Install\RequirementsChecker;
+use Contensio\Cms\Support\AccessControl;
 use Contensio\Cms\Support\PluginRegistry;
 use Contensio\Cms\Support\ThemeRegistry;
 use Illuminate\Foundation\Console\AboutCommand;
@@ -69,6 +71,7 @@ class CmsServiceProvider extends ServiceProvider
 
         $this->app['router']->aliasMiddleware('cms.auth', AdminAuthenticate::class);
         $this->app['router']->aliasMiddleware('cms.admin', RequireAdminRole::class);
+        $this->app['router']->aliasMiddleware('cms.permission', RequirePermission::class);
 
         // Always load install routes — the controller guards each step internally.
         // This ensures /install/complete is reachable after storeAccount() writes
@@ -77,6 +80,16 @@ class CmsServiceProvider extends ServiceProvider
 
         if ($this->isInstalled()) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+
+            // Seed core permissions + roles on first boot. Idempotent —
+            // running this every boot is safe; subsequent calls are effectively no-ops.
+            try {
+                if (! AccessControl::isSeeded()) {
+                    AccessControl::seedCoreDefaults();
+                }
+            } catch (\Throwable) {
+                // Table may not exist yet during migrations — skip silently
+            }
 
             // Discover all themes (built-in, local, Composer)
             ThemeRegistry::discover();

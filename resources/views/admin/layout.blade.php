@@ -169,9 +169,11 @@
                 {{ __('cms::admin.nav.menus') }}
             </a>
 
-            {{-- Users --}}
+            {{-- Users & Roles — only visible to users with users.view permission --}}
+            @if(auth()->user()?->hasPermission('users.view') || auth()->user()?->hasPermission('roles.manage'))
             <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.users') }}</p>
 
+            @if(auth()->user()?->hasPermission('users.view'))
             <a href="{{ route('cms.admin.users.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       {{ request()->routeIs('cms.admin.users*')
@@ -183,6 +185,22 @@
                 </svg>
                 {{ __('cms::admin.nav.users') }}
             </a>
+            @endif
+
+            @if(auth()->user()?->hasPermission('roles.manage'))
+            <a href="{{ route('cms.admin.roles.index') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      {{ request()->routeIs('cms.admin.roles*')
+                          ? 'bg-slate-700 text-white'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                </svg>
+                Roles &amp; Permissions
+            </a>
+            @endif
+            @endif
 
             {{-- Admin --}}
             <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.admin_section') }}</p>

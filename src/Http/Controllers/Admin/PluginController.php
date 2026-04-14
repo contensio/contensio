@@ -28,6 +28,7 @@
 
 namespace Contensio\Cms\Http\Controllers\Admin;
 
+use Contensio\Cms\Support\AccessControl;
 use Contensio\Cms\Support\PluginOptions;
 use Contensio\Cms\Support\PluginRegistry;
 use Illuminate\Http\Request;
@@ -248,6 +249,13 @@ class PluginController extends Controller
         }
 
         File::deleteDirectory($plugin['path']);
+
+        // Clean up plugin-declared permissions + roles (user assignments to
+        // those roles are automatically cascaded by the foreign keys)
+        AccessControl::removePluginDefinitions($name);
+
+        // Also drop any stored plugin options
+        PluginOptions::reset($name);
 
         return back()->with('success', "Plugin \"{$name}\" removed.");
     }

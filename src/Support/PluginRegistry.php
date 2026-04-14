@@ -18,6 +18,7 @@ namespace Contensio\Cms\Support;
 
 use Composer\Autoload\ClassLoader;
 use Contensio\Cms\Models\Setting;
+use Contensio\Cms\Support\AccessControl;
 
 /**
  * Central registry for all discovered plugins.
@@ -132,7 +133,8 @@ class PluginRegistry
         return in_array($name, static::enabledNames(), true);
     }
 
-    /** Enable a plugin by vendor/name (idempotent). */
+    /** Enable a plugin by vendor/name (idempotent). Also syncs any
+     *  permissions and roles declared in the plugin's manifest. */
     public static function enable(string $name): void
     {
         $enabled = static::enabledNames();
@@ -140,9 +142,17 @@ class PluginRegistry
             $enabled[] = $name;
         }
         static::persistEnabled($enabled);
+
+        // Sync plugin-declared permissions and roles into the DB
+        $plugin = static::get($name);
+        if ($plugin) {
+            static::syncPluginAccessControl($plugin);
+        }
     }
 
-    /** Disable a plugin by vendor/name (idempotent). */
+    /** Disable a plugin by vendor/name (idempotent). Plugin-declared
+     *  permissions and roles remain in the DB so user assignments persist
+     *  across disable/enable cycles. Full cleanup happens on uninstall. */
     public static function disable(string $name): void
     {
         $enabled = array_values(array_filter(
@@ -150,6 +160,48 @@ class PluginRegistry
             fn ($n) => $n !== $name
         ));
         static::persistEnabled($enabled);
+    }
+
+    /**
+     * Sync permissions + roles declared in a plugin's manifest into the DB.
+     * Called by enable(). Also works as a standalone re-sync when the
+     * manifest changes.
+     *
+     * Shape (in plugin.json):
+     *   "permissions": { "perm.name": "description", ... }
+     *   "roles":       { "role_name": { "label", "description", "permissions": [...] } }
+     */
+    public static function syncPluginAccessControl(array $plugin): void
+    {
+        $meta       = $plugin['meta'] ?? [];
+        $pluginName = $meta['name']   ?? null;
+        if (! $pluginName) {
+            return;
+        }
+
+        // Permissions catalog — plugin permissions use the first segment
+        // of the permission name as the "module" (e.g. "shop.orders.view" → module "shop")
+        if (! empty($meta['permissions']) && is_array($meta['permissions'])) {
+            $catalog = [];
+            foreach ($meta['permissions'] as $permName => $description) {
+                $module = explode('.', $permName)[0];
+                $catalog[$module][$permName] = $description;
+            }
+            try {
+                AccessControl::syncPermissions($catalog, pluginName: $pluginName);
+            } catch (\Throwable) {
+                // Table not ready (e.g. during install) — silently skip
+            }
+        }
+
+        // Roles — plugin-declared roles are NOT is_system (can be deleted once plugin is uninstalled)
+        if (! empty($meta['roles']) && is_array($meta['roles'])) {
+            try {
+                AccessControl::syncRoles($meta['roles'], pluginName: $pluginName, isSystem: false);
+            } catch (\Throwable) {
+                // Silently skip
+            }
+        }
     }
 
     /**
