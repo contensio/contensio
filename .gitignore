@@ -1,0 +1,22 @@
+# Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+/.phpunit.cache/
+.phpunit.result.cache
+
+# IDE / editor
+/.idea/
+/.vscode/
+/.fleet/
+/.nova/
+/.zed/
+/.phpactor.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

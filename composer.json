@@ -1,0 +1,42 @@
+{
+    "name": "contensio/contensio",
+    "description": "The open content platform for Laravel.",
+    "type": "library",
+    "license": "AGPL-3.0-or-later",
+    "keywords": ["laravel", "cms", "content-management", "contensio"],
+    "homepage": "https://contensio.com",
+    "authors": [
+        {
+            "name": "Iosif Gabriel Chimilevschi",
+            "homepage": "https://contensio.com",
+            "role": "Creator"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.0",
+        "phpunit/phpunit": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Contensio\\Cms\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Contensio\\Cms\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Contensio\\Cms\\CmsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

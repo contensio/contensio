@@ -1,0 +1,12 @@
+{
+    "name": "contensio/default",
+    "label": "Default",
+    "description": "The default theme that ships with Contensio. Clean, minimal, and fully responsive.",
+    "author": "Contensio",
+    "author_url": "https://contensio.com",
+    "version": "1.0.0",
+    "requires": {
+        "cms": "^1.0"
+    },
+    "removable": false
+}
