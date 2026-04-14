@@ -35,6 +35,7 @@ use Contensio\Cms\Http\Middleware\RequireAdminRole;
 use Contensio\Cms\Models\ContentType;
 use Contensio\Cms\Services\Install\EnvWriter;
 use Contensio\Cms\Services\Install\RequirementsChecker;
+use Contensio\Cms\Support\PluginRegistry;
 use Contensio\Cms\Support\ThemeRegistry;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\View;
@@ -93,6 +94,17 @@ class CmsServiceProvider extends ServiceProvider
                     view()->addNamespace('theme', $active['viewPath']);
                 }
             });
+
+            // Discover + register enabled plugins. Each plugin's own service
+            // provider takes over from here (its register()/boot() run in the
+            // normal Laravel lifecycle).
+            PluginRegistry::discover();
+            foreach (PluginRegistry::enabledNames() as $pluginName) {
+                $plugin = PluginRegistry::get($pluginName);
+                if ($plugin) {
+                    PluginRegistry::registerProvider($plugin, $this->app);
+                }
+            }
 
             // Share custom content types with the admin layout for the sidebar
             View::composer('cms::admin.layout', function ($view) {

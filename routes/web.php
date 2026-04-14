@@ -138,6 +138,10 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/languages/{id}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
 
         // Plugins
-        Route::get('/plugins', [PluginController::class, 'index'])->name('plugins.index');
+        Route::get('/plugins',           [PluginController::class, 'index'])->name('plugins.index');
+        Route::post('/plugins/enable',   [PluginController::class, 'enable'])->name('plugins.enable');
+        Route::post('/plugins/disable',  [PluginController::class, 'disable'])->name('plugins.disable');
+        Route::post('/plugins/install',  [PluginController::class, 'install'])->name('plugins.install');
+        Route::post('/plugins/uninstall',[PluginController::class, 'uninstall'])->name('plugins.uninstall');
 
     });

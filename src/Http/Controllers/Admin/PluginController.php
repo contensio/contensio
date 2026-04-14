@@ -28,12 +28,140 @@
 
 namespace Contensio\Cms\Http\Controllers\Admin;
 
+use Contensio\Cms\Support\PluginRegistry;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\File;
+use ZipArchive;
 
 class PluginController extends Controller
 {
+    /** List all discovered plugins with their enabled state. */
     public function index()
     {
-        return view('cms::admin.plugins.index');
+        $plugins     = PluginRegistry::all();
+        $enabledList = PluginRegistry::enabledNames();
+
+        return view('cms::admin.plugins.index', compact('plugins', 'enabledList'));
+    }
+
+    /** Enable a plugin. */
+    public function enable(Request $request)
+    {
+        $data = $request->validate(['plugin' => 'required|string']);
+
+        if (! PluginRegistry::get($data['plugin'])) {
+            return back()->withErrors(['plugin' => 'Plugin not found.']);
+        }
+
+        PluginRegistry::enable($data['plugin']);
+
+        return back()->with('success', "Plugin enabled. Some plugins may require running migrations — see the plugin's documentation.");
+    }
+
+    /** Disable a plugin. */
+    public function disable(Request $request)
+    {
+        $data = $request->validate(['plugin' => 'required|string']);
+
+        PluginRegistry::disable($data['plugin']);
+
+        return back()->with('success', 'Plugin disabled.');
+    }
+
+    /**
+     * Install a plugin from an uploaded ZIP file.
+     *
+     * The ZIP must contain a plugin.json at its root (or one folder deep),
+     * with a "name" field in "vendor/package" format.
+     */
+    public function install(Request $request)
+    {
+        $request->validate([
+            'zip' => 'required|file|mimes:zip|max:102400', // 100 MB
+        ]);
+
+        $zip  = new ZipArchive;
+        $file = $request->file('zip');
+
+        if ($zip->open($file->getRealPath()) !== true) {
+            return back()->withErrors(['zip' => 'Could not open the ZIP file.']);
+        }
+
+        // Find plugin.json — root or one folder deep
+        $manifestIndex = $zip->locateName('plugin.json');
+        if ($manifestIndex === false) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if (preg_match('#^[^/]+/plugin\.json$#', $entry)) {
+                    $manifestIndex = $i;
+                    break;
+                }
+            }
+        }
+
+        if ($manifestIndex === false) {
+            $zip->close();
+            return back()->withErrors(['zip' => 'No plugin.json found in the ZIP.']);
+        }
+
+        $meta = json_decode($zip->getFromIndex($manifestIndex), true);
+        if (empty($meta['name']) || ! preg_match('#^[a-z0-9_-]+/[a-z0-9_-]+$#', $meta['name'])) {
+            $zip->close();
+            return back()->withErrors(['zip' => 'Invalid plugin name in plugin.json. Must be "vendor/name".']);
+        }
+
+        $pluginName  = $meta['name'];
+        $pluginsRoot = rtrim(config('cms.packages_path', base_path('packages')), '/') . '/plugins';
+        $targetPath  = $pluginsRoot . '/' . $pluginName;
+
+        // Wipe any previous installation of the same plugin
+        if (is_dir($targetPath)) {
+            File::deleteDirectory($targetPath);
+        }
+
+        File::ensureDirectoryExists($targetPath);
+        $zip->extractTo($targetPath);
+        $zip->close();
+
+        // If the ZIP contained a single wrapper folder, flatten it
+        $entries = array_diff(scandir($targetPath), ['.', '..']);
+        if (count($entries) === 1) {
+            $inner = $targetPath . '/' . reset($entries);
+            if (is_dir($inner)) {
+                foreach (scandir($inner) as $item) {
+                    if ($item === '.' || $item === '..') continue;
+                    rename("{$inner}/{$item}", "{$targetPath}/{$item}");
+                }
+                rmdir($inner);
+            }
+        }
+
+        return back()->with('success', "Plugin \"{$pluginName}\" installed. Activate it when ready.");
+    }
+
+    /** Uninstall a local plugin (Composer-installed plugins can't be removed via admin). */
+    public function uninstall(Request $request)
+    {
+        $data = $request->validate(['plugin' => 'required|string']);
+
+        $name   = $data['plugin'];
+        $plugin = PluginRegistry::get($name);
+
+        if (! $plugin) {
+            return back()->withErrors(['plugin' => 'Plugin not found.']);
+        }
+
+        if (($plugin['source'] ?? '') !== 'local') {
+            return back()->withErrors(['plugin' => 'Only locally installed plugins can be removed. Remove Composer plugins via `composer remove`.']);
+        }
+
+        if (PluginRegistry::isEnabled($name)) {
+            return back()->withErrors(['plugin' => 'Disable the plugin first, then uninstall.']);
+        }
+
+        File::deleteDirectory($plugin['path']);
+
+        return back()->with('success', "Plugin \"{$name}\" removed.");
     }
 }
