@@ -43,6 +43,37 @@
 </div>
 @endif
 
+{{-- Autosave restore banner (only shown when a newer autosave exists for this user) --}}
+@if(! $isNew && ! empty($autosave))
+<div id="autosave-banner"
+     x-data="contensioAutosaveBanner(@js($autosave['data']), @js(route('cms.admin.content.autosave.discard', $content->id)))"
+     x-show="visible"
+     x-cloak
+     class="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg px-4 py-3">
+    <svg class="w-5 h-5 shrink-0 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+    <div class="flex-1 text-sm">
+        <p class="font-semibold">You have unsaved changes from {{ $autosave['human'] }}.</p>
+        <p class="text-amber-800/80 text-xs mt-0.5">Restore them, or discard and keep the last saved version.</p>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+        <button type="button" @click="restore()"
+                class="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
+            Restore
+        </button>
+        <button type="button" @click="discard()"
+                class="text-sm text-amber-700 hover:text-amber-900 font-medium px-2 py-1.5">
+            Discard
+        </button>
+    </div>
+</div>
+@endif
+
+{{-- Autosave status indicator (top-right fixed, fades in on activity) --}}
+<div id="autosave-indicator"
+     class="fixed bottom-6 right-6 z-40 hidden items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs font-medium transition-opacity"></div>
+
 <form method="POST" action="{{ $storeRoute }}" id="content-form">
 @csrf
 @if ($method === 'PUT') @method('PUT') @endif
@@ -634,6 +665,176 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+
+@if(! $isNew)
+{{-- Autosave: capture dirty form state every few seconds + on blur. --}}
+<script>
+    (function () {
+        const form = document.getElementById('content-form');
+        if (!form) return;
+
+        const autosaveUrl = @js(route('cms.admin.content.autosave', $content->id));
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+        const indicator = document.getElementById('autosave-indicator');
+
+        let lastSerialized = null;
+        let debounceTimer  = null;
+        let statusTimer    = null;
+
+        const setStatus = (text, kind) => {
+            if (!indicator) return;
+            clearTimeout(statusTimer);
+            indicator.classList.remove('hidden');
+            indicator.classList.add('flex');
+            indicator.style.opacity = '1';
+            const color = kind === 'saving' ? 'text-gray-500'
+                        : kind === 'saved'  ? 'text-green-700'
+                        : kind === 'error'  ? 'text-red-700'
+                        : 'text-gray-500';
+            const dot   = kind === 'saving' ? 'bg-gray-300 animate-pulse'
+                        : kind === 'saved'  ? 'bg-green-500'
+                        : kind === 'error'  ? 'bg-red-500'
+                        : 'bg-gray-300';
+            indicator.innerHTML =
+                '<span class="w-2 h-2 rounded-full ' + dot + '"></span>' +
+                '<span class="' + color + '">' + text + '</span>';
+            if (kind === 'saved') {
+                statusTimer = setTimeout(() => {
+                    indicator.style.opacity = '0';
+                    setTimeout(() => indicator.classList.add('hidden'), 400);
+                }, 3000);
+            }
+        };
+
+        const serializeFD = () => {
+            const fd = new FormData(form);
+            fd.delete('_token');
+            fd.delete('_method');
+            return fd;
+        };
+
+        // Lightweight change-detection signature: flat string of key=value pairs
+        const signature = (fd) => {
+            const parts = [];
+            for (const [k, v] of fd.entries()) {
+                if (v instanceof File) continue; // skip file uploads from signature
+                parts.push(k + '=' + v);
+            }
+            return parts.join('&');
+        };
+
+        const doAutosave = async () => {
+            const fd = serializeFD();
+            const sig = signature(fd);
+            if (sig === lastSerialized) return; // no changes since last save
+
+            setStatus('Saving…', 'saving');
+            fd.set('_token', csrf);
+            try {
+                const res = await fetch(autosaveUrl, {
+                    method: 'POST',
+                    body: fd,
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                lastSerialized = sig;
+                setStatus('Draft saved', 'saved');
+            } catch (err) {
+                console.warn('Autosave failed:', err);
+                setStatus('Couldn\'t autosave', 'error');
+            }
+        };
+
+        const scheduleAutosave = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(doAutosave, 2500);
+        };
+
+        form.addEventListener('input', scheduleAutosave);
+        form.addEventListener('change', scheduleAutosave);
+
+        // Periodic safety save every 30 seconds even without events
+        setInterval(doAutosave, 30_000);
+
+        // Final save on unload (best-effort)
+        window.addEventListener('beforeunload', () => {
+            const fd = serializeFD();
+            if (signature(fd) === lastSerialized) return;
+            fd.set('_token', csrf);
+            navigator.sendBeacon(autosaveUrl, fd);
+        });
+
+        // Snapshot the initial form state so the first change is detected
+        lastSerialized = signature(serializeFD());
+    })();
+
+    // Alpine component for the restore banner
+    window.contensioAutosaveBanner = (data, discardUrl) => ({
+        visible: true,
+        restore() {
+            // Walk the saved data and set each matching form field
+            const form = document.getElementById('content-form');
+            if (!form) return;
+
+            const apply = (name, value) => {
+                const elements = form.querySelectorAll('[name="' + CSS.escape(name) + '"]');
+                if (!elements.length) return;
+                elements.forEach((el) => {
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        el.checked = String(el.value) === String(value);
+                    } else {
+                        el.value = value ?? '';
+                        // Trigger input event so Alpine x-model bindings update
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                        el.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+            };
+
+            const flatten = (obj, prefix = '') => {
+                if (obj === null || obj === undefined) return;
+                if (typeof obj !== 'object') {
+                    apply(prefix, obj);
+                    return;
+                }
+                for (const [k, v] of Object.entries(obj)) {
+                    const key = prefix ? `${prefix}[${k}]` : k;
+                    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+                        flatten(v, key);
+                    } else if (Array.isArray(v)) {
+                        v.forEach((item, i) => {
+                            if (typeof item === 'object' && item !== null) {
+                                flatten(item, `${key}[${i}]`);
+                            } else {
+                                apply(`${key}[${i}]`, item);
+                            }
+                        });
+                    } else {
+                        apply(key, v);
+                    }
+                }
+            };
+
+            flatten(data);
+            this.visible = false;
+        },
+        async discard() {
+            try {
+                await fetch(discardUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                });
+            } catch {}
+            this.visible = false;
+        },
+    });
+</script>
+@endif
 @endpush
 
 @endsection

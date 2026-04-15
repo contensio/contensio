@@ -78,4 +78,45 @@ class SettingController extends Controller
 
         return redirect()->route('cms.admin.settings.general')->with('success', 'Settings saved.');
     }
+
+    /** SEO settings page — sitemap-related toggles, OG defaults, verification codes. */
+    public function seo()
+    {
+        $settings = Setting::where('module', 'core')
+            ->whereIn('setting_key', [
+                'seo_noindex',
+                'default_og_image',
+                'google_site_verification',
+                'robots_txt',
+            ])
+            ->pluck('value', 'setting_key');
+
+        return view('cms::admin.settings.seo', compact('settings'));
+    }
+
+    public function saveSeo(Request $request)
+    {
+        $data = $request->validate([
+            'seo_noindex'              => 'nullable',
+            'default_og_image'         => 'nullable|string|max:500',
+            'google_site_verification' => 'nullable|string|max:200',
+            'robots_txt'               => 'nullable|string|max:5000',
+        ]);
+
+        $map = [
+            'seo_noindex'              => $request->boolean('seo_noindex') ? '1' : '',
+            'default_og_image'         => trim((string) ($data['default_og_image'] ?? '')),
+            'google_site_verification' => trim((string) ($data['google_site_verification'] ?? '')),
+            'robots_txt'               => trim((string) ($data['robots_txt'] ?? '')),
+        ];
+
+        foreach ($map as $key => $value) {
+            Setting::updateOrCreate(
+                ['module' => 'core', 'setting_key' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('cms.admin.settings.seo')->with('success', 'SEO settings saved.');
+    }
 }

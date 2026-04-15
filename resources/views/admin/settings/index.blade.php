@@ -43,6 +43,23 @@
         </div>
     </a>
 
+    {{-- SEO --}}
+    <a href="{{ route('cms.admin.settings.seo') }}"
+       class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0 group-hover:bg-emerald-100 transition-colors">
+                <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900">SEO</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Sitemap, robots.txt, default OG image, verification codes.</p>
+            </div>
+        </div>
+    </a>
+
     {{-- Languages --}}
     <a href="{{ route('cms.admin.languages.index') }}"
        class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">

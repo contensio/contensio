@@ -16,7 +16,13 @@ use Contensio\Cms\Http\Controllers\Admin\ThemeController;
 use Contensio\Cms\Http\Controllers\Admin\UserController;
 use Contensio\Cms\Http\Controllers\Auth\LoginController;
 use Contensio\Cms\Http\Controllers\Frontend\FrontendController;
+use Contensio\Cms\Http\Controllers\Frontend\SeoController;
 use Illuminate\Support\Facades\Route;
+
+// ─── SEO (sitemap + robots) ────────────────────────────────────────────────
+// Registered outside the 'web' group so no session/CSRF overhead for crawlers.
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('cms.seo.sitemap');
+Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('cms.seo.robots');
 
 // ─── Frontend ──────────────────────────────────────────────────────────────
 Route::middleware('web')->group(function () {
@@ -65,6 +71,10 @@ Route::prefix(config('cms.route_prefix'))
         Route::get('/content/{type}/{id}/edit',  [ContentController::class, 'editContent'])->name('content.edit')->where('type', '[a-z][a-z0-9_-]*');
         Route::put('/content/{type}/{id}',       [ContentController::class, 'updateContent'])->name('content.update')->where('type', '[a-z][a-z0-9_-]*');
         Route::delete('/content/{type}/{id}',    [ContentController::class, 'destroyContent'])->name('content.destroy')->where('type', '[a-z][a-z0-9_-]*');
+
+        // Autosave (shared by pages, posts, and custom content types)
+        Route::post('/content/{id}/autosave',   [ContentController::class, 'autosave'])->name('content.autosave');
+        Route::post('/content/{id}/autosave/discard', [ContentController::class, 'discardAutosave'])->name('content.autosave.discard');
 
         // Block operations (shared by pages and posts)
         Route::get('/content/{id}/blocks/new/{type}', [BlockController::class, 'editNew'])->name('blocks.new');
@@ -142,6 +152,8 @@ Route::prefix(config('cms.route_prefix'))
         Route::get('/settings',          [SettingController::class, 'index'])->name('settings.index');
         Route::get('/settings/general',  [SettingController::class, 'general'])->name('settings.general');
         Route::post('/settings/general', [SettingController::class, 'saveGeneral'])->name('settings.general.save');
+        Route::get('/settings/seo',      [SettingController::class, 'seo'])->name('settings.seo');
+        Route::post('/settings/seo',     [SettingController::class, 'saveSeo'])->name('settings.seo.save');
 
         // Languages
         Route::get('/languages',               [LanguageController::class, 'index'])->name('languages.index');

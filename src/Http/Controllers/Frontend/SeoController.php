@@ -1,0 +1,160 @@
+<?php
+
+/**
+ * Contensio - The open content platform for Laravel.
+ * A flexible content foundation for blogs, shops, communities,
+ * and any content-driven app.
+ * https://contensio.com
+ *
+ * Copyright (c) 2026 Iosif Gabriel Chimilevschi
+ * Contensio is operated by Host Server SRL.
+ *
+ * @copyright   Copyright (c) 2026 Iosif Gabriel Chimilevschi
+ * @license     https://www.gnu.org/licenses/agpl-3.0.txt  AGPL-3.0-or-later
+ * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
+ */
+
+namespace Contensio\Cms\Http\Controllers\Frontend;
+
+use Contensio\Cms\Models\Content;
+use Contensio\Cms\Models\ContentTranslation;
+use Contensio\Cms\Models\ContentType;
+use Contensio\Cms\Models\Language;
+use Contensio\Cms\Models\Setting;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Controller;
+
+class SeoController extends Controller
+{
+    /**
+     * Serve /sitemap.xml listing the home page, blog index, and every
+     * published page/post slug for every active language.
+     *
+     * Respects the core.seo_noindex setting — returns an empty sitemap
+     * when the whole site is set to noindex.
+     */
+    public function sitemap()
+    {
+        // If the site is globally noindexed, serve an empty sitemap
+        $noIndex = (bool) Setting::where('module', 'core')->where('setting_key', 'seo_noindex')->value('value');
+
+        $urls = [];
+        $now  = now()->toAtomString();
+
+        if (! $noIndex) {
+            $defaultLang = Language::where('is_default', true)->first()
+                ?? Language::active()->orderBy('position')->first();
+
+            // Home + Blog roots
+            if ($defaultLang) {
+                $urls[] = [
+                    'loc'        => route('cms.home'),
+                    'lastmod'    => $now,
+                    'changefreq' => 'daily',
+                    'priority'   => '1.0',
+                ];
+                $urls[] = [
+                    'loc'        => route('cms.blog'),
+                    'lastmod'    => $now,
+                    'changefreq' => 'daily',
+                    'priority'   => '0.9',
+                ];
+            }
+
+            // Resolve page + post type IDs
+            $pageTypeId = ContentType::where('name', 'page')->value('id');
+            $postTypeId = ContentType::where('name', 'post')->value('id');
+
+            // Pages
+            if ($pageTypeId) {
+                $pages = ContentTranslation::query()
+                    ->select('content_translations.slug', 'contents.updated_at')
+                    ->join('contents', 'contents.id', '=', 'content_translations.content_id')
+                    ->where('contents.content_type_id', $pageTypeId)
+                    ->where('contents.status', Content::STATUS_PUBLISHED)
+                    ->whereNotNull('content_translations.slug')
+                    ->get();
+                foreach ($pages as $row) {
+                    $urls[] = [
+                        'loc'        => route('cms.page', $row->slug),
+                        'lastmod'    => optional($row->updated_at)->toAtomString() ?? $now,
+                        'changefreq' => 'weekly',
+                        'priority'   => '0.7',
+                    ];
+                }
+            }
+
+            // Posts
+            if ($postTypeId) {
+                $posts = ContentTranslation::query()
+                    ->select('content_translations.slug', 'contents.updated_at', 'contents.published_at')
+                    ->join('contents', 'contents.id', '=', 'content_translations.content_id')
+                    ->where('contents.content_type_id', $postTypeId)
+                    ->where('contents.status', Content::STATUS_PUBLISHED)
+                    ->whereNotNull('content_translations.slug')
+                    ->get();
+                foreach ($posts as $row) {
+                    $urls[] = [
+                        'loc'        => route('cms.post', $row->slug),
+                        'lastmod'    => optional($row->updated_at ?? $row->published_at)->toAtomString() ?? $now,
+                        'changefreq' => 'weekly',
+                        'priority'   => '0.6',
+                    ];
+                }
+            }
+        }
+
+        $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        foreach ($urls as $url) {
+            $xml .= "  <url>\n";
+            $xml .= '    <loc>' . htmlspecialchars($url['loc'], ENT_XML1 | ENT_QUOTES, 'UTF-8') . "</loc>\n";
+            $xml .= '    <lastmod>' . $url['lastmod'] . "</lastmod>\n";
+            $xml .= '    <changefreq>' . $url['changefreq'] . "</changefreq>\n";
+            $xml .= '    <priority>' . $url['priority'] . "</priority>\n";
+            $xml .= "  </url>\n";
+        }
+        $xml .= '</urlset>';
+
+        return response($xml, Response::HTTP_OK, [
+            'Content-Type'  => 'application/xml; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+
+    /**
+     * Serve /robots.txt. When the site is globally noindexed, disallow all
+     * crawlers. Otherwise, allow everything and point to the sitemap.
+     *
+     * Admins can override the body entirely via core.robots_txt setting.
+     */
+    public function robots()
+    {
+        // Custom override (admin-provided)
+        $custom = Setting::where('module', 'core')->where('setting_key', 'robots_txt')->value('value');
+        if ($custom) {
+            return response($custom, Response::HTTP_OK, [
+                'Content-Type'  => 'text/plain; charset=utf-8',
+                'Cache-Control' => 'public, max-age=3600',
+            ]);
+        }
+
+        $noIndex = (bool) Setting::where('module', 'core')->where('setting_key', 'seo_noindex')->value('value');
+
+        $lines = [];
+        if ($noIndex) {
+            $lines[] = 'User-agent: *';
+            $lines[] = 'Disallow: /';
+        } else {
+            $lines[] = 'User-agent: *';
+            $lines[] = 'Disallow: /' . ltrim(config('cms.route_prefix', 'admin'), '/') . '/';
+            $lines[] = '';
+            $lines[] = 'Sitemap: ' . url('/sitemap.xml');
+        }
+
+        return response(implode("\n", $lines) . "\n", Response::HTTP_OK, [
+            'Content-Type'  => 'text/plain; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+}

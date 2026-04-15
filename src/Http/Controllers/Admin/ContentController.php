@@ -31,6 +31,7 @@ namespace Contensio\Cms\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
+use Contensio\Cms\Models\Autosave;
 use Contensio\Cms\Models\BlockType;
 use Contensio\Cms\Models\Content;
 use Contensio\Cms\Models\ContentTranslation;
@@ -155,6 +156,7 @@ class ContentController extends Controller
         ]);
 
         $this->syncContent($request, $content, $languages);
+        $this->clearAutosave($content);
 
         return redirect()->route('cms.admin.pages.edit', $id)->with('success', 'Page saved.');
     }
@@ -287,6 +289,7 @@ class ContentController extends Controller
         ]);
 
         $this->syncContent($request, $content, $languages);
+        $this->clearAutosave($content);
 
         return redirect()->route('cms.admin.posts.edit', $id)->with('success', 'Post saved.');
     }
@@ -423,6 +426,7 @@ class ContentController extends Controller
         ]);
 
         $this->syncContent($request, $content, $languages);
+        $this->clearAutosave($content);
 
         return redirect()->route('cms.admin.content.edit', [$type, $id])->with('success', 'Entry saved.');
     }
@@ -462,6 +466,23 @@ class ContentController extends Controller
 
         $selectedTermIds = $content ? $content->terms->pluck('id')->all() : [];
 
+        // If the current user has an autosave for this content that is newer
+        // than the content's last saved state, expose it so the edit view
+        // can show a "restore" banner.
+        $autosave = null;
+        if ($content && auth()->check()) {
+            $row = Autosave::where('content_id', $content->id)
+                ->where('user_id', auth()->id())
+                ->first();
+            if ($row && (! $content->updated_at || $row->created_at->gt($content->updated_at))) {
+                $autosave = [
+                    'created_at' => $row->created_at->toIso8601String(),
+                    'human'      => $row->created_at->diffForHumans(),
+                    'data'       => $row->data,
+                ];
+            }
+        }
+
         return [
             'languages'       => $languages,
             'defaultLanguage' => $defaultLanguage,
@@ -470,7 +491,53 @@ class ContentController extends Controller
             'taxonomies'      => $type->taxonomies,
             'existing'        => $existing,
             'selectedTermIds' => $selectedTermIds,
+            'autosave'        => $autosave,
         ];
+    }
+
+    /**
+     * Save autosave snapshot for the current user on this content item.
+     * Called via fetch() from the edit view every few seconds while the
+     * form is dirty. Idempotent — upserts on (content_id, user_id).
+     */
+    public function autosave(Request $request, int $id)
+    {
+        $content = Content::findOrFail($id);
+
+        $data = $request->except(['_token', '_method']);
+
+        $row = Autosave::updateOrCreate(
+            ['content_id' => $content->id, 'user_id' => auth()->id()],
+            ['data' => $data, 'created_at' => now()]
+        );
+
+        return response()->json([
+            'ok'         => true,
+            'created_at' => $row->created_at->toIso8601String(),
+        ]);
+    }
+
+    /** Discard the current user's autosave for a content item. */
+    public function discardAutosave(int $id)
+    {
+        Autosave::where('content_id', $id)
+            ->where('user_id', auth()->id())
+            ->delete();
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Delete the user's autosave for a content item after a real save.
+     * Called from updatePage / updatePost / updateContent.
+     */
+    protected function clearAutosave(Content $content): void
+    {
+        if (auth()->check()) {
+            Autosave::where('content_id', $content->id)
+                ->where('user_id', auth()->id())
+                ->delete();
+        }
     }
 
     private function syncContent(Request $request, Content $content, $languages): void
