@@ -37,6 +37,7 @@ use Contensio\Cms\Models\ContentType;
 use Contensio\Cms\Services\Install\EnvWriter;
 use Contensio\Cms\Services\Install\RequirementsChecker;
 use Contensio\Cms\Support\AccessControl;
+use Contensio\Cms\Support\FortifyIntegration;
 use Contensio\Cms\Support\PluginRegistry;
 use Contensio\Cms\Support\ThemeRegistry;
 use Illuminate\Foundation\Console\AboutCommand;
@@ -80,6 +81,10 @@ class CmsServiceProvider extends ServiceProvider
 
         if ($this->isInstalled()) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+
+            // Wire Fortify (password reset + email verification views) into Contensio.
+            // Must run during boot so view callbacks are in place before Fortify resolves routes.
+            FortifyIntegration::configure($this->app);
 
             // Seed core permissions + roles on first boot. Idempotent —
             // running this every boot is safe; subsequent calls are effectively no-ops.
