@@ -43,6 +43,9 @@
         </div>
     </a>
 
+    {{-- Plugins can register additional cards here (social login, analytics, email, etc.) --}}
+    {!! \Contensio\Cms\Support\Hook::render('settings.hub_cards') !!}
+
     {{-- SEO --}}
     <a href="{{ route('cms.admin.settings.seo') }}"
        class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">

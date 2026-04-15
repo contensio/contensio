@@ -71,4 +71,7 @@
         </button>
     </form>
 
+    {{-- Plugins (e.g. contensio/social-connect) can inject "Continue with X" buttons here --}}
+    {!! \Contensio\Cms\Support\Hook::render('login.after_form') !!}
+
 @endsection

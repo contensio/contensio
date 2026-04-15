@@ -33,6 +33,7 @@ use Contensio\Cms\Support\PluginOptions;
 use Contensio\Cms\Support\PluginRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use ZipArchive;
 
@@ -47,18 +48,60 @@ class PluginController extends Controller
         return view('cms::admin.plugins.index', compact('plugins', 'enabledList'));
     }
 
-    /** Enable a plugin. */
+    /** Enable a plugin. Also runs its migrations (if any) to spare admins a CLI step. */
     public function enable(Request $request)
     {
         $data = $request->validate(['plugin' => 'required|string']);
 
-        if (! PluginRegistry::get($data['plugin'])) {
+        $plugin = PluginRegistry::get($data['plugin']);
+        if (! $plugin) {
             return back()->withErrors(['plugin' => 'Plugin not found.']);
         }
 
         PluginRegistry::enable($data['plugin']);
 
-        return back()->with('success', "Plugin enabled. Some plugins may require running migrations — see the plugin's documentation.");
+        // Run the plugin's bundled migrations (both local + Composer plugins).
+        // Non-fatal: if a migration errors, we keep the plugin enabled and surface
+        // a friendly message so the admin can investigate.
+        $migrationWarning = $this->runPluginMigrations($plugin);
+
+        $message = 'Plugin enabled.';
+        if ($migrationWarning) {
+            $message .= ' ' . $migrationWarning;
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Run any migrations shipped with the plugin (in `database/migrations/`).
+     * Returns null on success, or a short warning string describing a failure.
+     */
+    protected function runPluginMigrations(array $plugin): ?string
+    {
+        $migrationsPath = rtrim($plugin['path'] ?? '', '/\\') . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'migrations';
+
+        if (! is_dir($migrationsPath)) {
+            return null;
+        }
+
+        // Only bother if there's at least one migration file.
+        $hasFiles = (bool) glob($migrationsPath . DIRECTORY_SEPARATOR . '*.php');
+        if (! $hasFiles) {
+            return null;
+        }
+
+        try {
+            Artisan::call('migrate', [
+                '--path'     => $migrationsPath,
+                '--realpath' => true,
+                '--force'    => true,
+            ]);
+            return null;
+        } catch (\Throwable $e) {
+            report($e);
+            return 'Its migrations did not run cleanly — run `php artisan migrate` manually to investigate.';
+        }
     }
 
     /** Disable a plugin. */

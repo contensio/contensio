@@ -14,6 +14,7 @@ use Contensio\Cms\Http\Controllers\Admin\ProfileController;
 use Contensio\Cms\Http\Controllers\Admin\RoleController;
 use Contensio\Cms\Http\Controllers\Admin\SettingController;
 use Contensio\Cms\Http\Controllers\Admin\ThemeController;
+use Contensio\Cms\Http\Controllers\Admin\Tools\ImportExportController;
 use Contensio\Cms\Http\Controllers\Admin\UserController;
 use Contensio\Cms\Http\Controllers\Auth\LoginController;
 use Contensio\Cms\Http\Controllers\Frontend\FrontendController;
@@ -169,6 +170,11 @@ Route::prefix(config('cms.route_prefix'))
         Route::put('/languages/{id}',          [LanguageController::class, 'update'])->name('languages.update');
         Route::delete('/languages/{id}',       [LanguageController::class, 'destroy'])->name('languages.destroy');
         Route::post('/languages/{id}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
+
+        // Tools — Import / Export
+        Route::get('/tools/import-export',  [ImportExportController::class, 'index'])->name('tools.import-export');
+        Route::post('/tools/export',        [ImportExportController::class, 'export'])->name('tools.export');
+        Route::post('/tools/import',        [ImportExportController::class, 'import'])->name('tools.import');
 
         // Plugins
         Route::get('/plugins',                  [PluginController::class, 'index'])->name('plugins.index');

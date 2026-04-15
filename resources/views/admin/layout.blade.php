@@ -29,6 +29,7 @@
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <style>[x-cloak] { display: none !important; }</style>
     @stack('styles')
 </head>
 <body class="bg-gray-50 antialiased" x-data="{ sidebarOpen: false }">
@@ -64,6 +65,49 @@
         </div>
 
         {{-- Navigation --}}
+        @php
+            // Collapsible "Appearance" children — Themes + Menus are built-in;
+            // plugins stack beneath via placement=appearance.
+            $appearanceChildren = array_merge(
+                [
+                    ['label' => 'Themes', 'icon' => 'bi-palette',   'route' => 'cms.admin.themes.index'],
+                    ['label' => 'Menus',  'icon' => 'bi-list-task', 'route' => 'cms.admin.menus.index'],
+                ],
+                \Contensio\Cms\Support\AdminNavigation::appearanceItems()
+            );
+
+            // Collapsible "Tools" children — Import/Export is built-in;
+            // plugins stack beneath via placement=tools.
+            $toolsChildren = array_merge(
+                [[
+                    'label' => 'Import / Export',
+                    'icon'  => 'bi-arrow-left-right',
+                    'route' => 'cms.admin.tools.import-export',
+                ]],
+                \Contensio\Cms\Support\AdminNavigation::toolsItems()
+            );
+
+            // Filter each list by permission + determine auto-open state
+            $filterAndOpen = function (array $items) {
+                $items = array_values(array_filter($items, function ($item) {
+                    if (empty($item['permission'])) return true;
+                    return auth()->user()?->hasPermission($item['permission']);
+                }));
+                $open = false;
+                foreach ($items as $item) {
+                    if (! empty($item['route']) && request()->routeIs($item['route'] . '*')) {
+                        $open = true;
+                        break;
+                    }
+                }
+                return [$items, $open];
+            };
+            [$appearanceChildren, $appearanceOpen] = $filterAndOpen($appearanceChildren);
+            [$toolsChildren,      $toolsOpen]      = $filterAndOpen($toolsChildren);
+
+            $rootPluginItems = \Contensio\Cms\Support\AdminNavigation::rootItems();
+        @endphp
+
         <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
 
             {{-- Dashboard --}}
@@ -78,9 +122,6 @@
                 </svg>
                 {{ __('cms::admin.nav.dashboard') }}
             </a>
-
-            {{-- Content --}}
-            <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.content') }}</p>
 
             <a href="{{ route('cms.admin.pages.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
@@ -127,9 +168,6 @@
             </a>
             @endforeach
 
-            {{-- Media --}}
-            <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.media') }}</p>
-
             <a href="{{ route('cms.admin.media.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       {{ request()->routeIs('cms.admin.media*')
@@ -142,37 +180,110 @@
                 {{ __('cms::admin.nav.media_library') }}
             </a>
 
-            {{-- Appearance --}}
-            <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.appearance') }}</p>
+            {{-- Appearance — collapsible; Themes + Menus are built-in, plugins with placement=appearance stack beneath --}}
+            <div x-data="{ open: {{ $appearanceOpen ? 'true' : 'false' }} }">
+                <button type="button"
+                        @click="open = !open"
+                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                               text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="bi bi-palette w-4 shrink-0 text-center text-base leading-none"></i>
+                    <span class="flex-1 text-left">{{ __('cms::admin.nav.appearance') }}</span>
+                    <svg class="w-3 h-3 shrink-0 transition-transform" :class="open ? 'rotate-90' : ''"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-cloak class="mt-0.5 ml-4 pl-2 border-l border-slate-700/50 space-y-0.5">
+                    @foreach($appearanceChildren as $item)
+                        @php
+                            $href = ! empty($item['route']) && \Illuminate\Support\Facades\Route::has($item['route'])
+                                ? route($item['route'])
+                                : ($item['url'] ?? '#');
+                            $isActive = ! empty($item['route']) && request()->routeIs($item['route'] . '*');
+                        @endphp
+                        <a href="{{ $href }}"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                                  {{ $isActive ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                            @if(! empty($item['icon']))
+                            <i class="bi {{ $item['icon'] }} w-4 shrink-0 text-center text-base leading-none"></i>
+                            @else
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            </svg>
+                            @endif
+                            {{ $item['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
 
-            <a href="{{ route('cms.admin.themes.index') }}"
-               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.themes*')
-                          ? 'bg-slate-700 text-white'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
-                </svg>
-                Themes
-            </a>
+            {{-- Tools — collapsible; Import/Export is built-in, plugins with placement=tools stack beneath --}}
+            <div x-data="{ open: {{ $toolsOpen ? 'true' : 'false' }} }">
+                <button type="button"
+                        @click="open = !open"
+                        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                               text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="bi bi-tools w-4 shrink-0 text-center text-base leading-none"></i>
+                    <span class="flex-1 text-left">Tools</span>
+                    <svg class="w-3 h-3 shrink-0 transition-transform" :class="open ? 'rotate-90' : ''"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-cloak class="mt-0.5 ml-4 pl-2 border-l border-slate-700/50 space-y-0.5">
+                    @foreach($toolsChildren as $item)
+                        @php
+                            $href = ! empty($item['route']) && \Illuminate\Support\Facades\Route::has($item['route'])
+                                ? route($item['route'])
+                                : ($item['url'] ?? '#');
+                            $isActive = ! empty($item['route']) && request()->routeIs($item['route'] . '*');
+                        @endphp
+                        <a href="{{ $href }}"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                                  {{ $isActive ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                            @if(! empty($item['icon']))
+                            <i class="bi {{ $item['icon'] }} w-4 shrink-0 text-center text-base leading-none"></i>
+                            @else
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                            </svg>
+                            @endif
+                            {{ $item['label'] }}
+                        </a>
+                    @endforeach
+                </div>
+            </div>
 
-            <a href="{{ route('cms.admin.menus.index') }}"
-               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.menus*')
-                          ? 'bg-slate-700 text-white'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-                {{ __('cms::admin.nav.menus') }}
-            </a>
+            {{-- Root-placed plugin links (inline — no group header) --}}
+            @foreach($rootPluginItems as $item)
+                @if(! empty($item['permission']) && ! auth()->user()?->hasPermission($item['permission']))
+                    @continue
+                @endif
+                @php
+                    $href = ! empty($item['route']) && \Illuminate\Support\Facades\Route::has($item['route'])
+                        ? route($item['route'])
+                        : ($item['url'] ?? '#');
+                    $isActive = ! empty($item['route']) && request()->routeIs($item['route'] . '*');
+                @endphp
+                <a href="{{ $href }}"
+                   class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                          {{ $isActive ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                    @if(! empty($item['icon']))
+                    <i class="bi {{ $item['icon'] }} w-4 shrink-0 text-center text-base leading-none"></i>
+                    @else
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    @endif
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
 
             {{-- Users & Roles — only visible to users with users.view permission --}}
             @if(auth()->user()?->hasPermission('users.view') || auth()->user()?->hasPermission('roles.manage'))
-            <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.users') }}</p>
-
             @if(auth()->user()?->hasPermission('users.view'))
             <a href="{{ route('cms.admin.users.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
@@ -201,9 +312,6 @@
             </a>
             @endif
             @endif
-
-            {{-- Admin --}}
-            <p class="text-xs text-slate-500 uppercase tracking-wider px-3 pt-5 pb-1.5 font-medium">{{ __('cms::admin.nav.admin_section') }}</p>
 
             <a href="{{ route('cms.admin.settings.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors

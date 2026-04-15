@@ -37,6 +37,7 @@ use Contensio\Cms\Models\ContentType;
 use Contensio\Cms\Services\Install\EnvWriter;
 use Contensio\Cms\Services\Install\RequirementsChecker;
 use Contensio\Cms\Support\AccessControl;
+use Contensio\Cms\Support\AdminNavigation;
 use Contensio\Cms\Support\FortifyIntegration;
 use Contensio\Cms\Support\PluginRegistry;
 use Contensio\Cms\Support\ThemeRegistry;
@@ -115,12 +116,26 @@ class CmsServiceProvider extends ServiceProvider
 
             // Discover + register enabled plugins. Each plugin's own service
             // provider takes over from here (its register()/boot() run in the
-            // normal Laravel lifecycle).
+            // normal Laravel lifecycle). Additionally, if the plugin's
+            // manifest includes a "menu" block, we register a sidebar entry.
             PluginRegistry::discover();
             foreach (PluginRegistry::enabledNames() as $pluginName) {
                 $plugin = PluginRegistry::get($pluginName);
-                if ($plugin) {
-                    PluginRegistry::registerProvider($plugin, $this->app);
+                if (! $plugin) {
+                    continue;
+                }
+                PluginRegistry::registerProvider($plugin, $this->app);
+
+                // `menu` may be a single object or an array of objects.
+                // A big plugin can declare multiple entries (e.g. root + tools).
+                $menu = $plugin['meta']['menu'] ?? null;
+                if (is_array($menu)) {
+                    $entries = array_is_list($menu) ? $menu : [$menu];
+                    foreach ($entries as $entry) {
+                        if (is_array($entry) && ! empty($entry['placement']) && $entry['placement'] !== 'none') {
+                            AdminNavigation::register(array_merge($entry, ['plugin' => $pluginName]));
+                        }
+                    }
                 }
             }
 

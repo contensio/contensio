@@ -264,6 +264,9 @@
 
     </div>
 
+    {{-- Plugins can add cards here (linked accounts, API tokens, preferences, etc.) --}}
+    {!! \Contensio\Cms\Support\Hook::render('profile.sections', $user) !!}
+
 </div>
 
 @endsection
