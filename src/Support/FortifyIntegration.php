@@ -48,11 +48,16 @@ class FortifyIntegration
     public static function configure(Application $app): void
     {
         // ── Feature set ──────────────────────────────────────────────────
-        // Disable Fortify's login / register / 2FA for now.
-        // Enable password reset + email verification.
+        // Fortify's login / register features stay off — we keep our own.
+        // 2FA is enabled with confirm=true so users must verify a valid TOTP
+        // before 2FA becomes active on their account.
         $features = [
             Features::resetPasswords(),
             Features::emailVerification(),
+            Features::twoFactorAuthentication([
+                'confirm'        => true,
+                'confirmPassword' => true,
+            ]),
         ];
         $app['config']->set('fortify.features', $features);
 
@@ -77,6 +82,8 @@ class FortifyIntegration
         Fortify::verifyEmailView(fn () => view('cms::auth.verify-email'));
 
         Fortify::confirmPasswordView(fn () => view('cms::auth.confirm-password'));
+
+        Fortify::twoFactorChallengeView(fn () => view('cms::auth.two-factor-challenge'));
 
         // ── Customize password-reset email copy ──────────────────────────
         // Fortify uses Laravel's default ResetPassword notification. We

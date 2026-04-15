@@ -10,6 +10,7 @@ use Contensio\Cms\Http\Controllers\Admin\LanguageController;
 use Contensio\Cms\Http\Controllers\Admin\MediaController;
 use Contensio\Cms\Http\Controllers\Admin\MenuController;
 use Contensio\Cms\Http\Controllers\Admin\PluginController;
+use Contensio\Cms\Http\Controllers\Admin\ProfileController;
 use Contensio\Cms\Http\Controllers\Admin\RoleController;
 use Contensio\Cms\Http\Controllers\Admin\SettingController;
 use Contensio\Cms\Http\Controllers\Admin\ThemeController;
@@ -47,6 +48,11 @@ Route::prefix(config('cms.route_prefix'))
 
         // Dashboard
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Profile (current user's own account + 2FA management)
+        Route::get('/profile',              [ProfileController::class, 'index'])->name('profile');
+        Route::put('/profile',              [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password',     [ProfileController::class, 'updatePassword'])->name('profile.password');
 
         // Pages
         Route::get('/pages',             [ContentController::class, 'pages'])->name('pages.index');

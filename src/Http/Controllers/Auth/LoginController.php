@@ -50,24 +50,43 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $user = Auth::user();
-
-            if (! $user->is_active) {
-                Auth::logout();
-                return back()->withErrors([
-                    'email' => 'Your account has been disabled.',
-                ]);
-            }
-
-            $request->session()->regenerate();
-
-            return $this->redirectAfterLogin($user);
+        // We use Auth::validate() so the password gets checked WITHOUT logging
+        // the user in — because if they have 2FA enabled, we need to redirect
+        // them to the 2FA challenge before completing the session.
+        if (! Auth::validate($credentials)) {
+            return back()->withErrors([
+                'email' => 'These credentials do not match our records.',
+            ])->onlyInput('email');
         }
 
-        return back()->withErrors([
-            'email' => 'These credentials do not match our records.',
-        ])->onlyInput('email');
+        $user = \App\Models\User::where('email', $credentials['email'])->first();
+
+        if (! $user->is_active) {
+            return back()->withErrors([
+                'email' => 'Your account has been disabled.',
+            ])->onlyInput('email');
+        }
+
+        // If 2FA is enabled + confirmed, stash the user ID in the session and
+        // redirect to Fortify's two-factor challenge. Fortify reads login.id /
+        // login.remember to log the user in once the code is verified.
+        if (
+            ! is_null($user->two_factor_secret) &&
+            ! is_null($user->two_factor_confirmed_at)
+        ) {
+            $request->session()->put([
+                'login.id'       => $user->getAuthIdentifier(),
+                'login.remember' => $request->boolean('remember'),
+            ]);
+
+            return redirect()->route('two-factor.login');
+        }
+
+        // No 2FA — complete the login the normal way.
+        Auth::login($user, $request->boolean('remember'));
+        $request->session()->regenerate();
+
+        return $this->redirectAfterLogin($user);
     }
 
     public function logout(Request $request)

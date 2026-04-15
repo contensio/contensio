@@ -23,9 +23,13 @@ use Contensio\Cms\Support\AccessControl;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Fortify\TwoFactorAuthenticatable;
 
 trait HasCmsProfile
 {
+    use TwoFactorAuthenticatable;
+
+
     public function language(): BelongsTo
     {
         return $this->belongsTo(Language::class);
