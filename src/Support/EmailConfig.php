@@ -10,9 +10,9 @@
  * @license  AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
-use Contensio\Cms\Models\Setting;
+use Contensio\Models\Setting;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Crypt;
 
@@ -38,7 +38,7 @@ class EmailConfig
             'username'     => '',
             'password'     => '', // decrypted (plain) — never expose raw in UI; form uses placeholder
             'from_address' => '',
-            'from_name'    => config('cms.name', 'Contensio'),
+            'from_name'    => config('contensio.name', 'Contensio'),
         ];
 
         $out = array_merge($defaults, $raw);

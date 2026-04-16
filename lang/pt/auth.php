@@ -4,7 +4,7 @@ return [
 
     'login' => [
         'title'                => 'Bem-vindo de volta',
-        'subtitle'             => 'Inicie sessão no seu painel de administração',
+        'subtitle'             => 'Inicie sessão na sua conta',
         'email'                => 'Endereço de email',
         'email_placeholder'    => 'voce@exemplo.pt',
         'password'             => 'Palavra-passe',

@@ -22,9 +22,9 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
-use Contensio\Cms\Models\ActivityLog;
+use Contensio\Models\ActivityLog;
 use Illuminate\Support\Facades\Request;
 use Throwable;
 

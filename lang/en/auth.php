@@ -4,7 +4,7 @@ return [
 
     'login' => [
         'title'                => 'Welcome back',
-        'subtitle'             => 'Sign in to your admin panel',
+        'subtitle'             => 'Sign in to your account',
         'email'                => 'Email address',
         'email_placeholder'    => 'you@example.com',
         'password'             => 'Password',

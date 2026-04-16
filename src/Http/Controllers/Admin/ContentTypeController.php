@@ -26,15 +26,18 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\ContentTypeTranslation;
-use Contensio\Cms\Models\FieldGroup;
-use Contensio\Cms\Models\Language;
+use Contensio\Jobs\ProcessMediaVariants;
+use Contensio\Models\ContentType;
+use Contensio\Models\ContentTypeMeta;
+use Contensio\Models\ContentTypeTranslation;
+use Contensio\Models\FieldGroup;
+use Contensio\Models\Language;
+use Contensio\Models\Media;
 
 class ContentTypeController extends Controller
 {
@@ -44,7 +47,7 @@ class ContentTypeController extends Controller
             ->orderBy('position')
             ->get();
 
-        return view('cms::admin.content-types.index', compact('types'));
+        return view('contensio::admin.content-types.index', compact('types'));
     }
 
     public function create()
@@ -52,13 +55,19 @@ class ContentTypeController extends Controller
         $languages       = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defaultLanguage = Language::where('is_default', true)->first() ?? $languages->first();
 
-        return view('cms::admin.content-types.form', [
+        // Build preview defaults for a new (unsaved) content type
+        $previewType = new ContentType(['name' => '']);
+
+        return view('contensio::admin.content-types.form', [
             'type'            => null,
             'languages'       => $languages,
             'defaultLanguage' => $defaultLanguage,
             'existing'        => [],
             'allFieldGroups'  => FieldGroup::orderBy('label')->get(['id', 'label', 'key']),
             'attachedGroupIds'=> [],
+            'imageSizes'        => $previewType->defaultImageSizes(),
+            'defaultImageSizes' => $previewType->defaultImageSizes(),
+            'fitOptions'        => ['cover' => 'Cover', 'contain' => 'Contain', 'scale' => 'Scale', 'crop' => 'Crop', 'pad' => 'Pad (fill)'],
         ]);
     }
 
@@ -121,7 +130,14 @@ class ContentTypeController extends Controller
 
         $this->syncFieldGroups($type, (array) $request->input('field_group_ids', []));
 
-        return redirect()->route('cms.admin.content-types.index')
+        // Seed default image sizes from config for this content type
+        ContentTypeMeta::create([
+            'content_type_id' => $type->id,
+            'meta_key'        => 'image_sizes',
+            'meta_value'      => json_encode($type->defaultImageSizes()),
+        ]);
+
+        return redirect()->route('contensio.account.content-types.index')
             ->with('success', "Content type \"{$defaultSingular}\" created.");
     }
 
@@ -130,7 +146,7 @@ class ContentTypeController extends Controller
         $type = ContentType::with(['translations', 'taxonomies.translations'])->find($id);
 
         if (! $type) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Content type not found.');
         }
 
@@ -155,13 +171,16 @@ class ContentTypeController extends Controller
 
         $attached = $type->fieldGroups()->orderBy('field_group_attachments.position')->pluck('field_groups.id')->all();
 
-        return view('cms::admin.content-types.form', [
+        return view('contensio::admin.content-types.form', [
             'type'             => $type,
             'languages'        => $languages,
             'defaultLanguage'  => $defaultLanguage,
             'existing'         => $existing,
             'allFieldGroups'   => FieldGroup::orderBy('label')->get(['id', 'label', 'key']),
             'attachedGroupIds' => $attached,
+            'imageSizes'        => $type->getImageSizes(),
+            'defaultImageSizes' => $type->defaultImageSizes(),
+            'fitOptions'        => ['cover' => 'Cover', 'contain' => 'Contain', 'scale' => 'Scale', 'crop' => 'Crop', 'pad' => 'Pad (fill)'],
         ]);
     }
 
@@ -170,7 +189,7 @@ class ContentTypeController extends Controller
         $type = ContentType::find($id);
 
         if (! $type) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Content type not found.');
         }
 
@@ -218,9 +237,12 @@ class ContentTypeController extends Controller
         // Sync attached field groups, preserving the submitted order
         $this->syncFieldGroups($type, (array) $request->input('field_group_ids', []));
 
+        // Save image size configuration
+        $this->syncImageSizes($type, $request);
+
         $defaultSingular = $request->input("translations.{$defaultLangId}.singular");
 
-        return redirect()->route('cms.admin.content-types.index')
+        return redirect()->route('contensio.account.content-types.index')
             ->with('success', "Content type \"{$defaultSingular}\" saved.");
     }
 
@@ -245,11 +267,11 @@ class ContentTypeController extends Controller
         $type = ContentType::find($id);
 
         if (! $type) {
-            return redirect()->route('cms.admin.content-types.index');
+            return redirect()->route('contensio.account.content-types.index');
         }
 
         if ($type->is_system) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Core content types cannot be deleted.');
         }
 
@@ -258,17 +280,53 @@ class ContentTypeController extends Controller
             ->count();
 
         if ($contentCount > 0) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', "Cannot delete \"{$type->name}\" — it still has {$contentCount} item(s). Delete the content first.");
         }
 
         $type->delete();
 
-        return redirect()->route('cms.admin.content-types.index')
+        return redirect()->route('contensio.account.content-types.index')
             ->with('success', 'Content type deleted.');
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function syncImageSizes(ContentType $type, Request $request): void
+    {
+        $submitted = $request->input('image_sizes', []);
+
+        if (empty($submitted)) {
+            return;
+        }
+
+        $presets = array_keys(config('contensio.image_sizes', []));
+        $sizes   = [];
+
+        foreach ($presets as $key) {
+            $row = $submitted[$key] ?? [];
+
+            $sizes[] = [
+                'key'        => $key,
+                'label'      => $row['label']      ?? config("contensio.image_sizes.{$key}.label"),
+                'width'      => (int) ($row['width']  ?? config("contensio.image_sizes.{$key}.width")),
+                'height'     => (int) ($row['height'] ?? config("contensio.image_sizes.{$key}.height")),
+                'fit'        => $row['fit']        ?? config("contensio.image_sizes.{$key}.fit"),
+                'quality'    => (int) ($row['quality'] ?? config("contensio.image_sizes.{$key}.quality", 85)),
+                'background' => $row['background'] ?? config("contensio.image_sizes.{$key}.background", '#ffffff'),
+                'active'     => isset($row['active']) && (bool) $row['active'],
+            ];
+        }
+
+        ContentTypeMeta::updateOrCreate(
+            ['content_type_id' => $type->id, 'meta_key' => 'image_sizes'],
+            ['meta_value' => json_encode($sizes)]
+        );
+
+        // Re-process all media for newly active sizes
+        Media::where('mime_type', 'like', 'image/%')
+            ->each(fn (Media $media) => ProcessMediaVariants::dispatch($media));
+    }
 
     private function buildLabels(string $singular, string $plural, array $overrides = []): array
     {

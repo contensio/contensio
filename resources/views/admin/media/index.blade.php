@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Media Library')
 
@@ -39,7 +39,7 @@
         </div>
         <button type="button"
                 @click="uploading = true"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -82,7 +82,7 @@
             </div>
 
             <form method="POST"
-                  action="{{ route('cms.admin.media.upload') }}"
+                  action="{{ route('contensio.account.media.upload') }}"
                   enctype="multipart/form-data"
                   class="p-6">
                 @csrf
@@ -125,7 +125,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm">
+                            class="px-4 py-2 text-sm font-semibold text-white bg-ember-500 hover:bg-ember-600 rounded-md transition-colors shadow-sm">
                         Upload
                     </button>
                 </div>
@@ -146,7 +146,7 @@
         <p class="text-sm text-gray-400 mb-5">Upload your first image or document.</p>
         <button type="button"
                 @click="uploading = true"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -207,7 +207,7 @@
             <div class="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                 <form id="delete-media-{{ $item->id }}"
                       method="POST"
-                      action="{{ route('cms.admin.media.destroy', $item->id) }}"
+                      action="{{ route('contensio.account.media.destroy', $item->id) }}"
                       class="hidden">
                     @csrf @method('DELETE')
                 </form>

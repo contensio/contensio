@@ -128,7 +128,7 @@
                        name="{{ $fieldBase }}[translations][{{ $lang->id }}][label]"
                        x-model="labels[{{ $lang->id }}]"
                        class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                              focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
 
                 @if($item->type === 'custom_url')
                 <label class="block text-xs font-medium text-gray-600 mb-1 mt-2">
@@ -140,7 +140,7 @@
                        x-model="urls[{{ $lang->id }}]"
                        placeholder="https://..."
                        class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm font-mono
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                              focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 @endif
             </div>
             @endforeach
@@ -152,7 +152,7 @@
                     <select form="menu-form"
                             name="{{ $fieldBase }}[target]"
                             class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm bg-white
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                   focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                         <option value="_self"  {{ $item->target === '_self' ? 'selected' : '' }}>Same tab</option>
                         <option value="_blank" {{ $item->target === '_blank' ? 'selected' : '' }}>New tab</option>
                     </select>
@@ -164,7 +164,7 @@
                     <select form="menu-form"
                             name="{{ $fieldBase }}[parent_id]"
                             class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm bg-white
-                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                   focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                         <option value="">— Top level —</option>
                         @foreach($parentOptions as $opt)
                             @if($opt['id'] !== $item->id)

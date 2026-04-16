@@ -14,13 +14,13 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Frontend;
+namespace Contensio\Http\Controllers\Frontend;
 
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentTranslation;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Setting;
+use Contensio\Models\Content;
+use Contensio\Models\ContentTranslation;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Setting;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
@@ -48,13 +48,13 @@ class SeoController extends Controller
             // Home + Blog roots
             if ($defaultLang) {
                 $urls[] = [
-                    'loc'        => route('cms.home'),
+                    'loc'        => route('contensio.home'),
                     'lastmod'    => $now,
                     'changefreq' => 'daily',
                     'priority'   => '1.0',
                 ];
                 $urls[] = [
-                    'loc'        => route('cms.blog'),
+                    'loc'        => route('contensio.blog'),
                     'lastmod'    => $now,
                     'changefreq' => 'daily',
                     'priority'   => '0.9',
@@ -76,7 +76,7 @@ class SeoController extends Controller
                     ->get();
                 foreach ($pages as $row) {
                     $urls[] = [
-                        'loc'        => route('cms.page', $row->slug),
+                        'loc'        => route('contensio.page', $row->slug),
                         'lastmod'    => optional($row->updated_at)->toAtomString() ?? $now,
                         'changefreq' => 'weekly',
                         'priority'   => '0.7',
@@ -95,7 +95,7 @@ class SeoController extends Controller
                     ->get();
                 foreach ($posts as $row) {
                     $urls[] = [
-                        'loc'        => route('cms.post', $row->slug),
+                        'loc'        => route('contensio.post', $row->slug),
                         'lastmod'    => optional($row->updated_at ?? $row->published_at)->toAtomString() ?? $now,
                         'changefreq' => 'weekly',
                         'priority'   => '0.6',
@@ -147,7 +147,7 @@ class SeoController extends Controller
             $lines[] = 'Disallow: /';
         } else {
             $lines[] = 'User-agent: *';
-            $lines[] = 'Disallow: /' . ltrim(config('cms.route_prefix', 'admin'), '/') . '/';
+            $lines[] = 'Disallow: /' . ltrim(config('contensio.route_prefix', 'admin'), '/') . '/';
             $lines[] = '';
             $lines[] = 'Sitemap: ' . url('/sitemap.xml');
         }

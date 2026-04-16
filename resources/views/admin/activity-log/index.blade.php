@@ -7,12 +7,12 @@
  | @license  AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Activity log')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">Activity log</span>
 @endsection
@@ -31,7 +31,7 @@
             <label class="block text-xs font-medium text-gray-600 mb-1">User</label>
             <select name="user"
                     class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 <option value="">Everyone</option>
                 @foreach($users as $u)
                 <option value="{{ $u->id }}" {{ (int) $user === (int) $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
@@ -42,7 +42,7 @@
             <label class="block text-xs font-medium text-gray-600 mb-1">Action</label>
             <select name="action"
                     class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 <option value="">Any</option>
                 @foreach($actions as $a)
                 <option value="{{ $a }}" {{ $action === $a ? 'selected' : '' }}>{{ $a }}</option>
@@ -53,7 +53,7 @@
             <label class="block text-xs font-medium text-gray-600 mb-1">Subject</label>
             <select name="subject"
                     class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 <option value="">Any</option>
                 @foreach($subjects as $s)
                 <option value="{{ $s }}" {{ $subject === $s ? 'selected' : '' }}>{{ $s }}</option>
@@ -64,22 +64,22 @@
             <label class="block text-xs font-medium text-gray-600 mb-1">From</label>
             <input type="date" name="from" value="{{ $from }}"
                    class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
         </div>
         <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">To</label>
             <input type="date" name="to" value="{{ $to }}"
                    class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
         </div>
     </div>
     <div class="flex items-center gap-2 mt-3">
         <button type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-1.5 rounded-lg transition-colors">
+                class="bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-1.5 rounded-lg transition-colors">
             Filter
         </button>
         @if($user || $action || $subject || $from || $to)
-        <a href="{{ route('cms.admin.activity-log.index') }}"
+        <a href="{{ route('contensio.account.activity-log.index') }}"
            class="text-sm text-gray-600 hover:text-gray-900">Clear</a>
         @endif
     </div>

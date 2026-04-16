@@ -26,23 +26,23 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Menu;
-use Contensio\Cms\Models\MenuItem;
-use Contensio\Cms\Models\MenuItemTranslation;
-use Contensio\Cms\Models\MenuLocation;
-use Contensio\Cms\Models\MenuTranslation;
-use Contensio\Cms\Models\Taxonomy;
-use Contensio\Cms\Models\Term;
-use Contensio\Cms\Support\ThemeRegistry;
+use Contensio\Models\Content;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Menu;
+use Contensio\Models\MenuItem;
+use Contensio\Models\MenuItemTranslation;
+use Contensio\Models\MenuLocation;
+use Contensio\Models\MenuTranslation;
+use Contensio\Models\Taxonomy;
+use Contensio\Models\Term;
+use Contensio\Support\ThemeRegistry;
 
 class MenuController extends Controller
 {
@@ -53,7 +53,7 @@ class MenuController extends Controller
 
         $menus = Menu::with(['translations', 'locations', 'allItems'])->orderBy('name')->get();
 
-        return view('cms::admin.menus.index', compact('menus', 'languages', 'defaultLangId'));
+        return view('contensio::admin.menus.index', compact('menus', 'languages', 'defaultLangId'));
     }
 
     public function store(Request $request)
@@ -77,7 +77,7 @@ class MenuController extends Controller
             ]);
         }
 
-        return redirect()->route('cms.admin.menus.edit', $menu->id)
+        return redirect()->route('contensio.account.menus.edit', $menu->id)
             ->with('success', 'Menu created. Now add some items to it.');
     }
 
@@ -109,7 +109,7 @@ class MenuController extends Controller
         // Which locations are currently assigned to THIS menu (keyed by location key)
         $myAssignments = MenuLocation::where('menu_id', $menu->id)->pluck('location')->toArray();
 
-        return view('cms::admin.menus.edit', compact(
+        return view('contensio::admin.menus.edit', compact(
             'menu', 'items', 'languages', 'defaultLangId',
             'pages', 'posts', 'terms', 'themeLocations', 'myAssignments'
         ));
@@ -234,7 +234,7 @@ class MenuController extends Controller
             }
         });
 
-        return redirect()->route('cms.admin.menus.edit', $menu->id)
+        return redirect()->route('contensio.account.menus.edit', $menu->id)
             ->with('success', 'Menu saved.');
     }
 
@@ -242,7 +242,7 @@ class MenuController extends Controller
     {
         Menu::findOrFail($id)->delete();
 
-        return redirect()->route('cms.admin.menus.index')->with('success', 'Menu deleted.');
+        return redirect()->route('contensio.account.menus.index')->with('success', 'Menu deleted.');
     }
 
     /**
@@ -316,7 +316,7 @@ class MenuController extends Controller
             ]);
         }
 
-        return redirect()->route('cms.admin.menus.edit', $menu->id)
+        return redirect()->route('contensio.account.menus.edit', $menu->id)
             ->with('success', 'Item added.');
     }
 

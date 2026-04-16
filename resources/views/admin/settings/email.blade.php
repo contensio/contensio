@@ -7,12 +7,12 @@
  | @license  AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Email Settings')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">Email</span>
 @endsection
@@ -46,7 +46,7 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('cms.admin.settings.email.save') }}"
+    <form method="POST" action="{{ route('contensio.account.settings.email.save') }}"
           class="bg-white rounded-xl border border-gray-200 overflow-hidden">
         @csrf
 
@@ -56,7 +56,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Mailer</label>
                 <select name="mailer"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     @foreach(['smtp' => 'SMTP', 'sendmail' => 'Sendmail', 'log' => 'Log (dev)', 'array' => 'Array (testing)'] as $k => $label)
                     <option value="{{ $k }}" {{ old('mailer', $settings['mailer']) === $k ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -70,14 +70,14 @@
                     <input type="text" name="host" value="{{ old('host', $settings['host']) }}"
                            placeholder="smtp.example.com"
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                  focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Port</label>
                     <input type="number" name="port" value="{{ old('port', $settings['port']) }}"
                            placeholder="587"
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                  focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 </div>
             </div>
 
@@ -85,7 +85,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Encryption</label>
                 <select name="encryption"
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     @foreach(['tls' => 'TLS (port 587)', 'ssl' => 'SSL (port 465)', '' => 'None'] as $k => $label)
                     <option value="{{ $k }}" {{ old('encryption', $settings['encryption']) === $k ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -98,7 +98,7 @@
                     <input type="text" name="username" value="{{ old('username', $settings['username']) }}"
                            autocomplete="off"
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                  focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
@@ -106,7 +106,7 @@
                            autocomplete="new-password"
                            placeholder="{{ ! empty($settings['password']) ? '••••••••••••••••' : '' }}"
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                  focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current password.</p>
                 </div>
             </div>
@@ -119,13 +119,13 @@
                         <input type="email" name="from_address" value="{{ old('from_address', $settings['from_address']) }}"
                                placeholder="no-reply@example.com"
                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                      focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">From name</label>
                         <input type="text" name="from_name" value="{{ old('from_name', $settings['from_name']) }}"
                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                      focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                      focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     </div>
                 </div>
             </div>
@@ -134,14 +134,14 @@
 
         <div class="flex items-center justify-end gap-3 px-5 py-3 bg-gray-50 border-t border-gray-100">
             <button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
+                    class="bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
                 Save settings
             </button>
         </div>
     </form>
 
     {{-- Test email --}}
-    <form method="POST" action="{{ route('cms.admin.settings.email.test') }}"
+    <form method="POST" action="{{ route('contensio.account.settings.email.test') }}"
           class="mt-5 bg-white rounded-xl border border-gray-200 p-5">
         @csrf
         <div class="flex items-center gap-3 mb-3">

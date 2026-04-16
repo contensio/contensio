@@ -14,11 +14,11 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
-use Contensio\Cms\Models\Permission;
-use Contensio\Cms\Models\Role;
-use Contensio\Cms\Models\RoleTranslation;
+use Contensio\Models\Permission;
+use Contensio\Models\Role;
+use Contensio\Models\RoleTranslation;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -261,8 +261,8 @@ class AccessControl
             );
 
             // Default-language translation (only insert on create; admins may later edit labels)
-            $defaultLang = \Contensio\Cms\Models\Language::where('is_default', true)->value('id')
-                ?? \Contensio\Cms\Models\Language::orderBy('position')->value('id');
+            $defaultLang = \Contensio\Models\Language::where('is_default', true)->value('id')
+                ?? \Contensio\Models\Language::orderBy('position')->value('id');
             if ($defaultLang && ! $role->translations()->where('language_id', $defaultLang)->exists()) {
                 RoleTranslation::create([
                     'role_id'     => $role->id,

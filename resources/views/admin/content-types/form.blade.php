@@ -8,14 +8,14 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', $type ? 'Edit Content Type' : 'New Content Type')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
-    <a href="{{ route('cms.admin.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
+    <a href="{{ route('contensio.account.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">{{ $type ? 'Edit' : 'New Content Type' }}</span>
 @endsection
@@ -49,7 +49,7 @@
     @endif
 
     <form method="POST"
-          action="{{ $type ? route('cms.admin.content-types.update', $type->id) : route('cms.admin.content-types.store') }}">
+          action="{{ $type ? route('contensio.account.content-types.update', $type->id) : route('contensio.account.content-types.store') }}">
         @csrf
         @if($type) @method('PUT') @endif
 
@@ -145,7 +145,7 @@
                                        x-model="singular"
                                        @input="generate()"
                                        placeholder="e.g. Portfolio Item"
-                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                                 @error("translations.{$lang->id}.singular")
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -160,7 +160,7 @@
                                        x-model="plural"
                                        @input="generate()"
                                        placeholder="e.g. Portfolio Items"
-                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                                 @error("translations.{$lang->id}.plural")
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -180,7 +180,7 @@
                                        x-model="slug"
                                        @input="slugTouched = true"
                                        placeholder="portfolio-items"
-                                       class="flex-1 rounded-r border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="flex-1 rounded-r border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                             </div>
                             <p class="mt-1 text-xs text-gray-400">Lowercase letters, numbers and hyphens only.</p>
@@ -222,7 +222,7 @@
                                            name="translations[{{ $lang->id }}][labels][{{ $key }}]"
                                            x-model="lbl.{{ $key }}"
                                            @input="lblTouched.{{ $key }} = true"
-                                           class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                                 </div>
                                 @endforeach
                             </div>
@@ -293,7 +293,7 @@
                            name="{{ $key }}"
                            value="1"
                            {{ $checked ? 'checked' : '' }}
-                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                     <div>
                         <p class="text-sm font-medium text-gray-700">{{ $feature['label'] }}</p>
                         <p class="text-xs text-gray-400 mt-0.5">{{ $feature['desc'] }}</p>
@@ -312,8 +312,8 @@
                     <p class="text-xs text-gray-500 mt-0.5">Attach field groups. Their fields will appear on this content type's edit form.</p>
                 </div>
                 @if(empty($allFieldGroups ?? []))
-                <a href="{{ route('cms.admin.field-groups.create') }}"
-                   class="text-sm font-medium text-blue-600 hover:text-blue-700">Create a field group →</a>
+                <a href="{{ route('contensio.account.field-groups.create') }}"
+                   class="text-sm font-medium text-ember-600 hover:text-ember-700">Create a field group →</a>
                 @endif
             </div>
 
@@ -354,13 +354,13 @@
 
             {{-- Attach picker --}}
             <div x-show="available.length > 0" class="flex items-center gap-2">
-                <select x-ref="picker" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select x-ref="picker" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
                     <template x-for="g in available" :key="g.id">
                         <option :value="g.id" x-text="g.label + ' (' + g.key + ')'"></option>
                     </template>
                 </select>
                 <button type="button" @click="attach($refs.picker.value)"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+                        class="bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
                     Attach
                 </button>
             </div>
@@ -388,15 +388,121 @@
             }
         </script>
 
+        {{-- ── Image Sizes ─────────────────────────────────────────────────── --}}
+        <div class="bg-white border border-gray-200 rounded-md overflow-hidden mb-6"
+             x-data="imageSizes(@js($imageSizes), @js($defaultImageSizes))">
+
+            <div class="px-5 py-4 border-b border-gray-100 flex items-start gap-3">
+                <div class="flex-1">
+                    <h2 class="text-base font-bold text-gray-800">Image Sizes</h2>
+                    <p class="text-xs text-gray-400 mt-0.5">Choose which variants are generated when an image is uploaded. Sizes apply globally — each active size is generated for every uploaded image.</p>
+                </div>
+                <button type="button"
+                        @click="resetToDefaults()"
+                        class="shrink-0 text-xs font-medium text-gray-400 hover:text-gray-700 border border-gray-200 hover:border-gray-300 rounded px-2.5 py-1.5 transition-colors mt-0.5">
+                    Reset to defaults
+                </button>
+            </div>
+
+            <div class="divide-y divide-gray-100">
+                <template x-for="(size, index) in sizes" :key="size.key">
+                    <div class="px-5 py-4">
+
+                        {{-- Row header: toggle + label --}}
+                        <div class="flex items-center gap-3 mb-0" :class="size.active ? 'mb-3' : ''">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox"
+                                       :name="'image_sizes[' + size.key + '][active]'"
+                                       value="1"
+                                       x-model="size.active"
+                                       class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ember-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-ember-500"></div>
+                            </label>
+                            <span class="text-sm font-semibold text-gray-800" x-text="size.label"></span>
+                            <span class="text-xs text-gray-400 font-mono" x-text="size.key"></span>
+                            <span class="ml-auto text-xs text-gray-400"
+                                  x-text="size.width + ' × ' + size.height + ' px  ·  ' + fitLabel(size.fit)"></span>
+                        </div>
+
+                        {{-- Expanded config (visible when active) --}}
+                        <div x-show="size.active" x-cloak class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+
+                            {{-- Hidden inputs always submitted for active sizes --}}
+                            <input type="hidden" :name="'image_sizes[' + size.key + '][label]'"      :value="size.label">
+                            <input type="hidden" :name="'image_sizes[' + size.key + '][quality]'"    :value="size.quality">
+
+                            {{-- Width --}}
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Width (px)</label>
+                                <input type="number" min="1" max="9999"
+                                       :name="'image_sizes[' + size.key + '][width]'"
+                                       x-model.number="size.width"
+                                       class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
+                            </div>
+
+                            {{-- Height --}}
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Height (px)</label>
+                                <input type="number" min="1" max="9999"
+                                       :name="'image_sizes[' + size.key + '][height]'"
+                                       x-model.number="size.height"
+                                       class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
+                            </div>
+
+                            {{-- Fit --}}
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Fit method</label>
+                                <select :name="'image_sizes[' + size.key + '][fit]'"
+                                        x-model="size.fit"
+                                        class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
+                                    @foreach($fitOptions as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Background color (only for pad) --}}
+                            <div x-show="size.fit === 'pad'">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Fill color</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color"
+                                           :name="'image_sizes[' + size.key + '][background]'"
+                                           x-model="size.background"
+                                           class="w-10 h-8 rounded border border-gray-300 cursor-pointer p-0.5">
+                                    <span class="text-xs font-mono text-gray-500" x-text="size.background"></span>
+                                </div>
+                            </div>
+                            {{-- Placeholder to keep grid consistent when pad is not selected --}}
+                            <div x-show="size.fit !== 'pad'"></div>
+
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <script>
+            function imageSizes(initial, defaults) {
+                const fitLabels = @json($fitOptions);
+                return {
+                    sizes: initial,
+                    fitLabel(key) { return fitLabels[key] || key; },
+                    resetToDefaults() {
+                        this.sizes = JSON.parse(JSON.stringify(defaults));
+                    },
+                };
+            }
+        </script>
+
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
+                    class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 {{ $type ? 'Save Changes' : 'Create Content Type' }}
             </button>
-            <a href="{{ route('cms.admin.content-types.index') }}"
+            <a href="{{ route('contensio.account.content-types.index') }}"
                class="text-sm font-medium text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-100 transition-colors">
                 Cancel
             </a>

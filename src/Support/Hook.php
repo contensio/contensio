@@ -14,7 +14,7 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
 /**
  * Extension point registry — the way plugins inject content into core views.
@@ -38,14 +38,14 @@ namespace Contensio\Cms\Support;
  * ## Usage in core Blade views
  *
  * ```blade
- * {!! \Contensio\Cms\Support\Hook::render('login.after_form') !!}
- * {!! \Contensio\Cms\Support\Hook::render('profile.sections', $user) !!}
+ * {!! \Contensio\Support\Hook::render('login.after_form') !!}
+ * {!! \Contensio\Support\Hook::render('profile.sections', $user) !!}
  * ```
  *
  * ## Usage in a plugin's service provider
  *
  * ```php
- * use Contensio\Cms\Support\Hook;
+ * use Contensio\Support\Hook;
  *
  * public function boot(): void {
  *     Hook::add('login.after_form', function () {

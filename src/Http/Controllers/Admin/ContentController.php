@@ -26,20 +26,20 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\Autosave;
-use Contensio\Cms\Models\BlockType;
-use Contensio\Cms\Support\Activity;
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentTranslation;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Term;
-use Contensio\Cms\Models\TermTranslation;
+use Contensio\Models\Autosave;
+use Contensio\Models\BlockType;
+use Contensio\Support\Activity;
+use Contensio\Models\Content;
+use Contensio\Models\ContentTranslation;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Term;
+use Contensio\Models\TermTranslation;
 
 class ContentController extends Controller
 {
@@ -52,7 +52,7 @@ class ContentController extends Controller
             ? Content::where('content_type_id', $type->id)->with(['translations', 'author'])->latest()->get()
             : collect();
 
-        return view('cms::admin.pages.index', compact('items'));
+        return view('contensio::admin.pages.index', compact('items'));
     }
 
     public function createPage()
@@ -63,14 +63,14 @@ class ContentController extends Controller
 
         $blockTypes = BlockType::active()->ordered()->get();
 
-        return view('cms::admin.content.edit', array_merge(
+        return view('contensio::admin.content.edit', array_merge(
             $this->editViewData(null, $type),
             [
                 'content'    => null,
                 'type'       => $type,
                 'blockTypes' => $blockTypes,
-                'backRoute'  => route('cms.admin.pages.index'),
-                'storeRoute' => route('cms.admin.pages.store'),
+                'backRoute'  => route('contensio.account.pages.index'),
+                'storeRoute' => route('contensio.account.pages.store'),
                 'method'     => 'POST',
             ]
         ));
@@ -106,7 +106,7 @@ class ContentController extends Controller
             'Page: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'page', 'status' => $content->status]);
 
-        return redirect()->route('cms.admin.pages.edit', $content->id)
+        return redirect()->route('contensio.account.pages.edit', $content->id)
             ->with('success', 'Page created.');
     }
 
@@ -117,23 +117,23 @@ class ContentController extends Controller
             ->firstOrFail();
 
         $content = Content::where('content_type_id', $type->id)
-            ->with(['translations', 'author', 'terms'])
+            ->with(['translations', 'author', 'terms', 'featuredImage'])
             ->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.pages.index')->with('error', 'Page not found.');
+            return redirect()->route('contensio.account.pages.index')->with('error', 'Page not found.');
         }
 
         $blockTypes = BlockType::active()->ordered()->get();
 
-        return view('cms::admin.content.edit', array_merge(
+        return view('contensio::admin.content.edit', array_merge(
             $this->editViewData($content, $type),
             [
                 'content'    => $content,
                 'type'       => $type,
                 'blockTypes' => $blockTypes,
-                'backRoute'  => route('cms.admin.pages.index'),
-                'storeRoute' => route('cms.admin.pages.update', $id),
+                'backRoute'  => route('contensio.account.pages.index'),
+                'storeRoute' => route('contensio.account.pages.update', $id),
                 'method'     => 'PUT',
             ]
         ));
@@ -145,7 +145,7 @@ class ContentController extends Controller
         $content = Content::where('content_type_id', $type->id)->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.pages.index')->with('error', 'Page not found.');
+            return redirect()->route('contensio.account.pages.index')->with('error', 'Page not found.');
         }
 
         $languages = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
@@ -173,7 +173,7 @@ class ContentController extends Controller
             'Page: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'page', 'status' => $content->status]);
 
-        return redirect()->route('cms.admin.pages.edit', $id)->with('success', 'Page saved.');
+        return redirect()->route('contensio.account.pages.edit', $id)->with('success', 'Page saved.');
     }
 
     public function destroyPage(int $id)
@@ -182,7 +182,7 @@ class ContentController extends Controller
         $content = Content::where('content_type_id', $type->id)->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.pages.index');
+            return redirect()->route('contensio.account.pages.index');
         }
 
         $title = $content->translations()->value('title');
@@ -191,7 +191,7 @@ class ContentController extends Controller
         Activity::record('deleted', 'content', $id, "Page: {$title}")
             ->withProperties(['type' => 'page']);
 
-        return redirect()->route('cms.admin.pages.index')->with('success', 'Page deleted.');
+        return redirect()->route('contensio.account.pages.index')->with('success', 'Page deleted.');
     }
 
     // ─── Posts ────────────────────────────────────────────────────────────────
@@ -200,10 +200,10 @@ class ContentController extends Controller
     {
         $type  = ContentType::where('name', 'post')->first();
         $items = $type
-            ? Content::where('content_type_id', $type->id)->with(['translations', 'author'])->latest()->get()
+            ? Content::where('content_type_id', $type->id)->with(['translations', 'author', 'featuredImage.variants'])->latest()->get()
             : collect();
 
-        return view('cms::admin.posts.index', compact('items'));
+        return view('contensio::admin.posts.index', compact('items'));
     }
 
     public function createPost()
@@ -214,14 +214,14 @@ class ContentController extends Controller
 
         $blockTypes = BlockType::active()->ordered()->get();
 
-        return view('cms::admin.content.edit', array_merge(
+        return view('contensio::admin.content.edit', array_merge(
             $this->editViewData(null, $type),
             [
                 'content'    => null,
                 'type'       => $type,
                 'blockTypes' => $blockTypes,
-                'backRoute'  => route('cms.admin.posts.index'),
-                'storeRoute' => route('cms.admin.posts.store'),
+                'backRoute'  => route('contensio.account.posts.index'),
+                'storeRoute' => route('contensio.account.posts.store'),
                 'method'     => 'POST',
             ]
         ));
@@ -257,7 +257,7 @@ class ContentController extends Controller
             'Post: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'post', 'status' => $content->status]);
 
-        return redirect()->route('cms.admin.posts.edit', $content->id)
+        return redirect()->route('contensio.account.posts.edit', $content->id)
             ->with('success', 'Post created.');
     }
 
@@ -268,23 +268,23 @@ class ContentController extends Controller
             ->firstOrFail();
 
         $content = Content::where('content_type_id', $type->id)
-            ->with(['translations', 'author', 'terms'])
+            ->with(['translations', 'author', 'terms', 'featuredImage'])
             ->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.posts.index')->with('error', 'Post not found.');
+            return redirect()->route('contensio.account.posts.index')->with('error', 'Post not found.');
         }
 
         $blockTypes = BlockType::active()->ordered()->get();
 
-        return view('cms::admin.content.edit', array_merge(
+        return view('contensio::admin.content.edit', array_merge(
             $this->editViewData($content, $type),
             [
                 'content'    => $content,
                 'type'       => $type,
                 'blockTypes' => $blockTypes,
-                'backRoute'  => route('cms.admin.posts.index'),
-                'storeRoute' => route('cms.admin.posts.update', $id),
+                'backRoute'  => route('contensio.account.posts.index'),
+                'storeRoute' => route('contensio.account.posts.update', $id),
                 'method'     => 'PUT',
             ]
         ));
@@ -296,7 +296,7 @@ class ContentController extends Controller
         $content = Content::where('content_type_id', $type->id)->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.posts.index')->with('error', 'Post not found.');
+            return redirect()->route('contensio.account.posts.index')->with('error', 'Post not found.');
         }
 
         $languages = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
@@ -324,7 +324,7 @@ class ContentController extends Controller
             'Post: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'post', 'status' => $content->status]);
 
-        return redirect()->route('cms.admin.posts.edit', $id)->with('success', 'Post saved.');
+        return redirect()->route('contensio.account.posts.edit', $id)->with('success', 'Post saved.');
     }
 
     public function destroyPost(int $id)
@@ -333,7 +333,7 @@ class ContentController extends Controller
         $content = Content::where('content_type_id', $type->id)->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.posts.index');
+            return redirect()->route('contensio.account.posts.index');
         }
 
         $title = $content->translations()->value('title');
@@ -342,7 +342,7 @@ class ContentController extends Controller
         Activity::record('deleted', 'content', $id, "Post: {$title}")
             ->withProperties(['type' => 'post']);
 
-        return redirect()->route('cms.admin.posts.index')->with('success', 'Post deleted.');
+        return redirect()->route('contensio.account.posts.index')->with('success', 'Post deleted.');
     }
 
     // ─── Custom content types ─────────────────────────────────────────────────
@@ -358,7 +358,7 @@ class ContentController extends Controller
         $trans  = $contentType->translations->first();
         $plural = $trans?->labels['plural'] ?? ucfirst($type);
 
-        return view('cms::admin.content.index', compact('contentType', 'items', 'plural', 'type'));
+        return view('contensio::admin.content.index', compact('contentType', 'items', 'plural', 'type'));
     }
 
     public function createContent(string $type)
@@ -369,14 +369,14 @@ class ContentController extends Controller
 
         $blockTypes = BlockType::active()->ordered()->get();
 
-        return view('cms::admin.content.edit', array_merge(
+        return view('contensio::admin.content.edit', array_merge(
             $this->editViewData(null, $contentType),
             [
                 'content'    => null,
                 'type'       => $contentType,
                 'blockTypes' => $blockTypes,
-                'backRoute'  => route('cms.admin.content.index', $type),
-                'storeRoute' => route('cms.admin.content.store', $type),
+                'backRoute'  => route('contensio.account.content.index', $type),
+                'storeRoute' => route('contensio.account.content.store', $type),
                 'method'     => 'POST',
             ]
         ));
@@ -405,7 +405,7 @@ class ContentController extends Controller
 
         $this->syncContent($request, $content, $languages);
 
-        return redirect()->route('cms.admin.content.edit', [$type, $content->id])
+        return redirect()->route('contensio.account.content.edit', [$type, $content->id])
             ->with('success', 'Entry created.');
     }
 
@@ -416,23 +416,23 @@ class ContentController extends Controller
             ->firstOrFail();
 
         $content = Content::where('content_type_id', $contentType->id)
-            ->with(['translations', 'author', 'terms'])
+            ->with(['translations', 'author', 'terms', 'featuredImage'])
             ->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.content.index', $type)->with('error', 'Entry not found.');
+            return redirect()->route('contensio.account.content.index', $type)->with('error', 'Entry not found.');
         }
 
         $blockTypes = BlockType::active()->ordered()->get();
 
-        return view('cms::admin.content.edit', array_merge(
+        return view('contensio::admin.content.edit', array_merge(
             $this->editViewData($content, $contentType),
             [
                 'content'    => $content,
                 'type'       => $contentType,
                 'blockTypes' => $blockTypes,
-                'backRoute'  => route('cms.admin.content.index', $type),
-                'storeRoute' => route('cms.admin.content.update', [$type, $id]),
+                'backRoute'  => route('contensio.account.content.index', $type),
+                'storeRoute' => route('contensio.account.content.update', [$type, $id]),
                 'method'     => 'PUT',
             ]
         ));
@@ -444,7 +444,7 @@ class ContentController extends Controller
         $content     = Content::where('content_type_id', $contentType->id)->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.content.index', $type)->with('error', 'Entry not found.');
+            return redirect()->route('contensio.account.content.index', $type)->with('error', 'Entry not found.');
         }
 
         $languages = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
@@ -465,7 +465,7 @@ class ContentController extends Controller
         $this->syncContent($request, $content, $languages);
         $this->clearAutosave($content);
 
-        return redirect()->route('cms.admin.content.edit', [$type, $id])->with('success', 'Entry saved.');
+        return redirect()->route('contensio.account.content.edit', [$type, $id])->with('success', 'Entry saved.');
     }
 
     public function destroyContent(string $type, int $id)
@@ -477,7 +477,7 @@ class ContentController extends Controller
             $content->delete();
         }
 
-        return redirect()->route('cms.admin.content.index', $type)->with('success', 'Entry deleted.');
+        return redirect()->route('contensio.account.content.index', $type)->with('success', 'Entry deleted.');
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -599,6 +599,14 @@ class ContentController extends Controller
     {
         $defaultLangId = Language::where('is_default', true)->value('id') ?? 1;
 
+        // Featured image (only when the form includes the field)
+        if ($request->has('featured_image_id')) {
+            $content->featured_image_id = $request->filled('featured_image_id')
+                ? (int) $request->input('featured_image_id')
+                : null;
+            $content->save();
+        }
+
         // Collect term IDs from hierarchical checkboxes
         $allTermIds = array_map('intval', $request->input('term_ids', []));
 
@@ -617,9 +625,20 @@ class ContentController extends Controller
                 if ($termId) {
                     $allTermIds[] = $termId;
                 } else {
-                    // New tag typed by the user — create term + default-language translation
+                    // Tag typed manually (no id from Tagify) — find existing or create new
                     $name = trim($tag['value'] ?? '');
                     if (! $name) {
+                        continue;
+                    }
+
+                    // Check for an existing term with this name in the same taxonomy
+                    $existing = TermTranslation::where('language_id', $defaultLangId)
+                        ->where('name', $name)
+                        ->whereHas('term', fn ($q) => $q->where('taxonomy_id', (int) $taxonomyId))
+                        ->first();
+
+                    if ($existing) {
+                        $allTermIds[] = $existing->term_id;
                         continue;
                     }
 
@@ -689,7 +708,7 @@ class ContentController extends Controller
         if (empty($payload)) return;
 
         // Whitelist: fields reachable from this content's type via attached groups
-        $validFieldIds = \Contensio\Cms\Models\Field::query()
+        $validFieldIds = \Contensio\Models\Field::query()
             ->whereHas('group.contentTypes', fn ($q) => $q->where('content_types.id', $content->content_type_id))
             ->pluck('id')
             ->flip(); // for O(1) isset checks
@@ -697,7 +716,7 @@ class ContentController extends Controller
         foreach ($payload as $fieldId => $submitted) {
             if (! isset($validFieldIds[(int) $fieldId])) continue;
 
-            $field = \Contensio\Cms\Models\Field::find($fieldId);
+            $field = \Contensio\Models\Field::find($fieldId);
             if (! $field) continue;
 
             $cfg     = $field->config ?? [];
@@ -707,7 +726,7 @@ class ContentController extends Controller
             if ($field->is_translatable && is_array($submitted)) {
                 foreach ($submitted as $langId => $value) {
                     $saveValue = $isMulti ? json_encode(array_values((array) $value)) : (string) ($value ?? '');
-                    \Contensio\Cms\Models\ContentFieldValue::updateOrCreate(
+                    \Contensio\Models\ContentFieldValue::updateOrCreate(
                         [
                             'content_id'  => $content->id,
                             'field_id'    => (int) $fieldId,
@@ -718,7 +737,7 @@ class ContentController extends Controller
                 }
             } else {
                 $saveValue = $isMulti ? json_encode(array_values((array) $submitted)) : (string) (is_array($submitted) ? '' : $submitted);
-                \Contensio\Cms\Models\ContentFieldValue::updateOrCreate(
+                \Contensio\Models\ContentFieldValue::updateOrCreate(
                     [
                         'content_id'  => $content->id,
                         'field_id'    => (int) $fieldId,

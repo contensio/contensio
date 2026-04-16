@@ -8,7 +8,7 @@
  * @license AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
  */
 
-namespace Contensio\Cms\Models;
+namespace Contensio\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

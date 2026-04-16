@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Plugins')
 
@@ -30,7 +30,7 @@
         <button type="button"
                 x-data
                 @click="$dispatch('cms:plugin-install-open')"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white
                        text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -71,7 +71,7 @@
         <button type="button"
                 x-data
                 @click="$dispatch('cms:plugin-install-open')"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             Install Plugin
         </button>
     </div>
@@ -145,7 +145,7 @@
                 <div class="mt-4 flex items-center gap-2">
                     @if(! $isEnabled)
                         {{-- Enable --}}
-                        <form method="POST" action="{{ route('cms.admin.plugins.enable') }}" class="flex-1">
+                        <form method="POST" action="{{ route('contensio.account.plugins.enable') }}" class="flex-1">
                             @csrf
                             <input type="hidden" name="plugin" value="{{ $name }}">
                             <button type="submit"
@@ -159,8 +159,8 @@
                     @else
                         @if($hasSettings)
                             {{-- Settings (only when enabled + plugin declared settings) --}}
-                            <a href="{{ route('cms.admin.plugins.settings', ['plugin' => $name]) }}"
-                               class="flex-1 inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700
+                            <a href="{{ route('contensio.account.plugins.settings', ['plugin' => $name]) }}"
+                               class="flex-1 inline-flex items-center justify-center gap-1.5 bg-ember-500 hover:bg-ember-600
                                       text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
                                title="Configure this plugin">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +173,7 @@
                         @endif
 
                         {{-- Disable --}}
-                        <form method="POST" action="{{ route('cms.admin.plugins.disable') }}" class="{{ $hasSettings ? '' : 'flex-1' }}">
+                        <form method="POST" action="{{ route('contensio.account.plugins.disable') }}" class="{{ $hasSettings ? '' : 'flex-1' }}">
                             @csrf
                             <input type="hidden" name="plugin" value="{{ $name }}">
                             <button type="submit"
@@ -188,7 +188,7 @@
                     @if($removable && ! $isEnabled)
                     <form id="remove-plugin-{{ md5($name) }}"
                           method="POST"
-                          action="{{ route('cms.admin.plugins.uninstall') }}"
+                          action="{{ route('contensio.account.plugins.uninstall') }}"
                           class="hidden">
                         @csrf
                         <input type="hidden" name="plugin" value="{{ $name }}">
@@ -243,7 +243,7 @@
             </p>
 
             <form method="POST"
-                  action="{{ route('cms.admin.plugins.install') }}"
+                  action="{{ route('contensio.account.plugins.install') }}"
                   enctype="multipart/form-data"
                   x-data="{ fileName: '' }">
                 @csrf
@@ -274,7 +274,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                            class="flex-1 bg-ember-500 hover:bg-ember-600 text-white font-semibold
                                    text-sm px-4 py-2.5 rounded-xl transition-colors">
                         Install
                     </button>

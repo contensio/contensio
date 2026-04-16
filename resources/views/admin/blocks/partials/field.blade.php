@@ -34,7 +34,7 @@
                    value="{{ $current }}"
                    placeholder="{{ $fieldType === 'url' ? 'https://...' : '' }}"
                    class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                    {{ $required ? 'required' : '' }}>
             @break
 
@@ -44,7 +44,7 @@
             </label>
             <textarea id="{{ $inputId }}" name="{{ $inputName }}" rows="4"
                       class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm resize-y
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                             focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                       {{ $required ? 'required' : '' }}>{{ $current }}</textarea>
             @break
 
@@ -86,7 +86,7 @@
             </label>
             <select id="{{ $inputId }}" name="{{ $inputName }}"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm bg-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 @foreach ($options as $optVal => $optLabel)
                     @php
                         $isAssoc = ! is_int($optVal);
@@ -104,7 +104,7 @@
             <label class="flex items-center gap-2.5 cursor-pointer">
                 <input type="hidden"   name="{{ $inputName }}" value="0">
                 <input type="checkbox" name="{{ $inputName }}" value="1" id="{{ $inputId }}"
-                       class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                       class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500 cursor-pointer"
                        {{ $current ? 'checked' : '' }}>
                 <span class="text-sm text-gray-700">{{ $label }}</span>
             </label>
@@ -126,7 +126,7 @@
             <input type="text" id="{{ $inputId }}" name="{{ $inputName }}"
                    value="{{ $current }}"
                    class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
 
     @endswitch
 

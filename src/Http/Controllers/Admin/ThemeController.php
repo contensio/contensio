@@ -26,13 +26,13 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\File;
-use Contensio\Cms\Support\ThemeOptions;
-use Contensio\Cms\Support\ThemeRegistry;
+use Contensio\Support\ThemeOptions;
+use Contensio\Support\ThemeRegistry;
 use ZipArchive;
 
 class ThemeController extends Controller
@@ -65,7 +65,7 @@ class ThemeController extends Controller
         $themes     = ThemeRegistry::all();
         $activeName = ThemeRegistry::activeName();
 
-        return view('cms::admin.themes.index', compact('themes', 'activeName'));
+        return view('contensio::admin.themes.index', compact('themes', 'activeName'));
     }
 
     /** Activate a theme. */
@@ -191,14 +191,14 @@ class ThemeController extends Controller
 
         if (! $theme) {
             return redirect()
-                ->route('cms.admin.themes.index')
+                ->route('contensio.account.themes.index')
                 ->withErrors(['theme' => 'Active theme not found.']);
         }
 
         $sections = ThemeOptions::schema($name);
         $values   = ThemeOptions::all($name);
 
-        return view('cms::admin.themes.customize', compact('name', 'theme', 'sections', 'values'));
+        return view('contensio::admin.themes.customize', compact('name', 'theme', 'sections', 'values'));
     }
 
     /**
@@ -231,7 +231,7 @@ class ThemeController extends Controller
         ThemeOptions::save($name, $values);
 
         return redirect()
-            ->route('cms.admin.themes.customize')
+            ->route('contensio.account.themes.customize')
             ->with('success', 'Theme customization saved.');
     }
 
@@ -242,7 +242,7 @@ class ThemeController extends Controller
         ThemeOptions::reset($name);
 
         return redirect()
-            ->route('cms.admin.themes.customize')
+            ->route('contensio.account.themes.customize')
             ->with('success', 'Theme reset to default settings.');
     }
 }

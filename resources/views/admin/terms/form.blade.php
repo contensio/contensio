@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @php
     $txTrans  = $taxonomy->translations->first();
@@ -21,11 +21,11 @@
 @section('title', $term ? 'Edit Term' : 'New Term')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
-    <a href="{{ route('cms.admin.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
+    <a href="{{ route('contensio.account.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
     <span class="mx-2 text-gray-300">/</span>
-    <a href="{{ route('cms.admin.terms.index', $taxonomy->id) }}" class="text-gray-500 hover:text-gray-700">{{ $txPlural }}</a>
+    <a href="{{ route('contensio.account.terms.index', $taxonomy->id) }}" class="text-gray-500 hover:text-gray-700">{{ $txPlural }}</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">{{ $term ? 'Edit Term' : 'New Term' }}</span>
 @endsection
@@ -53,8 +53,8 @@
 
     <form method="POST"
           action="{{ $term
-              ? route('cms.admin.terms.update', [$taxonomy->id, $term->id])
-              : route('cms.admin.terms.store', $taxonomy->id) }}">
+              ? route('contensio.account.terms.update', [$taxonomy->id, $term->id])
+              : route('contensio.account.terms.store', $taxonomy->id) }}">
         @csrf
         @if($term) @method('PUT') @endif
 
@@ -116,7 +116,7 @@
                                    x-model="name"
                                    @input="generate()"
                                    placeholder="e.g. Technology"
-                                   class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                    {{ $isDefault ? 'required' : '' }}>
                             @error("translations.{$lang->id}.name")
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -135,7 +135,7 @@
                                        x-model="slug"
                                        @input="slugTouched = true"
                                        placeholder="technology"
-                                       class="flex-1 rounded-r border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="flex-1 rounded-r border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                             </div>
                             <p class="mt-1 text-xs text-gray-400">Auto-generated from name. Lowercase letters, numbers and hyphens only.</p>
@@ -152,7 +152,7 @@
                             <textarea name="translations[{{ $lang->id }}][description]"
                                       rows="3"
                                       placeholder="Short description of this term…"
-                                      class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none">{{ $defDesc }}</textarea>
+                                      class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent resize-none">{{ $defDesc }}</textarea>
                         </div>
 
                     </div>
@@ -169,7 +169,7 @@
             </div>
             <div class="px-5 py-5">
                 <select name="parent_id"
-                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent bg-white">
                     <option value="">— None (top level) —</option>
                     @foreach($parentOptions as $parentId => $parentName)
                     <option value="{{ $parentId }}" {{ old('parent_id', $term?->parent_id) == $parentId ? 'selected' : '' }}>
@@ -183,13 +183,13 @@
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
+                    class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 {{ $term ? 'Save Changes' : 'Create Term' }}
             </button>
-            <a href="{{ route('cms.admin.terms.index', $taxonomy->id) }}"
+            <a href="{{ route('contensio.account.terms.index', $taxonomy->id) }}"
                class="text-sm font-medium text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-100 transition-colors">
                 Cancel
             </a>

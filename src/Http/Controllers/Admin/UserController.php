@@ -14,14 +14,14 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use App\Models\User;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Role;
-use Contensio\Cms\Models\RoleTranslation;
-use Contensio\Cms\Support\AccessControl;
-use Contensio\Cms\Support\Activity;
+use Contensio\Models\Language;
+use Contensio\Models\Role;
+use Contensio\Models\RoleTranslation;
+use Contensio\Support\AccessControl;
+use Contensio\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +35,7 @@ class UserController extends Controller
         $users = User::with(['roles.translations'])->latest()->get();
         $defaultLangId = Language::where('is_default', true)->value('id');
 
-        return view('cms::admin.users.index', compact('users', 'defaultLangId'));
+        return view('contensio::admin.users.index', compact('users', 'defaultLangId'));
     }
 
     public function create()
@@ -43,7 +43,7 @@ class UserController extends Controller
         $roles         = Role::with('translations')->orderBy('position')->orderBy('name')->get();
         $defaultLangId = Language::where('is_default', true)->value('id');
 
-        return view('cms::admin.users.create', compact('roles', 'defaultLangId'));
+        return view('contensio::admin.users.create', compact('roles', 'defaultLangId'));
     }
 
     public function store(Request $request)
@@ -72,7 +72,7 @@ class UserController extends Controller
             ->withProperties(['name' => $data['name'], 'email' => $data['email']]);
 
         return redirect()
-            ->route('cms.admin.users.index')
+            ->route('contensio.account.users.index')
             ->with('success', 'User created.');
     }
 
@@ -83,7 +83,7 @@ class UserController extends Controller
         $defaultLangId = Language::where('is_default', true)->value('id');
         $assignedRoles = $user->roles->pluck('id')->toArray();
 
-        return view('cms::admin.users.edit', compact('user', 'roles', 'defaultLangId', 'assignedRoles'));
+        return view('contensio::admin.users.edit', compact('user', 'roles', 'defaultLangId', 'assignedRoles'));
     }
 
     public function update(Request $request, int $id)
@@ -123,7 +123,7 @@ class UserController extends Controller
             ]);
 
         return redirect()
-            ->route('cms.admin.users.edit', $user->id)
+            ->route('contensio.account.users.edit', $user->id)
             ->with('success', 'User updated.');
     }
 
@@ -144,7 +144,7 @@ class UserController extends Controller
         Activity::record('deleted', 'user', $id, "User: {$email}");
 
         return redirect()
-            ->route('cms.admin.users.index')
+            ->route('contensio.account.users.index')
             ->with('success', 'User deleted.');
     }
 

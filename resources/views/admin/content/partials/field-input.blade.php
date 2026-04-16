@@ -37,7 +37,7 @@
                @if(! empty($cfg['max_length'])) maxlength="{{ (int) $cfg['max_length'] }}" @endif
                @if($isRequired) required @endif
                placeholder="{{ $placeholder }}"
-               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
         @break
 
     @case('textarea')
@@ -46,7 +46,7 @@
                   @if(! empty($cfg['max_length'])) maxlength="{{ (int) $cfg['max_length'] }}" @endif
                   @if($isRequired) required @endif
                   placeholder="{{ $placeholder }}"
-                  class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y">{{ is_array($current) ? '' : $current }}</textarea>
+                  class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent resize-y">{{ is_array($current) ? '' : $current }}</textarea>
         @break
 
     @case('rich-text')
@@ -67,7 +67,7 @@
                    @if(! empty($cfg['step'])) step="{{ $cfg['step'] }}" @endif
                    @if($isRequired) required @endif
                    placeholder="{{ $placeholder }}"
-                   class="flex-1 rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                   class="flex-1 rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
             @if(! empty($cfg['suffix']))
             <span class="text-sm text-gray-500 shrink-0">{{ $cfg['suffix'] }}</span>
             @endif
@@ -79,7 +79,7 @@
             <input type="hidden" name="{{ $inputName }}" value="0">
             <input type="checkbox" id="{{ $fieldId }}" name="{{ $inputName }}" value="1"
                    {{ $current == '1' || $current === true ? 'checked' : '' }}
-                   class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                   class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
             <span class="text-sm text-gray-600">Yes</span>
         </label>
         @break
@@ -89,13 +89,13 @@
                id="{{ $fieldId }}" name="{{ $inputName }}"
                value="{{ is_array($current) ? '' : $current }}"
                @if($isRequired) required @endif
-               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
         @break
 
     @case('select')
         <select id="{{ $fieldId }}" name="{{ $inputName }}"
                 @if($isRequired) required @endif
-                class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
             <option value="">— Select —</option>
             @foreach((array) ($cfg['options'] ?? []) as $opt)
             <option value="{{ $opt['value'] ?? '' }}" {{ $current == ($opt['value'] ?? null) ? 'selected' : '' }}>
@@ -109,7 +109,7 @@
         @php $selected = is_array($decodedCurrent) ? $decodedCurrent : []; @endphp
         <select id="{{ $fieldId }}" name="{{ $inputName }}[]" multiple size="{{ min(8, count((array) ($cfg['options'] ?? []))) }}"
                 @if($isRequired) required @endif
-                class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
             @foreach((array) ($cfg['options'] ?? []) as $opt)
             <option value="{{ $opt['value'] ?? '' }}" {{ in_array($opt['value'] ?? null, $selected) ? 'selected' : '' }}>
                 {{ $opt['label'] ?? $opt['value'] ?? '' }}
@@ -128,7 +128,7 @@
             if (! empty($stored)) {
                 $ids = array_filter(array_map('intval', $stored));
                 if ($ids) {
-                    $previewItems = \Contensio\Cms\Models\Media::whereIn('id', $ids)->get();
+                    $previewItems = \Contensio\Models\Media::whereIn('id', $ids)->get();
                 }
             }
         @endphp
@@ -163,7 +163,7 @@
                value="{{ is_array($current) ? '' : $current }}"
                @if($isRequired) required @endif
                placeholder="{{ $placeholder ?: 'https://example.com' }}"
-               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
         @break
 
     @default

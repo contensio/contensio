@@ -26,14 +26,14 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Frontend;
+namespace Contensio\Http\Controllers\Frontend;
 
 use Illuminate\Routing\Controller;
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentTranslation;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Setting;
+use Contensio\Models\Content;
+use Contensio\Models\ContentTranslation;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Setting;
 
 class FrontendController extends Controller
 {

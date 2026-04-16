@@ -7,8 +7,8 @@
 
 @php
     // Gather current translation label/help/placeholder for each field (default lang)
-    $defaultLangId = \Contensio\Cms\Models\Language::where('is_default', true)->value('id')
-        ?? \Contensio\Cms\Models\Language::orderBy('id')->value('id');
+    $defaultLangId = \Contensio\Models\Language::where('is_default', true)->value('id')
+        ?? \Contensio\Models\Language::orderBy('id')->value('id');
 
     $fieldData = $group->fields->map(function ($f) use ($defaultLangId) {
         $t = $f->translations->firstWhere('language_id', $defaultLangId) ?? $f->translations->first();
@@ -37,7 +37,7 @@
             <p class="text-xs text-gray-500 mt-0.5">Add and organize fields that belong to this group.</p>
         </div>
         <button type="button" @click="openNew()"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
             <i class="bi bi-plus-lg"></i> Add field
         </button>
     </div>
@@ -103,7 +103,7 @@
              x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
              class="relative bg-white rounded-2xl shadow-2xl w-full sm:max-w-2xl mx-auto overflow-hidden max-h-[90vh] flex flex-col">
 
-            <form :action="editing.id ? `{{ url('/') }}/{{ config('cms.route_prefix') }}/fields/${editing.id}` : `{{ route('cms.admin.fields.store', $group->id) }}`"
+            <form :action="editing.id ? `{{ url('/') }}/{{ config('contensio.route_prefix') }}/fields/${editing.id}` : `{{ route('contensio.account.fields.store', $group->id) }}`"
                   method="POST" class="flex flex-col min-h-0">
                 @csrf
                 <template x-if="editing.id">@method('PUT')</template>
@@ -124,14 +124,14 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
                             <input type="text" name="label" x-model="editing.label" required
                                    placeholder="e.g. Price"
-                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Key</label>
                             <input type="text" name="key" x-model="editing.key" required pattern="[a-z0-9_]+"
                                    placeholder="e.g. price"
                                    :disabled="!!editing.id"
-                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500">
+                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500">
                             <p class="mt-1 text-xs text-gray-500" x-show="!editing.id">Lowercase letters, numbers, underscores.</p>
                             <p class="mt-1 text-xs text-gray-500" x-show="!!editing.id">Key can't be changed after creation.</p>
                         </div>
@@ -141,7 +141,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
                             <select name="type" x-model="editing.type" required
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                                 <template x-for="t in types" :key="t.value">
                                     <option :value="t.value" x-text="t.label"></option>
                                 </template>
@@ -151,7 +151,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Section <span class="text-gray-400 font-normal">(optional)</span></label>
                             <input type="text" name="section" x-model="editing.section"
                                    placeholder="e.g. Display"
-                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                             <p class="mt-1 text-xs text-gray-500">Groups related fields visually.</p>
                         </div>
                     </div>
@@ -166,13 +166,13 @@
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Max length</label>
                                     <input type="number" name="config[max_length]" x-model="editing.config.max_length" min="1"
-                                           class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                           class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
                                 </div>
                                 <template x-if="editing.type === 'textarea'">
                                     <div>
                                         <label class="block text-xs font-medium text-gray-600 mb-1">Rows</label>
                                         <input type="number" name="config[rows]" x-model="editing.config.rows" min="1" max="20"
-                                               class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                               class="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
                                     </div>
                                 </template>
                             </div>
@@ -205,7 +205,7 @@
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="hidden" name="config[with_time]" value="0">
                                 <input type="checkbox" name="config[with_time]" value="1" x-model="editing.config.with_time"
-                                       class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                       class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                                 <span class="text-sm text-gray-700">Include time</span>
                             </label>
                         </template>
@@ -216,7 +216,7 @@
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Options <span class="text-gray-400 font-normal">(one per line — <code>value:label</code>)</span></label>
                                 <textarea name="config[options]" x-model="editing.config.optionsText" rows="5"
                                           placeholder="red:Red&#10;blue:Blue&#10;green:Green"
-                                          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                          class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ember-500"></textarea>
                             </div>
                         </template>
 
@@ -226,7 +226,7 @@
                                 <label class="flex items-center gap-2 cursor-pointer">
                                     <input type="hidden" name="config[multiple]" value="0">
                                     <input type="checkbox" name="config[multiple]" value="1" x-model="editing.config.multiple"
-                                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                                     <span class="text-sm text-gray-700">Allow multiple files</span>
                                 </label>
                                 <div>
@@ -242,12 +242,12 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Placeholder <span class="text-gray-400 font-normal">(optional)</span></label>
                             <input type="text" name="placeholder" x-model="editing.placeholder"
-                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Help text <span class="text-gray-400 font-normal">(optional)</span></label>
                             <input type="text" name="help_text" x-model="editing.help_text"
-                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
                         </div>
                     </div>
 
@@ -255,13 +255,13 @@
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="hidden" name="is_required" value="0">
                             <input type="checkbox" name="is_required" value="1" x-model="editing.is_required"
-                                   class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                   class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                             <span class="text-sm text-gray-700">Required</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="hidden" name="is_translatable" value="0">
                             <input type="checkbox" name="is_translatable" value="1" x-model="editing.is_translatable"
-                                   class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                   class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                             <span class="text-sm text-gray-700">Translatable <span class="text-xs text-gray-500">(per-language values)</span></span>
                         </label>
                     </div>
@@ -271,7 +271,7 @@
                 {{-- Modal footer --}}
                 <div class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-100 shrink-0">
                     <button type="button" @click="closeModal()" class="text-sm text-gray-600 hover:text-gray-900 px-3 py-2">Cancel</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
+                    <button type="submit" class="bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors"
                             x-text="editing.id ? 'Save field' : 'Add field'"></button>
                 </div>
             </form>
@@ -280,7 +280,7 @@
 
     {{-- Delete forms (rendered once per field, submitted on confirm) --}}
     @foreach($group->fields as $f)
-    <form id="delete-field-{{ $f->id }}" method="POST" action="{{ route('cms.admin.fields.destroy', $f->id) }}" class="hidden">
+    <form id="delete-field-{{ $f->id }}" method="POST" action="{{ route('contensio.account.fields.destroy', $f->id) }}" class="hidden">
         @csrf @method('DELETE')
     </form>
     @endforeach
@@ -301,7 +301,8 @@ function fieldsBuilder(initialFields) {
             } : {}),
         })),
         modalOpen: false,
-        editing: this.blank(),
+        editing: {},
+        init() { this.editing = this.blank(); },
         types: [
             { value: 'text',         label: 'Text (single line)' },
             { value: 'textarea',     label: 'Textarea (multi-line)' },

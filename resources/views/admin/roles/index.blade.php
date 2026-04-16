@@ -8,27 +8,27 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Roles')
 
 @section('breadcrumb')
-<a href="{{ route('cms.admin.users.index') }}" class="text-gray-400 hover:text-gray-700">Users</a>
+<a href="{{ route('contensio.account.settings.index') }}" class="text-gray-400 hover:text-gray-700">Configuration</a>
 <span class="mx-2 text-gray-300">/</span>
-<span class="font-medium text-gray-700">Roles</span>
+<span class="font-medium text-gray-700">Roles &amp; Permissions</span>
 @endsection
 
 @section('content')
 
-<div class="max-w-6xl mx-auto">
+<div>
 
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-bold text-gray-900">Roles & Permissions</h1>
             <p class="text-sm text-gray-500 mt-0.5">Control what each type of user can do. Use core roles as-is, edit their permissions, or create custom roles.</p>
         </div>
-        <a href="{{ route('cms.admin.roles.create') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+        <a href="{{ route('contensio.account.roles.create') }}"
+           class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -71,11 +71,15 @@
                     $permsCount = $role->permissions->count();
                     $hasStar    = $role->permissions->contains('name', '*');
                 @endphp
-                <tr class="hover:bg-blue-50/40 transition-colors group">
+                <tr class="hover:bg-blue-50/40 transition-colors">
                     <td class="px-4 py-3.5">
-                        <a href="{{ route('cms.admin.roles.edit', $role->id) }}" class="font-semibold text-gray-900 hover:text-blue-600">
+                        @if($hasStar && $role->is_system)
+                        <span class="font-semibold text-gray-900">{{ $label }}</span>
+                        @else
+                        <a href="{{ route('contensio.account.roles.edit', $role->id) }}" class="font-semibold text-gray-900 hover:text-blue-600">
                             {{ $label }}
                         </a>
+                        @endif
                         @if($desc)
                         <p class="text-xs text-gray-500 mt-0.5 max-w-md">{{ $desc }}</p>
                         @endif
@@ -111,18 +115,19 @@
                         {{ $role->users_count }}
                     </td>
                     <td class="px-4 py-3.5">
-                        <div class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href="{{ route('cms.admin.roles.edit', $role->id) }}"
-                               class="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                               title="Edit role">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if(! ($hasStar && $role->is_system))
+                        <div class="flex items-center gap-2 justify-end">
+                            <a href="{{ route('contensio.account.roles.edit', $role->id) }}"
+                               class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                 </svg>
+                                Edit
                             </a>
                             @if(! $role->is_system && ! $role->plugin_name)
                             <form id="delete-role-{{ $role->id }}" method="POST"
-                                  action="{{ route('cms.admin.roles.destroy', $role->id) }}"
+                                  action="{{ route('contensio.account.roles.destroy', $role->id) }}"
                                   class="hidden">
                                 @csrf @method('DELETE')
                             </form>
@@ -133,15 +138,16 @@
                                         confirmLabel: 'Delete',
                                         formId: 'delete-role-{{ $role->id }}'
                                     })"
-                                    class="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                    title="Delete role">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 px-2.5 py-1.5 rounded transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                 </svg>
+                                Delete
                             </button>
                             @endif
                         </div>
+                        @endif
                     </td>
                 </tr>
                 @endforeach

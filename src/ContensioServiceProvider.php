@@ -26,56 +26,58 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms;
+namespace Contensio;
 
-use Contensio\Cms\Console\Commands\InstallCommand;
-use Contensio\Cms\Console\Commands\SeedBlockTypesCommand;
-use Contensio\Cms\Http\Middleware\AdminAuthenticate;
-use Contensio\Cms\Http\Middleware\HandleRedirects;
-use Contensio\Cms\Http\Middleware\RequireAdminRole;
-use Contensio\Cms\Http\Middleware\RequirePermission;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Services\Install\EnvWriter;
-use Contensio\Cms\Services\Install\RequirementsChecker;
-use Contensio\Cms\Support\AccessControl;
-use Contensio\Cms\Support\AdminNavigation;
-use Contensio\Cms\Support\EmailConfig;
-use Contensio\Cms\Support\FortifyIntegration;
-use Contensio\Cms\Support\PluginRegistry;
-use Contensio\Cms\Support\ThemeRegistry;
+use Contensio\Console\Commands\InstallCommand;
+use Contensio\Console\Commands\SeedBlockTypesCommand;
+use Contensio\Http\Middleware\AdminAuthenticate;
+use Contensio\Http\Middleware\HandleRedirects;
+use Contensio\Http\Middleware\RequireAdminRole;
+use Contensio\Http\Middleware\RequirePermission;
+use Contensio\Models\ContentType;
+use Contensio\Services\Install\EnvWriter;
+use Contensio\Services\Install\Installer;
+use Contensio\Services\Install\RequirementsChecker;
+use Contensio\Support\AccessControl;
+use Contensio\Support\AdminNavigation;
+use Contensio\Support\EmailConfig;
+use Contensio\Support\FortifyIntegration;
+use Contensio\Support\PluginRegistry;
+use Contensio\Support\ThemeRegistry;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
-class CmsServiceProvider extends ServiceProvider
+class ContensioServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/cms.php', 'cms');
+        $this->mergeConfigFrom(__DIR__ . '/../config/contensio.php', 'contensio');
 
         // Autoload global helpers (theme_asset(), etc.)
         require_once __DIR__ . '/helpers.php';
 
         // Register core block type definitions.
-        // Plugins can extend this by merging into 'cms.blocks' in their own service providers.
-        $this->app['config']->set('cms.blocks', array_merge(
+        // Plugins can extend this by merging into 'contensio.blocks' in their own service providers.
+        $this->app['config']->set('contensio.blocks', array_merge(
             require __DIR__ . '/../config/blocks.php',
-            $this->app['config']->get('cms.blocks', [])
+            $this->app['config']->get('contensio.blocks', [])
         ));
 
         $this->app->singleton(RequirementsChecker::class);
         $this->app->singleton(EnvWriter::class);
+        $this->app->singleton(Installer::class);
     }
 
     public function boot(): void
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'cms');
-        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'cms');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'contensio');
+        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'contensio');
 
-        $this->app['router']->aliasMiddleware('cms.auth', AdminAuthenticate::class);
-        $this->app['router']->aliasMiddleware('cms.admin', RequireAdminRole::class);
-        $this->app['router']->aliasMiddleware('cms.permission', RequirePermission::class);
+        $this->app['router']->aliasMiddleware('contensio.auth', AdminAuthenticate::class);
+        $this->app['router']->aliasMiddleware('contensio.admin', RequireAdminRole::class);
+        $this->app['router']->aliasMiddleware('contensio.permission', RequirePermission::class);
 
         // Global: serve admin-configured URL redirects on every public request.
         // Prepended so it runs before route resolution — an existing page with
@@ -84,7 +86,7 @@ class CmsServiceProvider extends ServiceProvider
 
         // Always load install routes — the controller guards each step internally.
         // This ensures /install/complete is reachable after storeAccount() writes
-        // CMS_INSTALLED=true and redirects (which would be a new request).
+        // CONTENSIO_INSTALLED=true and redirects (which would be a new request).
         $this->loadRoutesFrom(__DIR__ . '/../routes/install.php');
 
         if ($this->isInstalled()) {
@@ -163,7 +165,7 @@ class CmsServiceProvider extends ServiceProvider
             }
 
             // Share custom content types with the admin layout for the sidebar
-            View::composer('cms::admin.layout', function ($view) {
+            View::composer('contensio::admin.layout', function ($view) {
                 try {
                     $view->with('customContentTypes',
                         ContentType::where('is_system', false)
@@ -184,24 +186,24 @@ class CmsServiceProvider extends ServiceProvider
             ]);
 
             $this->publishes([
-                __DIR__ . '/../config/cms.php' => config_path('cms.php'),
-            ], 'cms-config');
+                __DIR__ . '/../config/contensio.php' => config_path('contensio.php'),
+            ], 'contensio-config');
 
             $this->publishes([
-                __DIR__ . '/../resources/views' => resource_path('views/vendor/cms'),
-            ], 'cms-views');
+                __DIR__ . '/../resources/views' => resource_path('views/vendor/contensio'),
+            ], 'contensio-views');
 
             $this->publishes([
-                __DIR__ . '/../public' => public_path('vendor/cms'),
-            ], 'cms-assets');
+                __DIR__ . '/../public' => public_path('vendor/contensio'),
+            ], 'contensio-assets');
 
             $this->publishes([
-                __DIR__ . '/../lang' => $this->app->langPath('vendor/cms'),
-            ], 'cms-lang');
+                __DIR__ . '/../lang' => $this->app->langPath('vendor/contensio'),
+            ], 'contensio-lang');
 
             $this->publishesMigrations([
                 __DIR__ . '/../database/migrations' => database_path('migrations'),
-            ], 'cms-migrations');
+            ], 'contensio-migrations');
         }
 
         AboutCommand::add('Contensio', fn () => [
@@ -212,6 +214,6 @@ class CmsServiceProvider extends ServiceProvider
 
     private function isInstalled(): bool
     {
-        return (bool) env('CMS_INSTALLED', false);
+        return (bool) env('CONTENSIO_INSTALLED', false);
     }
 }

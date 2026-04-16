@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Users')
 
@@ -18,15 +18,15 @@
 
 @section('content')
 
-<div class="max-w-6xl mx-auto">
+<div>
 
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-bold text-gray-900">Users</h1>
             <p class="text-sm text-gray-500 mt-0.5">Manage who can access the admin panel and what they can do.</p>
         </div>
-        <a href="{{ route('cms.admin.users.create') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+        <a href="{{ route('contensio.account.users.create') }}"
+           class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -65,16 +65,25 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($users as $user)
-                <tr class="hover:bg-blue-50/40 transition-colors group">
+                @php
+                    $thumbPath = $user->avatar_path
+                        ? dirname($user->avatar_path) . '/thumb_' . basename($user->avatar_path)
+                        : null;
+                @endphp
+                <tr class="hover:bg-blue-50/40 transition-colors">
                     <td class="px-4 py-3.5">
                         <div class="flex items-center gap-3">
+                            @if($thumbPath)
+                            <img src="{{ asset('storage/' . $thumbPath) }}"
+                                 class="w-8 h-8 rounded-full object-cover shrink-0"
+                                 alt="{{ $user->name }}">
+                            @else
                             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
                             </div>
+                            @endif
                             <div class="min-w-0">
-                                <a href="{{ route('cms.admin.users.edit', $user->id) }}" class="font-semibold text-gray-900 hover:text-blue-600 truncate">
-                                    {{ $user->name }}
-                                </a>
+                                <span class="font-semibold text-gray-900">{{ $user->name }}</span>
                                 @if($user->id === auth()->id())
                                 <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">you</span>
                                 @endif
@@ -101,18 +110,18 @@
                     </td>
                     <td class="px-4 py-3.5 text-xs text-gray-500">{{ $user->created_at?->format('M d, Y') }}</td>
                     <td class="px-4 py-3.5">
-                        <div class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href="{{ route('cms.admin.users.edit', $user->id) }}"
-                               class="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                               title="Edit user">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center gap-2 justify-end">
+                            <a href="{{ route('contensio.account.users.edit', $user->id) }}"
+                               class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                                 </svg>
+                                Edit
                             </a>
                             @if($user->id !== auth()->id())
                             <form id="delete-user-{{ $user->id }}" method="POST"
-                                  action="{{ route('cms.admin.users.destroy', $user->id) }}"
+                                  action="{{ route('contensio.account.users.destroy', $user->id) }}"
                                   class="hidden">
                                 @csrf @method('DELETE')
                             </form>
@@ -139,14 +148,6 @@
         </table>
     </div>
 
-    <div class="mt-6 flex items-center justify-between text-sm">
-        <a href="{{ route('cms.admin.roles.index') }}" class="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1.5">
-            Manage roles and permissions
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-        </a>
-    </div>
 
 </div>
 

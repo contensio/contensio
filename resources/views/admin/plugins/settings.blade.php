@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Plugin settings — ' . ($plugin['meta']['label'] ?? $name))
 
 @section('breadcrumb')
-<a href="{{ route('cms.admin.plugins.index') }}" class="text-gray-400 hover:text-gray-700">Plugins</a>
+<a href="{{ route('contensio.account.plugins.index') }}" class="text-gray-400 hover:text-gray-700">Plugins</a>
 <span class="mx-2 text-gray-300">/</span>
 <span class="font-medium text-gray-700">Settings</span>
 @endsection
@@ -42,7 +42,7 @@
             <p class="text-sm text-gray-500 mt-0.5 font-mono">{{ $name }}</p>
         </div>
 
-        <a href="{{ route('cms.admin.plugins.index') }}"
+        <a href="{{ route('contensio.account.plugins.index') }}"
            class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800
                   border border-gray-300 bg-white hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('cms.admin.plugins.settings.save') }}">
+    <form method="POST" action="{{ route('contensio.account.plugins.settings.save') }}">
         @csrf
         <input type="hidden" name="plugin" value="{{ $name }}">
 
@@ -104,7 +104,7 @@
 
                         <div class="px-6 py-5 space-y-5">
                             @foreach($section['fields'] ?? [] as $field)
-                                @include('cms::admin.themes.partials.field', [
+                                @include('contensio::admin.themes.partials.field', [
                                     'field' => $field,
                                     'value' => $values[$field['key']] ?? ($field['default'] ?? null),
                                 ])
@@ -116,7 +116,7 @@
                     {{-- Actions --}}
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex items-center justify-between">
 
-                        <form id="reset-plugin-form" method="POST" action="{{ route('cms.admin.plugins.settings.reset') }}" class="hidden">
+                        <form id="reset-plugin-form" method="POST" action="{{ route('contensio.account.plugins.settings.reset') }}" class="hidden">
                             @csrf
                             <input type="hidden" name="plugin" value="{{ $name }}">
                         </form>
@@ -132,7 +132,7 @@
                         </button>
 
                         <button type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
+                                class="bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
                             Save Changes
                         </button>
                     </div>

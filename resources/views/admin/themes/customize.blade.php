@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Customize ' . ($theme['meta']['label'] ?? $name))
 
 @section('breadcrumb')
-<a href="{{ route('cms.admin.themes.index') }}" class="text-gray-400 hover:text-gray-700">Themes</a>
+<a href="{{ route('contensio.account.themes.index') }}" class="text-gray-400 hover:text-gray-700">Themes</a>
 <span class="mx-2 text-gray-300">/</span>
 <span class="font-medium text-gray-700">Customize</span>
 @endsection
@@ -79,7 +79,7 @@
     </div>
     @else
 
-    <form method="POST" action="{{ route('cms.admin.themes.customize.save') }}">
+    <form method="POST" action="{{ route('contensio.account.themes.customize.save') }}">
         @csrf
 
         <div class="grid grid-cols-12 gap-6">
@@ -123,7 +123,7 @@
 
                         <div class="px-6 py-5 space-y-5">
                             @foreach($section['fields'] ?? [] as $field)
-                                @include('cms::admin.themes.partials.field', [
+                                @include('contensio::admin.themes.partials.field', [
                                     'field' => $field,
                                     'value' => $values[$field['key']] ?? ($field['default'] ?? null),
                                 ])
@@ -139,7 +139,7 @@
                         {{-- Reset --}}
                         <form id="reset-theme-form"
                               method="POST"
-                              action="{{ route('cms.admin.themes.customize.reset') }}"
+                              action="{{ route('contensio.account.themes.customize.reset') }}"
                               class="hidden">
                             @csrf
                         </form>
@@ -156,7 +156,7 @@
 
                         {{-- Save --}}
                         <button type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                                class="bg-ember-500 hover:bg-ember-600 text-white font-semibold
                                        text-sm px-5 py-2.5 rounded-lg transition-colors">
                             Save Changes
                         </button>

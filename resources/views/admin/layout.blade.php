@@ -14,7 +14,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', __('cms::admin.dashboard.title')) — {{ config('cms.name', 'Contensio') }}</title>
+    <title>@yield('title', __('contensio::admin.dashboard.title')) — {{ config('contensio.name', 'Contensio') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset(config('contensio.admin_favicon', 'vendor/contensio/img/favicon128x128.png')) }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -22,6 +23,11 @@
                 extend: {
                     fontSize: {
                         'sm': ['0.9375rem', { lineHeight: '1.5rem' }],
+                    },
+                    colors: {
+                        'ember-500': '#d04a1f',
+                        'ember-600': '#b23e18',
+                        'ember-700': '#8f3112',
                     }
                 }
             }
@@ -55,13 +61,11 @@
         :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
 
         {{-- Logo --}}
-        <div class="flex items-center gap-2.5 px-4 h-16 border-b border-slate-700/50 shrink-0">
-            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-            </div>
-            <span class="text-white font-semibold text-sm tracking-tight">{{ config('cms.name', 'Contensio') }}</span>
+        <div class="flex items-center px-4 h-16 border-b border-slate-700/50 shrink-0">
+            <a href="{{ route('contensio.account.dashboard') }}" class="inline-flex items-center">
+                <img src="{{ asset(config('contensio.admin_logo_dark', 'vendor/contensio/img/logo-backend.png')) }}"
+                     alt="{{ config('contensio.name', 'Contensio') }}">
+            </a>
         </div>
 
         {{-- Navigation --}}
@@ -70,10 +74,10 @@
             // plugins stack beneath via placement=appearance.
             $appearanceChildren = array_merge(
                 [
-                    ['label' => 'Themes', 'icon' => 'bi-palette',   'route' => 'cms.admin.themes.index'],
-                    ['label' => 'Menus',  'icon' => 'bi-list-task', 'route' => 'cms.admin.menus.index'],
+                    ['label' => 'Themes', 'icon' => 'bi-palette',   'route' => 'contensio.account.themes.index'],
+                    ['label' => 'Menus',  'icon' => 'bi-list-task', 'route' => 'contensio.account.menus.index'],
                 ],
-                \Contensio\Cms\Support\AdminNavigation::appearanceItems()
+                \Contensio\Support\AdminNavigation::appearanceItems()
             );
 
             // Collapsible "Tools" children — Import/Export is built-in;
@@ -82,9 +86,9 @@
                 [[
                     'label' => 'Import / Export',
                     'icon'  => 'bi-arrow-left-right',
-                    'route' => 'cms.admin.tools.import-export',
+                    'route' => 'contensio.account.tools.import-export',
                 ]],
-                \Contensio\Cms\Support\AdminNavigation::toolsItems()
+                \Contensio\Support\AdminNavigation::toolsItems()
             );
 
             // Filter each list by permission + determine auto-open state
@@ -105,55 +109,55 @@
             [$appearanceChildren, $appearanceOpen] = $filterAndOpen($appearanceChildren);
             [$toolsChildren,      $toolsOpen]      = $filterAndOpen($toolsChildren);
 
-            $rootPluginItems = \Contensio\Cms\Support\AdminNavigation::rootItems();
+            $rootPluginItems = \Contensio\Support\AdminNavigation::rootItems();
         @endphp
 
         <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
 
             {{-- Dashboard --}}
-            <a href="{{ route('cms.admin.dashboard') }}"
+            <a href="{{ route('contensio.account.dashboard') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.dashboard')
+                      {{ request()->routeIs('contensio.account.dashboard')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                 </svg>
-                {{ __('cms::admin.nav.dashboard') }}
+                {{ __('contensio::admin.nav.dashboard') }}
             </a>
 
-            <a href="{{ route('cms.admin.pages.index') }}"
+            <a href="{{ route('contensio.account.pages.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.pages*')
+                      {{ request()->routeIs('contensio.account.pages*')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                {{ __('cms::admin.nav.pages') }}
+                {{ __('contensio::admin.nav.pages') }}
             </a>
 
-            <a href="{{ route('cms.admin.posts.index') }}"
+            <a href="{{ route('contensio.account.posts.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.posts*')
+                      {{ request()->routeIs('contensio.account.posts*')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
-                {{ __('cms::admin.nav.posts') }}
+                {{ __('contensio::admin.nav.posts') }}
             </a>
 
             @foreach($customContentTypes ?? [] as $ct)
             @php
                 $ctTrans  = $ct->translations->first();
                 $ctPlural = $ctTrans?->labels['plural'] ?? ucfirst($ct->name);
-                $ctActive = request()->routeIs('cms.admin.content.*') && request()->route('type') === $ct->name;
+                $ctActive = request()->routeIs('contensio.account.content.*') && request()->route('type') === $ct->name;
             @endphp
-            <a href="{{ route('cms.admin.content.index', $ct->name) }}"
+            <a href="{{ route('contensio.account.content.index', $ct->name) }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                       {{ $ctActive ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 @if($ct->icon)
@@ -168,16 +172,16 @@
             </a>
             @endforeach
 
-            <a href="{{ route('cms.admin.media.index') }}"
+            <a href="{{ route('contensio.account.media.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.media*')
+                      {{ request()->routeIs('contensio.account.media*')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                {{ __('cms::admin.nav.media_library') }}
+                {{ __('contensio::admin.nav.media_library') }}
             </a>
 
             {{-- Appearance — collapsible; Themes + Menus are built-in, plugins with placement=appearance stack beneath --}}
@@ -187,7 +191,7 @@
                         class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
                                text-slate-400 hover:text-white hover:bg-slate-800">
                     <i class="bi bi-palette w-4 shrink-0 text-center text-base leading-none"></i>
-                    <span class="flex-1 text-left">{{ __('cms::admin.nav.appearance') }}</span>
+                    <span class="flex-1 text-left">{{ __('contensio::admin.nav.appearance') }}</span>
                     <svg class="w-3 h-3 shrink-0 transition-transform" :class="open ? 'rotate-90' : ''"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -282,40 +286,24 @@
                 </a>
             @endforeach
 
-            {{-- Users & Roles — only visible to users with users.view permission --}}
-            @if(auth()->user()?->hasPermission('users.view') || auth()->user()?->hasPermission('roles.manage'))
+            {{-- Users --}}
             @if(auth()->user()?->hasPermission('users.view'))
-            <a href="{{ route('cms.admin.users.index') }}"
+            <a href="{{ route('contensio.account.users.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.users*')
+                      {{ request()->routeIs('contensio.account.users*')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
-                {{ __('cms::admin.nav.users') }}
+                {{ __('contensio::admin.nav.users') }}
             </a>
             @endif
 
-            @if(auth()->user()?->hasPermission('roles.manage'))
-            <a href="{{ route('cms.admin.roles.index') }}"
+            <a href="{{ route('contensio.account.settings.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.roles*')
-                          ? 'bg-slate-700 text-white'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                </svg>
-                Roles &amp; Permissions
-            </a>
-            @endif
-            @endif
-
-            <a href="{{ route('cms.admin.settings.index') }}"
-               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.settings*') || request()->routeIs('cms.admin.languages*') || request()->routeIs('cms.admin.content-types*') || request()->routeIs('cms.admin.taxonomies*')
+                      {{ request()->routeIs('contensio.account.settings*') || request()->routeIs('contensio.account.languages*') || request()->routeIs('contensio.account.content-types*') || request()->routeIs('contensio.account.taxonomies*')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -326,16 +314,16 @@
                 Configuration
             </a>
 
-            <a href="{{ route('cms.admin.plugins.index') }}"
+            <a href="{{ route('contensio.account.plugins.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                      {{ request()->routeIs('cms.admin.plugins*')
+                      {{ request()->routeIs('contensio.account.plugins*')
                           ? 'bg-slate-700 text-white'
                           : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                 </svg>
-                {{ __('cms::admin.nav.plugins') }}
+                {{ __('contensio::admin.nav.plugins') }}
             </a>
 
         </nav>
@@ -343,9 +331,14 @@
         {{-- Sidebar footer: current user --}}
         <div class="shrink-0 px-3 py-3 border-t border-slate-700/50">
             <div class="flex items-center gap-2.5 px-2 py-1.5">
-                <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                @if(auth()->user()->avatar_path)
+                <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt=""
+                     class="w-7 h-7 rounded-full object-cover shrink-0">
+                @else
+                <div class="w-7 h-7 rounded-full bg-ember-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
+                @endif
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-white truncate">{{ auth()->user()->name }}</p>
                     <p class="text-xs text-slate-500 truncate">{{ auth()->user()->email }}</p>
@@ -381,16 +374,21 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                 </svg>
-                {{ __('cms::admin.header.view_site') }}
+                {{ __('contensio::admin.header.view_site') }}
             </a>
 
             {{-- User menu --}}
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open"
                         class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div class="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">
+                    @if(auth()->user()->avatar_path)
+                    <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}" alt=""
+                         class="w-7 h-7 rounded-full object-cover">
+                    @else
+                    <div class="w-7 h-7 rounded-full bg-ember-500 flex items-center justify-center text-white text-xs font-semibold">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
+                    @endif
                     <span class="hidden sm:block text-sm font-medium text-gray-700">{{ auth()->user()->name }}</span>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -406,15 +404,15 @@
                      x-transition:leave-end="opacity-0 scale-95"
                      @click.outside="open = false"
                      class="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
-                    <a href="{{ route('cms.admin.profile') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('contensio.account.profile') }}" class="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                         <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                         </svg>
-                        {{ __('cms::admin.header.my_profile') }}
+                        {{ __('contensio::admin.header.my_profile') }}
                     </a>
                     <div class="border-t border-gray-100 my-1"></div>
-                    <form method="POST" action="{{ route('cms.logout') }}">
+                    <form method="POST" action="{{ route('contensio.logout') }}">
                         @csrf
                         <button type="submit"
                                 class="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
@@ -422,7 +420,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                             </svg>
-                            {{ __('cms::admin.header.sign_out') }}
+                            {{ __('contensio::admin.header.sign_out') }}
                         </button>
                     </form>
                 </div>
@@ -437,8 +435,8 @@
 
         {{-- Footer --}}
         <footer class="px-6 py-3 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
-            <span>{{ config('cms.name', 'Contensio') }}</span>
-            <span>{{ __('cms::admin.footer.version', ['version' => '1.0.0']) }}</span>
+            <span>{{ config('contensio.name', 'Contensio') }}</span>
+            <span>{{ __('contensio::admin.footer.version', ['version' => '1.0.0']) }}</span>
         </footer>
 
     </div>
@@ -446,13 +444,13 @@
     @stack('scripts')
 
     {{-- ─── Icon picker modal ──────────────────────────────────────────────────── --}}
-    @include('cms::admin.partials.icon-picker-modal')
+    @include('contensio::admin.partials.icon-picker-modal')
 
     {{-- ─── Media Library picker modal ─────────────────────────────────────────── --}}
-    @include('cms::admin.partials.media-picker')
+    @include('contensio::admin.partials.media-picker')
 
     {{-- ─── Rich Text Editor (Tiptap) — loaded once; opts-in per textarea via window.initRTE() ─── --}}
-    @include('cms::admin.partials.rich-text-editor')
+    @include('contensio::admin.partials.rich-text-editor')
 
     {{-- ─── Confirmation modal ───────────────────────────────────────────────── --}}
     {{--

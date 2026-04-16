@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::auth.partials.layout')
+@extends('contensio::auth.partials.layout')
 @section('title', 'Verify your email')
 
 @section('card')
@@ -38,12 +38,12 @@
     <form method="POST" action="{{ route('verification.send') }}">
         @csrf
         <button type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg transition-colors">
+            class="w-full bg-[#d04a1f] hover:bg-[#b23e18] text-white font-medium text-sm py-2.5 rounded-lg transition-colors">
             Resend verification email
         </button>
     </form>
 
-    <form method="POST" action="{{ route('cms.logout') }}" class="mt-3">
+    <form method="POST" action="{{ route('contensio.logout') }}" class="mt-3">
         @csrf
         <button type="submit"
             class="w-full text-sm text-gray-500 hover:text-gray-700 font-medium py-2">

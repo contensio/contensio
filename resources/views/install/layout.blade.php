@@ -13,21 +13,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('cms::install.title') }}</title>
+    <title>{{ __('contensio::install.title') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset(config('contensio.admin_favicon', 'vendor/contensio/img/favicon128x128.png')) }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'ember-500': '#d04a1f',
+                        'ember-600': '#b23e18',
+                        'ember-700': '#8f3112',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen" style="background-color: #fbf8f0;">
 
     {{-- Header --}}
     <div class="bg-white border-b border-gray-200">
-        <div class="max-w-2xl mx-auto px-4 py-5 flex items-center gap-3">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg>
-            </div>
-            <span class="font-semibold text-gray-900">{{ config('cms.name', 'Contensio') }}</span>
-            <span class="text-gray-400 text-sm ml-1">{{ __('cms::install.installation') }}</span>
+        <div class="max-w-2xl mx-auto px-4 py-5 flex items-center justify-center">
+            <img src="{{ asset(config('contensio.admin_logo', 'vendor/contensio/img/logo.png')) }}"
+                 alt="{{ config('contensio.name', 'Contensio') }}">
         </div>
     </div>
 
@@ -37,15 +46,15 @@
         <div class="max-w-2xl mx-auto px-4 py-4">
             <div class="flex items-center gap-2">
                 @foreach([
-                    1 => __('cms::install.steps.database'),
-                    2 => __('cms::install.steps.website'),
-                    3 => __('cms::install.steps.account'),
-                    4 => __('cms::install.steps.done'),
+                    1 => __('contensio::install.steps.database'),
+                    2 => __('contensio::install.steps.website'),
+                    3 => __('contensio::install.steps.account'),
+                    4 => __('contensio::install.steps.done'),
                 ] as $num => $label)
                     <div class="flex items-center gap-2 {{ $num < 4 ? 'flex-1' : '' }}">
                         <div class="flex items-center gap-2">
                             <div class="w-7 h-7 rounded-full flex items-center justify-center text-sm font-medium
-                                {{ $currentStep > $num ? 'bg-green-500 text-white' : ($currentStep == $num ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500') }}">
+                                {{ $currentStep > $num ? 'bg-green-500 text-white' : ($currentStep == $num ? 'bg-ember-500 text-white' : 'bg-gray-200 text-gray-500') }}">
                                 @if($currentStep > $num)
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 @else

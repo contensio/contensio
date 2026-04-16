@@ -8,14 +8,14 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', $taxonomy ? 'Edit Taxonomy' : 'New Taxonomy')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
-    <a href="{{ route('cms.admin.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
+    <a href="{{ route('contensio.account.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">{{ $taxonomy ? 'Edit Taxonomy' : 'New Taxonomy' }}</span>
 @endsection
@@ -48,8 +48,8 @@
 
     <form method="POST"
           action="{{ $taxonomy
-              ? route('cms.admin.taxonomies.update', [$type->id, $taxonomy->id])
-              : route('cms.admin.taxonomies.store', $type->id) }}">
+              ? route('contensio.account.taxonomies.update', [$type->id, $taxonomy->id])
+              : route('contensio.account.taxonomies.store', $type->id) }}">
         @csrf
         @if($taxonomy) @method('PUT') @endif
 
@@ -133,7 +133,7 @@
                                        x-model="singular"
                                        @input="generate()"
                                        placeholder="e.g. Topic"
-                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                                 @error("translations.{$lang->id}.singular")
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -149,7 +149,7 @@
                                        x-model="plural"
                                        @input="generate()"
                                        placeholder="e.g. Topics"
-                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                                 @error("translations.{$lang->id}.plural")
                                 <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -169,7 +169,7 @@
                                        x-model="slug"
                                        @input="slugTouched = true"
                                        placeholder="topics"
-                                       class="flex-1 rounded-r border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       class="flex-1 rounded-r border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                        {{ $isDefault ? 'required' : '' }}>
                             </div>
                             @error("translations.{$lang->id}.slug")
@@ -207,7 +207,7 @@
                                            name="translations[{{ $lang->id }}][labels][{{ $key }}]"
                                            x-model="lbl.{{ $key }}"
                                            @input="lblTouched.{{ $key }} = true"
-                                           class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                                 </div>
                                 @endforeach
                             </div>
@@ -230,7 +230,7 @@
                            name="is_hierarchical"
                            value="1"
                            {{ old('is_hierarchical', $taxonomy?->is_hierarchical) ? 'checked' : '' }}
-                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                     <div>
                         <p class="text-sm font-medium text-gray-700">Hierarchical</p>
                         <p class="text-xs text-gray-400 mt-0.5">Terms can have parent/child relationships (like categories). Leave unchecked for flat tags.</p>
@@ -241,13 +241,13 @@
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
+                    class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 {{ $taxonomy ? 'Save Changes' : 'Create Taxonomy' }}
             </button>
-            <a href="{{ route('cms.admin.content-types.index') }}"
+            <a href="{{ route('contensio.account.content-types.index') }}"
                class="text-sm font-medium text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-md hover:bg-gray-100 transition-colors">
                 Cancel
             </a>

@@ -14,7 +14,7 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Middleware;
+namespace Contensio\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
  * Enforce a specific permission on a route.
  *
  * Usage:
- *   Route::get(...)->middleware('cms.permission:users.view')
+ *   Route::get(...)->middleware('contensio.permission:users.view')
  *
  * If the user lacks the permission, a 403 is returned with a helpful message.
  */

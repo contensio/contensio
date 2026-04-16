@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::auth.partials.layout')
+@extends('contensio::auth.partials.layout')
 @section('title', 'Confirm password')
 
 @section('card')
@@ -33,7 +33,7 @@
         </div>
 
         <button type="submit"
-            class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm
+            class="w-full mt-6 bg-[#d04a1f] hover:bg-[#b23e18] text-white font-medium text-sm
                    py-2.5 rounded-lg transition-colors">
             Confirm
         </button>

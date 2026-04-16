@@ -22,9 +22,9 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Models\Redirect as RedirectModel;
+use Contensio\Models\Redirect as RedirectModel;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -43,12 +43,12 @@ class RedirectController extends Controller
             ->paginate(30)
             ->withQueryString();
 
-        return view('cms::admin.redirects.index', compact('redirects', 'q'));
+        return view('contensio::admin.redirects.index', compact('redirects', 'q'));
     }
 
     public function create()
     {
-        return view('cms::admin.redirects.form', [
+        return view('contensio::admin.redirects.form', [
             'redirect' => new RedirectModel(['status_code' => 301]),
         ]);
     }
@@ -59,14 +59,14 @@ class RedirectController extends Controller
 
         RedirectModel::create($data);
 
-        return redirect()->route('cms.admin.redirects.index')->with('success', 'Redirect created.');
+        return redirect()->route('contensio.account.redirects.index')->with('success', 'Redirect created.');
     }
 
     public function edit(int $id)
     {
         $redirect = RedirectModel::findOrFail($id);
 
-        return view('cms::admin.redirects.form', compact('redirect'));
+        return view('contensio::admin.redirects.form', compact('redirect'));
     }
 
     public function update(Request $request, int $id)
@@ -74,14 +74,14 @@ class RedirectController extends Controller
         $redirect = RedirectModel::findOrFail($id);
         $redirect->update($this->validated($request, $redirect->id));
 
-        return redirect()->route('cms.admin.redirects.index')->with('success', 'Redirect updated.');
+        return redirect()->route('contensio.account.redirects.index')->with('success', 'Redirect updated.');
     }
 
     public function destroy(int $id)
     {
         RedirectModel::where('id', $id)->delete();
 
-        return redirect()->route('cms.admin.redirects.index')->with('success', 'Redirect deleted.');
+        return redirect()->route('contensio.account.redirects.index')->with('success', 'Redirect deleted.');
     }
 
     protected function validated(Request $request, ?int $ignoreId = null): array

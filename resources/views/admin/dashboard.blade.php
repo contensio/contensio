@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Dashboard')
 
@@ -23,9 +23,9 @@
     $editRouteFor = function ($item) {
         $type = $item->contentType?->name;
         return match ($type) {
-            'page'  => route('cms.admin.pages.edit',   $item->id),
-            'post'  => route('cms.admin.posts.edit',   $item->id),
-            default => route('cms.admin.content.edit', [$type ?: 'page', $item->id]),
+            'page'  => route('contensio.account.pages.edit',   $item->id),
+            'post'  => route('contensio.account.posts.edit',   $item->id),
+            default => route('contensio.account.content.edit', [$type ?: 'page', $item->id]),
         };
     };
 
@@ -44,21 +44,21 @@
         <p class="text-sm text-gray-500 mt-0.5">Here's what's happening on your site.</p>
     </div>
     <div class="flex items-center gap-2">
-        <a href="{{ route('cms.admin.pages.create') }}"
-           class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors">
+        <a href="{{ route('contensio.account.pages.create') }}"
+           class="inline-flex items-center gap-1.5 bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-3 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             New page
         </a>
-        <a href="{{ route('cms.admin.posts.create') }}"
+        <a href="{{ route('contensio.account.posts.create') }}"
            class="inline-flex items-center gap-1.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
             New post
         </a>
-        <a href="{{ route('cms.admin.media.index') }}"
+        <a href="{{ route('contensio.account.media.index') }}"
            class="inline-flex items-center gap-1.5 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-3 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -71,7 +71,7 @@
 {{-- Stats — 5 cards, each linking to the relevant section --}}
 <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
 
-    <a href="{{ route('cms.admin.pages.index') }}"
+    <a href="{{ route('contensio.account.pages.index') }}"
        class="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm p-4 transition-all">
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Pages</span>
@@ -85,7 +85,7 @@
         <p class="text-2xl font-bold text-gray-900">{{ number_format($stats['pages']) }}</p>
     </a>
 
-    <a href="{{ route('cms.admin.posts.index') }}"
+    <a href="{{ route('contensio.account.posts.index') }}"
        class="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm p-4 transition-all">
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Posts</span>
@@ -99,7 +99,7 @@
         <p class="text-2xl font-bold text-gray-900">{{ number_format($stats['posts']) }}</p>
     </a>
 
-    <a href="{{ route('cms.admin.media.index') }}"
+    <a href="{{ route('contensio.account.media.index') }}"
        class="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm p-4 transition-all">
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Media</span>
@@ -113,7 +113,7 @@
         <p class="text-2xl font-bold text-gray-900">{{ number_format($stats['media']) }}</p>
     </a>
 
-    <a href="{{ route('cms.admin.users.index') }}"
+    <a href="{{ route('contensio.account.users.index') }}"
        class="group bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm p-4 transition-all">
         <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Users</span>
@@ -161,7 +161,7 @@
             </svg>
             <p class="text-sm font-medium text-gray-700 mb-1">Nothing published yet</p>
             <p class="text-xs text-gray-400 mb-4">Publish your first page or post to see it here.</p>
-            <a href="{{ route('cms.admin.posts.create') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">Create a post →</a>
+            <a href="{{ route('contensio.account.posts.create') }}" class="text-sm text-ember-600 hover:text-ember-700 font-medium">Create a post →</a>
         </div>
         @else
         <div class="divide-y divide-gray-100">

@@ -26,9 +26,9 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
-use Contensio\Cms\Models\Setting;
+use Contensio\Models\Setting;
 
 /**
  * Central registry for all discovered themes.
@@ -48,7 +48,7 @@ class ThemeRegistry
 
     /**
      * Discover all available themes from both sources and seed the registry.
-     * Called once in CmsServiceProvider::boot().
+     * Called once in ContensioServiceProvider::boot().
      */
     public static function discover(): void
     {
@@ -57,7 +57,7 @@ class ThemeRegistry
         // ── Themes installed in packages/themes/{vendor}/{name}/ ──────────
         // This is where ALL themes live — both the default and user-installed ones.
         // packages_path is configured in config/cms.php (default: base_path('packages')).
-        $themesRoot = rtrim(config('cms.packages_path', base_path('packages')), '/') . '/themes';
+        $themesRoot = rtrim(config('contensio.packages_path', base_path('packages')), '/') . '/themes';
 
         if (is_dir($themesRoot)) {
             foreach (glob("{$themesRoot}/*/*/theme.json") ?: [] as $manifest) {

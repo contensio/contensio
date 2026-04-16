@@ -14,7 +14,7 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Contracts\Foundation\Application;
@@ -36,7 +36,7 @@ use Laravel\Fortify\Fortify;
  *   - Registration — Contensio is admin-managed; users are created by
  *     administrators, not self-service. Fortify's register feature is off.
  *
- * Runs from CmsServiceProvider::boot() so it kicks in only when the CMS
+ * Runs from ContensioServiceProvider::boot() so it kicks in only when the CMS
  * itself is active (not during package install / before migrations).
  */
 class FortifyIntegration
@@ -64,7 +64,7 @@ class FortifyIntegration
         // ── Route paths ──────────────────────────────────────────────────
         // Keep Fortify's default paths (/forgot-password, /reset-password, etc.)
         // but point the "home" after verification to Contensio's dashboard.
-        $app['config']->set('fortify.home', '/' . ltrim(config('cms.route_prefix', 'admin'), '/'));
+        $app['config']->set('fortify.home', '/' . ltrim(config('contensio.route_prefix', 'admin'), '/'));
 
         // Contensio renders its own login — Fortify's /login route is disabled
         // by omitting Features::login(). BUT Fortify's route file unconditionally
@@ -75,19 +75,19 @@ class FortifyIntegration
 
         // ── View callbacks ───────────────────────────────────────────────
         // Fortify is headless — we register callbacks that return our Blade views.
-        Fortify::requestPasswordResetLinkView(fn () => view('cms::auth.forgot-password'));
+        Fortify::requestPasswordResetLinkView(fn () => view('contensio::auth.forgot-password'));
 
-        Fortify::resetPasswordView(fn ($request) => view('cms::auth.reset-password', [
+        Fortify::resetPasswordView(fn ($request) => view('contensio::auth.reset-password', [
             'request' => $request,
             'token'   => $request->route('token'),
             'email'   => $request->query('email'),
         ]));
 
-        Fortify::verifyEmailView(fn () => view('cms::auth.verify-email'));
+        Fortify::verifyEmailView(fn () => view('contensio::auth.verify-email'));
 
-        Fortify::confirmPasswordView(fn () => view('cms::auth.confirm-password'));
+        Fortify::confirmPasswordView(fn () => view('contensio::auth.confirm-password'));
 
-        Fortify::twoFactorChallengeView(fn () => view('cms::auth.two-factor-challenge'));
+        Fortify::twoFactorChallengeView(fn () => view('contensio::auth.two-factor-challenge'));
 
         // ── Customize password-reset email copy ──────────────────────────
         // Fortify uses Laravel's default ResetPassword notification. We
@@ -98,7 +98,7 @@ class FortifyIntegration
                 'email' => $notifiable->getEmailForPasswordReset(),
             ], false));
 
-            $siteName = config('cms.name', 'Contensio');
+            $siteName = config('contensio.name', 'Contensio');
 
             return (new MailMessage)
                 ->subject('Reset your ' . $siteName . ' password')

@@ -26,7 +26,7 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Models;
+namespace Contensio\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -80,5 +80,50 @@ class ContentType extends Model
     public function taxonomies(): BelongsToMany
     {
         return $this->belongsToMany(Taxonomy::class, 'content_type_taxonomies');
+    }
+
+    /**
+     * Return the image size configuration for this content type.
+     * Reads from content_type_meta (key: image_sizes) or falls back to
+     * the config defaults with per-type activation rules applied.
+     */
+    public function getImageSizes(): array
+    {
+        $meta = $this->meta()->where('meta_key', 'image_sizes')->first();
+
+        if ($meta && $meta->meta_value) {
+            return json_decode($meta->meta_value, true) ?? [];
+        }
+
+        return $this->defaultImageSizes();
+    }
+
+    /**
+     * Build the default image sizes for this content type from config,
+     * applying per-preset default_for rules to set the initial active state.
+     */
+    public function defaultImageSizes(): array
+    {
+        $presets = config('contensio.image_sizes', []);
+        $name    = $this->name;
+
+        return collect($presets)
+            ->map(function (array $preset, string $key) use ($name): array {
+                $defaultFor = $preset['default_for'] ?? [];
+                $active     = in_array('*', $defaultFor) || in_array($name, $defaultFor);
+
+                return [
+                    'key'        => $key,
+                    'label'      => $preset['label'],
+                    'width'      => $preset['width'],
+                    'height'     => $preset['height'],
+                    'fit'        => $preset['fit'],
+                    'quality'    => $preset['quality'],
+                    'background' => $preset['background'] ?? '#ffffff',
+                    'active'     => $active,
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

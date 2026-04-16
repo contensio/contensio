@@ -26,7 +26,7 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Middleware;
+namespace Contensio\Http\Middleware;
 
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Http\Request;
@@ -36,7 +36,7 @@ class AdminAuthenticate extends Authenticate
     protected function redirectTo(Request $request): ?string
     {
         if (! $request->expectsJson()) {
-            return route('cms.login');
+            return route('contensio.login');
         }
 
         return null;

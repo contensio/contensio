@@ -26,12 +26,12 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Contensio\Cms\Models\Language;
+use Contensio\Models\Language;
 
 class LanguageController extends Controller
 {
@@ -39,12 +39,12 @@ class LanguageController extends Controller
     {
         $languages = Language::orderBy('position')->orderBy('id')->get();
 
-        return view('cms::admin.languages.index', compact('languages'));
+        return view('contensio::admin.languages.index', compact('languages'));
     }
 
     public function create()
     {
-        return view('cms::admin.languages.form', ['language' => null]);
+        return view('contensio::admin.languages.form', ['language' => null]);
     }
 
     public function store(Request $request)
@@ -65,7 +65,7 @@ class LanguageController extends Controller
             'position'   => (Language::max('position') ?? 0) + 1,
         ]);
 
-        return redirect()->route('cms.admin.languages.index')
+        return redirect()->route('contensio.account.languages.index')
             ->with('success', "Language \"{$request->name}\" added.");
     }
 
@@ -74,10 +74,10 @@ class LanguageController extends Controller
         $language = Language::find($id);
 
         if (! $language) {
-            return redirect()->route('cms.admin.languages.index');
+            return redirect()->route('contensio.account.languages.index');
         }
 
-        return view('cms::admin.languages.form', compact('language'));
+        return view('contensio::admin.languages.form', compact('language'));
     }
 
     public function update(Request $request, int $id)
@@ -85,7 +85,7 @@ class LanguageController extends Controller
         $language = Language::find($id);
 
         if (! $language) {
-            return redirect()->route('cms.admin.languages.index');
+            return redirect()->route('contensio.account.languages.index');
         }
 
         $request->validate([
@@ -106,7 +106,7 @@ class LanguageController extends Controller
             'status'    => $request->status,
         ]);
 
-        return redirect()->route('cms.admin.languages.index')
+        return redirect()->route('contensio.account.languages.index')
             ->with('success', "Language \"{$request->name}\" saved.");
     }
 
@@ -115,24 +115,24 @@ class LanguageController extends Controller
         $language = Language::find($id);
 
         if (! $language) {
-            return redirect()->route('cms.admin.languages.index');
+            return redirect()->route('contensio.account.languages.index');
         }
 
         if ($language->is_default) {
-            return redirect()->route('cms.admin.languages.index')
+            return redirect()->route('contensio.account.languages.index')
                 ->with('error', 'Cannot delete the default language. Set another language as default first.');
         }
 
         $count = DB::table('content_translations')->where('language_id', $language->id)->count();
 
         if ($count > 0) {
-            return redirect()->route('cms.admin.languages.index')
+            return redirect()->route('contensio.account.languages.index')
                 ->with('error', "Cannot delete \"{$language->name}\" — it has {$count} content translation(s).");
         }
 
         $language->delete();
 
-        return redirect()->route('cms.admin.languages.index')
+        return redirect()->route('contensio.account.languages.index')
             ->with('success', 'Language deleted.');
     }
 
@@ -141,7 +141,7 @@ class LanguageController extends Controller
         $language = Language::find($id);
 
         if (! $language) {
-            return redirect()->route('cms.admin.languages.index');
+            return redirect()->route('contensio.account.languages.index');
         }
 
         Language::where('is_default', true)->update(['is_default' => false]);
@@ -150,7 +150,7 @@ class LanguageController extends Controller
         $status = $language->status === 'disabled' ? 'active' : $language->status;
         $language->update(['is_default' => true, 'status' => $status]);
 
-        return redirect()->route('cms.admin.languages.index')
+        return redirect()->route('contensio.account.languages.index')
             ->with('success', "\"{$language->name}\" is now the default language.");
     }
 }

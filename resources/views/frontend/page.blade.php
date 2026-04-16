@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::frontend.layout')
+@extends('contensio::frontend.layout')
 
 @section('title', ($translation->meta_title ?: $translation->title) . ' — ' . $site['name'])
 
@@ -37,7 +37,7 @@
     {{-- Blocks --}}
     <div class="space-y-6">
         @foreach($content->blocks ?? [] as $block)
-            @include('cms::frontend.partials.block', ['block' => $block, 'langId' => $lang?->id])
+            @include('contensio::frontend.partials.block', ['block' => $block, 'langId' => $lang?->id])
         @endforeach
     </div>
 

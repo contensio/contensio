@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Menus')
 
@@ -31,7 +31,7 @@
         <button type="button"
                 x-data
                 @click="$dispatch('cms:menu-create-open')"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white
                        text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -72,7 +72,7 @@
         <button type="button"
                 x-data
                 @click="$dispatch('cms:menu-create-open')"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white
                        text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             Create Menu
         </button>
@@ -98,7 +98,7 @@
                 @endphp
                 <tr class="hover:bg-blue-50/40 transition-colors group">
                     <td class="px-4 py-3.5">
-                        <a href="{{ route('cms.admin.menus.edit', $menu->id) }}"
+                        <a href="{{ route('contensio.account.menus.edit', $menu->id) }}"
                            class="font-semibold text-gray-900 hover:text-blue-600">
                             {{ $label }}
                         </a>
@@ -122,7 +122,7 @@
                     </td>
                     <td class="px-4 py-3.5">
                         <div class="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href="{{ route('cms.admin.menus.edit', $menu->id) }}"
+                            <a href="{{ route('contensio.account.menus.edit', $menu->id) }}"
                                class="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                                title="Edit menu">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@
                             </a>
 
                             <form id="delete-menu-{{ $menu->id }}" method="POST"
-                                  action="{{ route('cms.admin.menus.destroy', $menu->id) }}"
+                                  action="{{ route('contensio.account.menus.destroy', $menu->id) }}"
                                   class="hidden">
                                 @csrf @method('DELETE')
                             </form>
@@ -182,7 +182,7 @@
             <h2 class="text-lg font-bold text-gray-900 mb-1">Create Menu</h2>
             <p class="text-sm text-gray-500 mb-5">Give your menu a name. You'll add items on the next screen.</p>
 
-            <form method="POST" action="{{ route('cms.admin.menus.store') }}">
+            <form method="POST" action="{{ route('contensio.account.menus.store') }}">
                 @csrf
 
                 <label class="block text-sm font-medium text-gray-700 mb-1">Menu name</label>
@@ -193,7 +193,7 @@
                        required
                        autofocus
                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                              focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
 
                 <div class="mt-6 flex gap-3">
                     <button type="button"
@@ -203,7 +203,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                            class="flex-1 bg-ember-500 hover:bg-ember-600 text-white font-semibold
                                    text-sm px-4 py-2.5 rounded-xl transition-colors">
                         Create
                     </button>

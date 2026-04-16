@@ -9,10 +9,10 @@
  * @license  AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
  */
 
-namespace Contensio\Cms\Http\Middleware;
+namespace Contensio\Http\Middleware;
 
 use Closure;
-use Contensio\Cms\Models\Redirect as RedirectModel;
+use Contensio\Models\Redirect as RedirectModel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -33,9 +33,9 @@ class HandleRedirects
 
         $path = '/' . ltrim($request->path(), '/');
 
-        // Skip admin + auth paths — they're never redirect candidates
-        $adminPrefix = '/' . trim((string) config('cms.route_prefix', 'admin'), '/');
-        if ($path === $adminPrefix || str_starts_with($path, $adminPrefix . '/')) {
+        // Skip panel + auth paths — they're never redirect candidates
+        $panelPrefix = '/' . trim((string) config('contensio.route_prefix', 'account'), '/');
+        if ($path === $panelPrefix || str_starts_with($path, $panelPrefix . '/')) {
             return $next($request);
         }
         if (in_array($path, ['/login', '/logout', '/register'], true)) {

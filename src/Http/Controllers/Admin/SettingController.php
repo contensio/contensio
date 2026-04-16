@@ -26,16 +26,16 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Setting;
-use Contensio\Cms\Support\EmailConfig;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Setting;
+use Contensio\Support\EmailConfig;
 
 class SettingController extends Controller
 {
@@ -46,14 +46,14 @@ class SettingController extends Controller
             'content_types' => ContentType::count(),
         ];
 
-        return view('cms::admin.settings.index', compact('stats'));
+        return view('contensio::admin.settings.index', compact('stats'));
     }
 
     public function general()
     {
         $settings = Setting::where('module', 'core')->pluck('value', 'setting_key');
 
-        return view('cms::admin.settings.general', compact('settings'));
+        return view('contensio::admin.settings.general', compact('settings'));
     }
 
     public function saveGeneral(Request $request)
@@ -79,7 +79,7 @@ class SettingController extends Controller
             );
         }
 
-        return redirect()->route('cms.admin.settings.general')->with('success', 'Settings saved.');
+        return redirect()->route('contensio.account.settings.general')->with('success', 'Settings saved.');
     }
 
     /** SEO settings page — sitemap-related toggles, OG defaults, verification codes. */
@@ -94,7 +94,7 @@ class SettingController extends Controller
             ])
             ->pluck('value', 'setting_key');
 
-        return view('cms::admin.settings.seo', compact('settings'));
+        return view('contensio::admin.settings.seo', compact('settings'));
     }
 
     public function saveSeo(Request $request)
@@ -120,7 +120,7 @@ class SettingController extends Controller
             );
         }
 
-        return redirect()->route('cms.admin.settings.seo')->with('success', 'SEO settings saved.');
+        return redirect()->route('contensio.account.settings.seo')->with('success', 'SEO settings saved.');
     }
 
     /** Email / SMTP settings. */
@@ -128,7 +128,7 @@ class SettingController extends Controller
     {
         $settings = EmailConfig::load();
 
-        return view('cms::admin.settings.email', compact('settings'));
+        return view('contensio::admin.settings.email', compact('settings'));
     }
 
     public function saveEmail(Request $request)
@@ -162,7 +162,7 @@ class SettingController extends Controller
         // Re-apply so the next request (and any test email) uses fresh config
         EmailConfig::apply();
 
-        return redirect()->route('cms.admin.settings.email')->with('success', 'Email settings saved.');
+        return redirect()->route('contensio.account.settings.email')->with('success', 'Email settings saved.');
     }
 
     public function sendTestEmail(Request $request)
@@ -173,18 +173,18 @@ class SettingController extends Controller
 
         try {
             Mail::raw(
-                "This is a test email from " . config('cms.name', 'Contensio') . ".\n\n"
+                "This is a test email from " . config('contensio.name', 'Contensio') . ".\n\n"
                 . "If you received this, your email settings are working correctly.",
                 function ($m) use ($request) {
-                    $m->to($request->to)->subject('Test email from ' . config('cms.name', 'Contensio'));
+                    $m->to($request->to)->subject('Test email from ' . config('contensio.name', 'Contensio'));
                 }
             );
         } catch (\Throwable $e) {
-            return redirect()->route('cms.admin.settings.email')
+            return redirect()->route('contensio.account.settings.email')
                 ->with('error', 'Failed to send: ' . $e->getMessage());
         }
 
-        return redirect()->route('cms.admin.settings.email')
+        return redirect()->route('contensio.account.settings.email')
             ->with('success', 'Test email sent to ' . $request->to . '.');
     }
 }

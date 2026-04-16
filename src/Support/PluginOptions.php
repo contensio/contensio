@@ -14,9 +14,9 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
-use Contensio\Cms\Models\Setting;
+use Contensio\Models\Setting;
 
 /**
  * Per-plugin configuration values.

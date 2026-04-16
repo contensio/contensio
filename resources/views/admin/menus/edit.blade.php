@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Edit Menu')
 
 @section('breadcrumb')
-<a href="{{ route('cms.admin.menus.index') }}" class="text-gray-400 hover:text-gray-700">Menus</a>
+<a href="{{ route('contensio.account.menus.index') }}" class="text-gray-400 hover:text-gray-700">Menus</a>
 <span class="mx-2 text-gray-300">/</span>
 <span class="font-medium text-gray-700">
     @php
@@ -81,7 +81,7 @@
          inside it (browsers flatten nested forms, which broke x-show and _method).
          The sidebar's Save button + location checkboxes use HTML5 form="menu-form"
          to post into this form from outside the DOM boundary. --}}
-    <form method="POST" action="{{ route('cms.admin.menus.update', $menu->id) }}" id="menu-form">
+    <form method="POST" action="{{ route('contensio.account.menus.update', $menu->id) }}" id="menu-form">
         @csrf @method('PUT')
     </form>
 
@@ -105,7 +105,7 @@
                            maxlength="100"
                            required
                            class="w-full sm:w-96 rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                  focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     <p class="mt-1.5 text-xs text-gray-400">Internal name shown in the menus list. Item labels — which are translatable and shown on the site — are edited per item below.</p>
                 </div>
 
@@ -124,7 +124,7 @@
                         @if($items->isNotEmpty())
                         <div id="menu-items-sortable" class="space-y-3">
                             @foreach($items as $idx => $item)
-                                @include('cms::admin.menus.partials.item', [
+                                @include('contensio::admin.menus.partials.item', [
                                     'item'           => $item,
                                     'index'          => $idx,
                                     'languages'      => $languages,
@@ -149,7 +149,7 @@
                 <div class="bg-white rounded-xl border border-gray-200 p-5 sticky top-20">
                     <button type="submit"
                             form="menu-form"
-                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                            class="w-full bg-ember-500 hover:bg-ember-600 text-white font-semibold
                                    text-sm px-4 py-2.5 rounded-lg transition-colors">
                         Save Menu
                     </button>
@@ -195,78 +195,78 @@
                         </div>
 
                         {{-- Page picker --}}
-                        <form method="POST" action="{{ route('cms.admin.menus.items.add', $menu->id) }}"
+                        <form method="POST" action="{{ route('contensio.account.menus.items.add', $menu->id) }}"
                               x-show="addType === 'page'" class="space-y-2">
                             @csrf
                             <input type="hidden" name="type" value="page">
                             <select name="reference_id" required
                                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white
-                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                                 <option value="">— Choose a page —</option>
                                 @foreach($pages as $pid => $title)
                                 <option value="{{ $pid }}">{{ $title }}</option>
                                 @endforeach
                             </select>
                             <button type="submit"
-                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                                    class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold
                                            px-3 py-2 rounded-lg transition-colors">
                                 Add Page
                             </button>
                         </form>
 
                         {{-- Post picker --}}
-                        <form method="POST" action="{{ route('cms.admin.menus.items.add', $menu->id) }}"
+                        <form method="POST" action="{{ route('contensio.account.menus.items.add', $menu->id) }}"
                               x-show="addType === 'post'" class="space-y-2">
                             @csrf
                             <input type="hidden" name="type" value="post">
                             <select name="reference_id" required
                                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white
-                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                                 <option value="">— Choose a post —</option>
                                 @foreach($posts as $pid => $title)
                                 <option value="{{ $pid }}">{{ $title }}</option>
                                 @endforeach
                             </select>
                             <button type="submit"
-                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                                    class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold
                                            px-3 py-2 rounded-lg transition-colors">
                                 Add Post
                             </button>
                         </form>
 
                         {{-- Term picker --}}
-                        <form method="POST" action="{{ route('cms.admin.menus.items.add', $menu->id) }}"
+                        <form method="POST" action="{{ route('contensio.account.menus.items.add', $menu->id) }}"
                               x-show="addType === 'term'" class="space-y-2">
                             @csrf
                             <input type="hidden" name="type" value="term">
                             <select name="reference_id" required
                                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white
-                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                           focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                                 <option value="">— Choose a term —</option>
                                 @foreach($terms as $tid => $tname)
                                 <option value="{{ $tid }}">{{ $tname }}</option>
                                 @endforeach
                             </select>
                             <button type="submit"
-                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                                    class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold
                                            px-3 py-2 rounded-lg transition-colors">
                                 Add Term
                             </button>
                         </form>
 
                         {{-- Custom URL --}}
-                        <form method="POST" action="{{ route('cms.admin.menus.items.add', $menu->id) }}"
+                        <form method="POST" action="{{ route('contensio.account.menus.items.add', $menu->id) }}"
                               x-show="addType === 'custom_url'" class="space-y-2">
                             @csrf
                             <input type="hidden" name="type" value="custom_url">
                             <input type="text" name="label" placeholder="Label" required
                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                             <input type="text" name="url" placeholder="https://example.com" required
                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                             <button type="submit"
-                                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                                    class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold
                                            px-3 py-2 rounded-lg transition-colors">
                                 Add Link
                             </button>
@@ -293,7 +293,7 @@
                                        name="locations[{{ $locKey }}]"
                                        value="1"
                                        {{ in_array($locKey, $myAssignments) ? 'checked' : '' }}
-                                       class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                       class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                                 <div>
                                     <span class="text-sm text-gray-700 group-hover:text-gray-900 font-medium">{{ $locLabel }}</span>
                                     <span class="block text-xs text-gray-400 font-mono">{{ $locKey }}</span>
@@ -310,7 +310,7 @@
 
     {{-- Delete form — standalone, triggered by the confirm modal. --}}
     <form id="delete-menu-form" method="POST"
-          action="{{ route('cms.admin.menus.destroy', $menu->id) }}"
+          action="{{ route('contensio.account.menus.destroy', $menu->id) }}"
           class="hidden">
         @csrf @method('DELETE')
     </form>
@@ -325,7 +325,7 @@
         const status = document.getElementById('menu-items-status');
         if (!list || typeof Sortable === 'undefined') return;
 
-        const reorderUrl = @json(route('cms.admin.menus.items.reorder', $menu->id));
+        const reorderUrl = @json(route('contensio.account.menus.items.reorder', $menu->id));
         const csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
         let hideTimer;

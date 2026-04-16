@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Themes')
 
@@ -33,7 +33,7 @@
         <button type="button"
                 @click="$refs.installModal.classList.remove('hidden')"
                 x-data
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white
                        text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -111,7 +111,7 @@
                         {{ $isActive ? 'from-blue-50 to-blue-100' : 'from-gray-50 to-gray-100' }}
                         flex items-center justify-center border-b border-gray-100 overflow-hidden">
                 @if($hasScreenshot)
-                <img src="{{ route('cms.admin.themes.screenshot', ['theme' => $name]) }}"
+                <img src="{{ route('contensio.account.themes.screenshot', ['theme' => $name]) }}"
                      alt="{{ $label }}"
                      class="w-full h-full object-cover">
                 @else
@@ -144,11 +144,11 @@
                     @if(! $isActive)
 
                     {{-- Activate --}}
-                    <form method="POST" action="{{ route('cms.admin.themes.activate') }}" class="flex-1">
+                    <form method="POST" action="{{ route('contensio.account.themes.activate') }}" class="flex-1">
                         @csrf
                         <input type="hidden" name="theme" value="{{ $name }}">
                         <button type="submit"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                                class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold
                                        px-4 py-2 rounded-lg transition-colors">
                             Activate
                         </button>
@@ -157,9 +157,9 @@
                     @else
 
                     {{-- Customize (active theme only) --}}
-                    <a href="{{ route('cms.admin.themes.customize') }}"
+                    <a href="{{ route('contensio.account.themes.customize') }}"
                        class="flex-1 inline-flex items-center justify-center gap-1.5
-                              bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold
+                              bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold
                               px-4 py-2 rounded-lg transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -174,7 +174,7 @@
                     @if($removable && ! $isActive)
                     <form id="remove-theme-{{ md5($name) }}"
                           method="POST"
-                          action="{{ route('cms.admin.themes.uninstall') }}"
+                          action="{{ route('contensio.account.themes.uninstall') }}"
                           class="hidden">
                         @csrf
                         <input type="hidden" name="theme" value="{{ $name }}">
@@ -218,7 +218,7 @@
             </p>
 
             <form method="POST"
-                  action="{{ route('cms.admin.themes.install') }}"
+                  action="{{ route('contensio.account.themes.install') }}"
                   enctype="multipart/form-data"
                   x-data="{ fileName: '' }">
                 @csrf
@@ -249,7 +249,7 @@
                         Cancel
                     </button>
                     <button type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                            class="flex-1 bg-ember-500 hover:bg-ember-600 text-white font-semibold
                                    text-sm px-4 py-2.5 rounded-xl transition-colors">
                         Install
                     </button>

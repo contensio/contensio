@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::frontend.layout')
+@extends('contensio::frontend.layout')
 
 @section('title', 'Blog — ' . $site['name'])
 
@@ -36,7 +36,7 @@
 
             {{-- Featured image --}}
             @if($post->featuredImage)
-            <a href="{{ route('cms.post', $slug) }}" class="shrink-0 hidden sm:block">
+            <a href="{{ route('contensio.post', $slug) }}" class="shrink-0 hidden sm:block">
                 <div class="w-28 h-20 rounded-lg overflow-hidden bg-gray-100">
                     <img src="{{ Storage::disk($post->featuredImage->disk)->url($post->featuredImage->file_path) }}"
                          alt="{{ $title }}"
@@ -53,12 +53,12 @@
                     @endif
                 </p>
                 <h2 class="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
-                    <a href="{{ route('cms.post', $slug) }}">{{ $title }}</a>
+                    <a href="{{ route('contensio.post', $slug) }}">{{ $title }}</a>
                 </h2>
                 @if($trans?->excerpt)
                 <p class="mt-1.5 text-sm text-gray-500 line-clamp-2">{{ $trans->excerpt }}</p>
                 @endif
-                <a href="{{ route('cms.post', $slug) }}"
+                <a href="{{ route('contensio.post', $slug) }}"
                    class="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                     Read more
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

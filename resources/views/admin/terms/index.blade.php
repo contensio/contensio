@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @php
     $txTrans  = $taxonomy->translations->first();
@@ -19,9 +19,9 @@
 @section('title', $txPlural)
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
-    <a href="{{ route('cms.admin.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
+    <a href="{{ route('contensio.account.content-types.index') }}" class="text-gray-500 hover:text-gray-700">Content Types</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">{{ $txPlural }}</span>
 @endsection
@@ -48,8 +48,8 @@
         <p class="text-sm text-gray-400 mt-0.5">Flat — terms are independent (like tags).</p>
         @endif
     </div>
-    <a href="{{ route('cms.admin.terms.create', $taxonomy->id) }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
+    <a href="{{ route('contensio.account.terms.create', $taxonomy->id) }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -69,8 +69,8 @@
         </div>
         <h3 class="text-sm font-semibold text-gray-900 mb-1">No terms yet</h3>
         <p class="text-sm text-gray-400 mb-5">Add the first term to this taxonomy.</p>
-        <a href="{{ route('cms.admin.terms.create', $taxonomy->id) }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
+        <a href="{{ route('contensio.account.terms.create', $taxonomy->id) }}"
+           class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-md transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
@@ -96,7 +96,7 @@
                         $trans = $term->translations->firstWhere('language_id', $defaultLangId)
                             ?? $term->translations->first();
                     @endphp
-                    @include('cms::admin.terms.partials.row', [
+                    @include('contensio::admin.terms.partials.row', [
                         'term'  => $term,
                         'trans' => $trans,
                         'depth' => 0,
@@ -108,7 +108,7 @@
                         $childTrans = $child->translations->firstWhere('language_id', $defaultLangId)
                             ?? $child->translations->first();
                     @endphp
-                    @include('cms::admin.terms.partials.row', [
+                    @include('contensio::admin.terms.partials.row', [
                         'term'  => $child,
                         'trans' => $childTrans,
                         'depth' => 1,
@@ -123,7 +123,7 @@
                     $trans = $term->translations->firstWhere('language_id', $defaultLangId)
                         ?? $term->translations->first();
                 @endphp
-                @include('cms::admin.terms.partials.row', [
+                @include('contensio::admin.terms.partials.row', [
                     'term'  => $term,
                     'trans' => $trans,
                     'depth' => 0,

@@ -23,9 +23,9 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Models\FieldGroup;
+use Contensio\Models\FieldGroup;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
@@ -38,12 +38,12 @@ class FieldGroupController extends Controller
             ->orderBy('label')
             ->get();
 
-        return view('cms::admin.field-groups.index', compact('groups'));
+        return view('contensio::admin.field-groups.index', compact('groups'));
     }
 
     public function create()
     {
-        return view('cms::admin.field-groups.form', [
+        return view('contensio::admin.field-groups.form', [
             'group' => new FieldGroup(),
         ]);
     }
@@ -54,7 +54,7 @@ class FieldGroupController extends Controller
 
         $group = FieldGroup::create($data);
 
-        return redirect()->route('cms.admin.field-groups.edit', $group->id)
+        return redirect()->route('contensio.account.field-groups.edit', $group->id)
             ->with('success', 'Field group created. Add fields below.');
     }
 
@@ -62,7 +62,7 @@ class FieldGroupController extends Controller
     {
         $group = FieldGroup::with('fields')->findOrFail($id);
 
-        return view('cms::admin.field-groups.form', compact('group'));
+        return view('contensio::admin.field-groups.form', compact('group'));
     }
 
     public function update(Request $request, int $id)
@@ -70,7 +70,7 @@ class FieldGroupController extends Controller
         $group = FieldGroup::findOrFail($id);
         $group->update($this->validated($request, $group->id));
 
-        return redirect()->route('cms.admin.field-groups.edit', $group->id)
+        return redirect()->route('contensio.account.field-groups.edit', $group->id)
             ->with('success', 'Field group updated.');
     }
 
@@ -78,7 +78,7 @@ class FieldGroupController extends Controller
     {
         FieldGroup::where('id', $id)->delete();
 
-        return redirect()->route('cms.admin.field-groups.index')
+        return redirect()->route('contensio.account.field-groups.index')
             ->with('success', 'Field group deleted.');
     }
 

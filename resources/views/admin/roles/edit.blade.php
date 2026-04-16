@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @php
     $tr          = $role->translations->firstWhere('language_id', $defaultLangId) ?? $role->translations->first();
@@ -19,7 +19,7 @@
 @section('title', 'Edit role — ' . $label)
 
 @section('breadcrumb')
-<a href="{{ route('cms.admin.roles.index') }}" class="text-gray-400 hover:text-gray-700">Roles</a>
+<a href="{{ route('contensio.account.roles.index') }}" class="text-gray-400 hover:text-gray-700">Roles</a>
 <span class="mx-2 text-gray-300">/</span>
 <span class="font-medium text-gray-700">{{ $label }}</span>
 @endsection
@@ -68,7 +68,7 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('cms.admin.roles.update', $role->id) }}">
+    <form method="POST" action="{{ route('contensio.account.roles.update', $role->id) }}">
         @csrf @method('PUT')
 
         <div class="bg-white rounded-xl border border-gray-200 p-5 mb-4 space-y-4">
@@ -77,14 +77,14 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <input type="text" name="label" value="{{ old('label', $label) }}" required maxlength="100"
                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                              focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea name="description" rows="2" maxlength="500"
                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-y
-                                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ old('description', $description) }}</textarea>
+                                 focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">{{ old('description', $description) }}</textarea>
             </div>
         </div>
 
@@ -92,7 +92,7 @@
             <h2 class="text-base font-bold text-gray-900 mb-1">Permissions</h2>
             <p class="text-xs text-gray-500 mb-4">Tick everything this role can do.</p>
 
-            @include('cms::admin.roles.partials.permission-matrix', [
+            @include('contensio::admin.roles.partials.permission-matrix', [
                 'permissions' => $permissions,
                 'assignedIds' => $assignedIds,
             ])
@@ -100,7 +100,7 @@
 
         <div class="flex items-center justify-between">
             @if(! $role->is_system && ! $role->plugin_name)
-            <form id="delete-role-form" method="POST" action="{{ route('cms.admin.roles.destroy', $role->id) }}" class="hidden">
+            <form id="delete-role-form" method="POST" action="{{ route('contensio.account.roles.destroy', $role->id) }}" class="hidden">
                 @csrf @method('DELETE')
             </form>
             <button type="button"
@@ -124,10 +124,10 @@
             @endif
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('cms.admin.roles.index') }}"
+                <a href="{{ route('contensio.account.roles.index') }}"
                    class="text-sm text-gray-500 hover:text-gray-700 font-medium">Cancel</a>
                 <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
+                        class="bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
                     Save Changes
                 </button>
             </div>

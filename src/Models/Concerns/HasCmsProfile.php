@@ -14,12 +14,12 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Models\Concerns;
+namespace Contensio\Models\Concerns;
 
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Role;
-use Contensio\Cms\Models\UserMeta;
-use Contensio\Cms\Support\AccessControl;
+use Contensio\Models\Language;
+use Contensio\Models\Role;
+use Contensio\Models\UserMeta;
+use Contensio\Support\AccessControl;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;

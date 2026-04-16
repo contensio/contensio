@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Add Role')
 
 @section('breadcrumb')
-<a href="{{ route('cms.admin.roles.index') }}" class="text-gray-400 hover:text-gray-700">Roles</a>
+<a href="{{ route('contensio.account.roles.index') }}" class="text-gray-400 hover:text-gray-700">Roles</a>
 <span class="mx-2 text-gray-300">/</span>
 <span class="font-medium text-gray-700">Add</span>
 @endsection
@@ -33,7 +33,7 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('cms.admin.roles.store') }}">
+    <form method="POST" action="{{ route('contensio.account.roles.store') }}">
         @csrf
 
         <div class="bg-white rounded-xl border border-gray-200 p-5 mb-4 space-y-4">
@@ -43,7 +43,7 @@
                 <input type="text" name="label" value="{{ old('label') }}" required maxlength="100" autofocus
                        placeholder="e.g. Shop Manager"
                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                              focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
             </div>
 
             <div>
@@ -51,7 +51,7 @@
                 <textarea name="description" rows="2" maxlength="500"
                           placeholder="Short description of what users with this role can do"
                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-y
-                                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ old('description') }}</textarea>
+                                 focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">{{ old('description') }}</textarea>
             </div>
         </div>
 
@@ -59,17 +59,17 @@
             <h2 class="text-base font-bold text-gray-900 mb-1">Permissions</h2>
             <p class="text-xs text-gray-500 mb-4">Tick everything this role can do. For full access, use the Super admin permission.</p>
 
-            @include('cms::admin.roles.partials.permission-matrix', [
+            @include('contensio::admin.roles.partials.permission-matrix', [
                 'permissions' => $permissions,
                 'assignedIds' => [],
             ])
         </div>
 
         <div class="flex items-center justify-end gap-3">
-            <a href="{{ route('cms.admin.roles.index') }}"
+            <a href="{{ route('contensio.account.roles.index') }}"
                class="text-sm text-gray-500 hover:text-gray-700 font-medium">Cancel</a>
             <button type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
+                    class="bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
                 Create Role
             </button>
         </div>

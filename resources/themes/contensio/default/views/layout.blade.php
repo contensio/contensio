@@ -34,13 +34,13 @@
     {{-- Header --}}
     <header class="border-b border-gray-100">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-            <a href="{{ route('cms.home') }}"
+            <a href="{{ route('contensio.home') }}"
                class="font-bold text-gray-900 text-lg hover:text-blue-600 transition-colors">
                 {{ $site['name'] }}
             </a>
             <nav class="flex items-center gap-6 text-sm text-gray-500">
-                <a href="{{ route('cms.home') }}" class="hover:text-gray-900 transition-colors">Home</a>
-                <a href="{{ route('cms.blog') }}" class="hover:text-gray-900 transition-colors">Blog</a>
+                <a href="{{ route('contensio.home') }}" class="hover:text-gray-900 transition-colors">Home</a>
+                <a href="{{ route('contensio.blog') }}" class="hover:text-gray-900 transition-colors">Blog</a>
             </nav>
         </div>
     </header>

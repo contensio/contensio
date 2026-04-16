@@ -26,15 +26,15 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Taxonomy;
-use Contensio\Cms\Models\Term;
-use Contensio\Cms\Models\TermTranslation;
+use Contensio\Models\Language;
+use Contensio\Models\Taxonomy;
+use Contensio\Models\Term;
+use Contensio\Models\TermTranslation;
 
 class TermController extends Controller
 {
@@ -43,7 +43,7 @@ class TermController extends Controller
         $taxonomy = Taxonomy::with('translations')->find($taxonomyId);
 
         if (! $taxonomy) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Taxonomy not found.');
         }
 
@@ -63,7 +63,7 @@ class TermController extends Controller
                 ->get();
         }
 
-        return view('cms::admin.terms.index', [
+        return view('contensio::admin.terms.index', [
             'taxonomy'      => $taxonomy,
             'terms'         => $terms,
             'defaultLangId' => $defaultLangId,
@@ -75,7 +75,7 @@ class TermController extends Controller
         $taxonomy = Taxonomy::with('translations')->find($taxonomyId);
 
         if (! $taxonomy) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Taxonomy not found.');
         }
 
@@ -85,7 +85,7 @@ class TermController extends Controller
 
         $parentOptions = $this->buildParentOptions($taxonomyId, $defaultLangId);
 
-        return view('cms::admin.terms.form', [
+        return view('contensio::admin.terms.form', [
             'term'            => null,
             'taxonomy'        => $taxonomy,
             'languages'       => $languages,
@@ -100,7 +100,7 @@ class TermController extends Controller
         $taxonomy = Taxonomy::find($taxonomyId);
 
         if (! $taxonomy) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Taxonomy not found.');
         }
 
@@ -112,6 +112,26 @@ class TermController extends Controller
             "translations.{$defaultLangId}.name" => 'required|string|max:200',
             "translations.{$defaultLangId}.slug" => 'required|string|max:200|alpha_dash',
         ]);
+
+        $slug = $request->input("translations.{$defaultLangId}.slug");
+        $name = $request->input("translations.{$defaultLangId}.name");
+
+        $slugExists = TermTranslation::where('language_id', $defaultLangId)
+            ->where('slug', $slug)
+            ->whereHas('term', fn ($q) => $q->where('taxonomy_id', $taxonomyId))
+            ->exists();
+
+        $nameExists = TermTranslation::where('language_id', $defaultLangId)
+            ->where('name', $name)
+            ->whereHas('term', fn ($q) => $q->where('taxonomy_id', $taxonomyId))
+            ->exists();
+
+        if ($slugExists || $nameExists) {
+            return back()->withInput()->withErrors(array_filter([
+                "translations.{$defaultLangId}.slug" => $slugExists ? 'A term with this slug already exists in this taxonomy.' : null,
+                "translations.{$defaultLangId}.name" => $nameExists ? 'A term with this name already exists in this taxonomy.' : null,
+            ]));
+        }
 
         $term = Term::create([
             'code'        => Str::random(16),
@@ -139,7 +159,7 @@ class TermController extends Controller
 
         $defaultName = $request->input("translations.{$defaultLangId}.name");
 
-        return redirect()->route('cms.admin.terms.index', $taxonomyId)
+        return redirect()->route('contensio.account.terms.index', $taxonomyId)
             ->with('success', "\"{$defaultName}\" added.");
     }
 
@@ -149,7 +169,7 @@ class TermController extends Controller
         $term     = Term::with('translations')->find($id);
 
         if (! $taxonomy || ! $term || $term->taxonomy_id !== $taxonomyId) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Not found.');
         }
 
@@ -168,7 +188,7 @@ class TermController extends Controller
 
         $parentOptions = $this->buildParentOptions($taxonomyId, $defaultLangId, $id);
 
-        return view('cms::admin.terms.form', [
+        return view('contensio::admin.terms.form', [
             'term'            => $term,
             'taxonomy'        => $taxonomy,
             'languages'       => $languages,
@@ -184,7 +204,7 @@ class TermController extends Controller
         $term     = Term::find($id);
 
         if (! $taxonomy || ! $term || $term->taxonomy_id !== $taxonomyId) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Not found.');
         }
 
@@ -196,6 +216,28 @@ class TermController extends Controller
             "translations.{$defaultLangId}.name" => 'required|string|max:200',
             "translations.{$defaultLangId}.slug" => 'required|string|max:200|alpha_dash',
         ]);
+
+        $slug = $request->input("translations.{$defaultLangId}.slug");
+        $name = $request->input("translations.{$defaultLangId}.name");
+
+        $slugExists = TermTranslation::where('language_id', $defaultLangId)
+            ->where('slug', $slug)
+            ->where('term_id', '!=', $id)
+            ->whereHas('term', fn ($q) => $q->where('taxonomy_id', $taxonomyId))
+            ->exists();
+
+        $nameExists = TermTranslation::where('language_id', $defaultLangId)
+            ->where('name', $name)
+            ->where('term_id', '!=', $id)
+            ->whereHas('term', fn ($q) => $q->where('taxonomy_id', $taxonomyId))
+            ->exists();
+
+        if ($slugExists || $nameExists) {
+            return back()->withInput()->withErrors(array_filter([
+                "translations.{$defaultLangId}.slug" => $slugExists ? 'A term with this slug already exists in this taxonomy.' : null,
+                "translations.{$defaultLangId}.name" => $nameExists ? 'A term with this name already exists in this taxonomy.' : null,
+            ]));
+        }
 
         $term->update([
             'parent_id' => $taxonomy->is_hierarchical ? ($request->input('parent_id') ?: null) : null,
@@ -221,7 +263,7 @@ class TermController extends Controller
 
         $defaultName = $request->input("translations.{$defaultLangId}.name");
 
-        return redirect()->route('cms.admin.terms.index', $taxonomyId)
+        return redirect()->route('contensio.account.terms.index', $taxonomyId)
             ->with('success', "\"{$defaultName}\" saved.");
     }
 
@@ -230,7 +272,7 @@ class TermController extends Controller
         $term = Term::find($id);
 
         if (! $term || $term->taxonomy_id !== $taxonomyId) {
-            return redirect()->route('cms.admin.terms.index', $taxonomyId);
+            return redirect()->route('contensio.account.terms.index', $taxonomyId);
         }
 
         // Re-parent children to this term's parent before deleting
@@ -238,7 +280,7 @@ class TermController extends Controller
 
         $term->delete();
 
-        return redirect()->route('cms.admin.terms.index', $taxonomyId)
+        return redirect()->route('contensio.account.terms.index', $taxonomyId)
             ->with('success', 'Term deleted.');
     }
 

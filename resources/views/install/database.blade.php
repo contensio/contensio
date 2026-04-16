@@ -8,15 +8,15 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::install.layout')
+@extends('contensio::install.layout')
 @php($currentStep = 1)
 
 @section('content')
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">{{ __('cms::install.database.title') }}</h1>
-        <p class="text-gray-500 mt-1">{{ __('cms::install.database.subtitle') }}</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ __('contensio::install.database.title') }}</h1>
+        <p class="text-gray-500 mt-1">{{ __('contensio::install.database.subtitle') }}</p>
     </div>
 
     @if($errors->any())
@@ -25,12 +25,12 @@
     </div>
     @endif
 
-    <form id="dbForm" method="POST" action="{{ route('cms.install.database.store') }}">
+    <form id="dbForm" method="POST" action="{{ route('contensio.install.database.store') }}">
         @csrf
 
         <div class="space-y-5">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.database.host') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.database.host') }}</label>
                 <input type="text" name="db_host" value="{{ old('db_host', 'localhost') }}"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="localhost">
@@ -38,13 +38,13 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.database.name') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.database.name') }}</label>
                     <input type="text" name="db_name" value="{{ old('db_name') }}"
                         class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="contensio_cms">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.database.username') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.database.username') }}</label>
                     <input type="text" name="db_username" value="{{ old('db_username') }}"
                         class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="root">
@@ -52,10 +52,10 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.database.password') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.database.password') }}</label>
                 <input type="password" name="db_password"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="{{ __('cms::install.database.password_placeholder') }}">
+                    placeholder="{{ __('contensio::install.database.password_placeholder') }}">
             </div>
 
             {{-- Advanced toggle --}}
@@ -65,11 +65,11 @@
                     <svg id="advancedIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
-                    {{ __('cms::install.database.advanced') }}
+                    {{ __('contensio::install.database.advanced') }}
                 </button>
 
                 <div id="advancedOptions" class="hidden mt-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.database.port') }}</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.database.port') }}</label>
                     <input type="number" name="db_port" value="{{ old('db_port', 3306) }}"
                         class="w-32 border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
@@ -80,12 +80,12 @@
         <div id="testResult" class="hidden mt-5 p-4 rounded-lg"></div>
 
         <div class="flex justify-between items-center mt-8">
-            <a href="{{ route('cms.install.requirements') }}"
+            <a href="{{ route('contensio.install.requirements') }}"
                class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1.5 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
-                {{ __('cms::install.buttons.back') }}
+                {{ __('contensio::install.buttons.back') }}
             </a>
 
             <div class="flex items-center gap-3">
@@ -95,16 +95,16 @@
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    {{ __('cms::install.database.test') }}
+                    {{ __('contensio::install.database.test') }}
                 </button>
 
                 <button type="submit" id="continueBtn"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2">
+                    class="bg-ember-500 hover:bg-ember-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2">
                     <svg id="submitSpinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
-                    {{ __('cms::install.buttons.continue') }}
+                    {{ __('contensio::install.buttons.continue') }}
                 </button>
             </div>
         </div>
@@ -112,7 +112,7 @@
 </div>
 
 <script>
-const connectingText = @json(__('cms::install.database.connecting'));
+const connectingText = @json(__('contensio::install.database.connecting'));
 
 function toggleAdvanced() {
     const el = document.getElementById('advancedOptions');
@@ -134,7 +134,7 @@ async function testConnection() {
     data.append('_token', '{{ csrf_token() }}');
 
     try {
-        const response = await fetch('{{ route('cms.install.database.test') }}', {
+        const response = await fetch('{{ route('contensio.install.database.test') }}', {
             method: 'POST',
             body: data,
         });

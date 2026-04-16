@@ -27,7 +27,7 @@
     @endif
     <td class="px-5 py-3 text-right">
         <div class="flex items-center justify-end gap-2">
-            <a href="{{ route('cms.admin.terms.edit', [$taxonomy->id, $term->id]) }}"
+            <a href="{{ route('contensio.account.terms.edit', [$taxonomy->id, $term->id]) }}"
                class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 px-2.5 py-1 rounded border border-gray-200 hover:bg-white transition-colors">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -38,7 +38,7 @@
 
             <form id="delete-term-{{ $term->id }}"
                   method="POST"
-                  action="{{ route('cms.admin.terms.destroy', [$taxonomy->id, $term->id]) }}"
+                  action="{{ route('contensio.account.terms.destroy', [$taxonomy->id, $term->id]) }}"
                   class="hidden">
                 @csrf @method('DELETE')
             </form>

@@ -36,10 +36,10 @@
                 <input type="search" x-model.debounce.300ms="q"
                        @input="reload()"
                        placeholder="Search files…"
-                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500">
             </div>
             <button type="button" @click="$refs.fileUpload.click()"
-                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+                    class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
                 <i class="bi bi-upload"></i> Upload
             </button>
             <input type="file" x-ref="fileUpload" class="hidden" @change="upload($event)">
@@ -86,7 +86,7 @@
 
             <div x-show="page < pages" class="mt-5 text-center">
                 <button type="button" @click="loadMore()"
-                        class="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        class="text-sm font-medium text-ember-600 hover:text-ember-700">
                     Load more
                 </button>
             </div>
@@ -102,7 +102,7 @@
             <div class="flex items-center gap-3">
                 <button type="button" @click="close()" class="text-sm text-gray-600 hover:text-gray-900 px-3 py-2">Cancel</button>
                 <button type="button" @click="confirm()" :disabled="selected.length === 0"
-                        class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-semibold text-sm px-5 py-2 rounded-lg transition-colors">
+                        class="bg-ember-500 hover:bg-ember-600 disabled:bg-gray-300 text-white font-semibold text-sm px-5 py-2 rounded-lg transition-colors">
                     Use selected
                 </button>
             </div>
@@ -148,7 +148,7 @@ function cmsMediaPicker() {
         },
         async fetch(append = false) {
             this.loading = true;
-            const url = new URL(`{{ route('cms.admin.media.pick') }}`, window.location.origin);
+            const url = new URL(`{{ route('contensio.account.media.pick') }}`, window.location.origin);
             url.searchParams.set('q', this.q);
             url.searchParams.set('mime', this.accept);
             url.searchParams.set('page', this.page);
@@ -167,7 +167,7 @@ function cmsMediaPicker() {
             const fd = new FormData();
             fd.append('file', file);
             fd.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-            const res = await fetch(`{{ route('cms.admin.media.pick.upload') }}`, { method: 'POST', body: fd });
+            const res = await fetch(`{{ route('contensio.account.media.pick.upload') }}`, { method: 'POST', body: fd });
             if (res.ok) {
                 const data = await res.json();
                 this.items.unshift(data.item);
@@ -207,6 +207,11 @@ function cmsMediaPicker() {
                     </div>
                 `).join('');
             }
+
+            // Notify other components listening for media selection (e.g. featured image card)
+            window.dispatchEvent(new CustomEvent('cms:media-selected', {
+                detail: { inputName: this.inputName, items: this.selected }
+            }));
 
             this.close();
         },

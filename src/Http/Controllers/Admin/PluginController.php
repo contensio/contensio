@@ -26,12 +26,12 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Support\AccessControl;
-use Contensio\Cms\Support\Activity;
-use Contensio\Cms\Support\PluginOptions;
-use Contensio\Cms\Support\PluginRegistry;
+use Contensio\Support\AccessControl;
+use Contensio\Support\Activity;
+use Contensio\Support\PluginOptions;
+use Contensio\Support\PluginRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
@@ -46,7 +46,7 @@ class PluginController extends Controller
         $plugins     = PluginRegistry::all();
         $enabledList = PluginRegistry::enabledNames();
 
-        return view('cms::admin.plugins.index', compact('plugins', 'enabledList'));
+        return view('contensio::admin.plugins.index', compact('plugins', 'enabledList'));
     }
 
     /** Enable a plugin. Also runs its migrations (if any) to spare admins a CLI step. */
@@ -163,7 +163,7 @@ class PluginController extends Controller
         }
 
         $pluginName  = $meta['name'];
-        $pluginsRoot = rtrim(config('cms.packages_path', base_path('packages')), '/') . '/plugins';
+        $pluginsRoot = rtrim(config('contensio.packages_path', base_path('packages')), '/') . '/plugins';
         $targetPath  = $pluginsRoot . '/' . $pluginName;
 
         // Wipe any previous installation of the same plugin
@@ -201,13 +201,13 @@ class PluginController extends Controller
 
         if (! $plugin) {
             return redirect()
-                ->route('cms.admin.plugins.index')
+                ->route('contensio.account.plugins.index')
                 ->withErrors(['plugin' => 'Plugin not found.']);
         }
 
         if (! PluginRegistry::isEnabled($name)) {
             return redirect()
-                ->route('cms.admin.plugins.index')
+                ->route('contensio.account.plugins.index')
                 ->withErrors(['plugin' => 'Enable the plugin first to configure it.']);
         }
 
@@ -215,13 +215,13 @@ class PluginController extends Controller
 
         if (empty($sections)) {
             return redirect()
-                ->route('cms.admin.plugins.index')
+                ->route('contensio.account.plugins.index')
                 ->withErrors(['plugin' => 'This plugin does not declare any settings.']);
         }
 
         $values = PluginOptions::all($name);
 
-        return view('cms::admin.plugins.settings', compact('name', 'plugin', 'sections', 'values'));
+        return view('contensio::admin.plugins.settings', compact('name', 'plugin', 'sections', 'values'));
     }
 
     /**
@@ -235,7 +235,7 @@ class PluginController extends Controller
 
         if (! PluginRegistry::get($name)) {
             return redirect()
-                ->route('cms.admin.plugins.index')
+                ->route('contensio.account.plugins.index')
                 ->withErrors(['plugin' => 'Plugin not found.']);
         }
 
@@ -262,7 +262,7 @@ class PluginController extends Controller
         PluginOptions::save($name, $values);
 
         return redirect()
-            ->route('cms.admin.plugins.settings', ['plugin' => $name])
+            ->route('contensio.account.plugins.settings', ['plugin' => $name])
             ->with('success', 'Plugin settings saved.');
     }
 
@@ -273,7 +273,7 @@ class PluginController extends Controller
         PluginOptions::reset($data['plugin']);
 
         return redirect()
-            ->route('cms.admin.plugins.settings', ['plugin' => $data['plugin']])
+            ->route('contensio.account.plugins.settings', ['plugin' => $data['plugin']])
             ->with('success', 'Plugin settings reset to defaults.');
     }
 

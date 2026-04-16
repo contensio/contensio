@@ -14,13 +14,13 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Models\ActivityLog;
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Media;
+use Contensio\Models\ActivityLog;
+use Contensio\Models\Content;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Media;
 use Illuminate\Routing\Controller;
 
 class DashboardController extends Controller
@@ -70,7 +70,7 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        return view('cms::admin.dashboard', compact(
+        return view('contensio::admin.dashboard', compact(
             'stats',
             'recentPublished',
             'recentDrafts',

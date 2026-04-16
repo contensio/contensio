@@ -26,9 +26,9 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
-use Contensio\Cms\Models\Setting;
+use Contensio\Models\Setting;
 
 /**
  * Per-theme customization values (colors, fonts, layout, etc.).

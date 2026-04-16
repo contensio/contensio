@@ -26,7 +26,7 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Services\Install;
+namespace Contensio\Services\Install;
 
 class RequirementsChecker
 {

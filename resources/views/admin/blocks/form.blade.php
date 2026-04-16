@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @php
     $isNew      = ! collect($content->blocks ?? [])->firstWhere('id', $block['id'] ?? null);
@@ -17,11 +17,11 @@
     $blockName  = $blockConfig['label'] ?? ucfirst($block['type'] ?? '');
     $pageTitle  = ($isNew ? 'Add' : 'Edit') . ' ' . $blockName . ' Block';
     $formAction = $isNew
-        ? route('cms.admin.blocks.store', $content->id)
-        : route('cms.admin.blocks.update', [$content->id, $block['id']]);
+        ? route('contensio.account.blocks.store', $content->id)
+        : route('contensio.account.blocks.update', [$content->id, $block['id']]);
     $backRoute  = $typeName === 'post'
-        ? route('cms.admin.posts.edit', $content->id)
-        : route('cms.admin.pages.edit', $content->id);
+        ? route('contensio.account.posts.edit', $content->id)
+        : route('contensio.account.pages.edit', $content->id);
 
     $blockData         = $block['data'] ?? [];
     $blockSettings     = $block['settings'] ?? [];
@@ -120,7 +120,7 @@
                         $value   = $blockData[$fieldName] ?? ($fieldDef['default'] ?? null);
                     @endphp
                     <div class="{{ $colSpan }}">
-                        @include('cms::admin.blocks.partials.field', [
+                        @include('contensio::admin.blocks.partials.field', [
                             'fieldName'  => $fieldName,
                             'fieldDef'   => $fieldDef,
                             'namePrefix' => 'block_data',
@@ -187,14 +187,14 @@
                     @endphp
 
                     @if(($fieldDef['type'] ?? '') === 'repeater')
-                        @include('cms::admin.blocks.partials.repeater', [
+                        @include('contensio::admin.blocks.partials.repeater', [
                             'fieldName'  => $fieldName,
                             'fieldDef'   => $fieldDef,
                             'namePrefix' => "block_translations[{$langId}]",
                             'items'      => $value,
                         ])
                     @else
-                        @include('cms::admin.blocks.partials.field', [
+                        @include('contensio::admin.blocks.partials.field', [
                             'fieldName'  => $fieldName,
                             'fieldDef'   => $fieldDef,
                             'namePrefix' => "block_translations[{$langId}]",
@@ -215,7 +215,7 @@
                 <h2 class="text-base font-bold text-gray-800">{{ $fieldDef['label'] ?? ucfirst($fieldName) }}</h2>
             </div>
             <div class="p-5">
-                @include('cms::admin.blocks.partials.repeater', [
+                @include('contensio::admin.blocks.partials.repeater', [
                     'fieldName'  => $fieldName,
                     'fieldDef'   => $fieldDef,
                     'namePrefix' => 'block_data',
@@ -233,7 +233,7 @@
         <div class="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
             <button type="submit"
                     onclick="document.getElementById('input-stay').value='0'"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
+                    class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition-colors">
                 {{ $isNew ? 'Add Block' : 'Save Block' }}
             </button>
 

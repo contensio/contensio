@@ -7,7 +7,7 @@
  | @license  AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Import / Export')
 
@@ -42,7 +42,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 
         {{-- ─── Export ─────────────────────────────────────────────────── --}}
-        <form method="POST" action="{{ route('cms.admin.tools.export') }}"
+        <form method="POST" action="{{ route('contensio.account.tools.export') }}"
               class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
             @csrf
 
@@ -61,7 +61,7 @@
 
                 <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" name="include_content" value="1" checked
-                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                     <span class="text-sm text-gray-700">
                         <strong>Content</strong> — {{ $stats['pages'] }} {{ Str::plural('page', $stats['pages']) }}, {{ $stats['posts'] }} {{ Str::plural('post', $stats['posts']) }}
                         <span class="block text-xs text-gray-500">with translations, blocks, and meta</span>
@@ -70,7 +70,7 @@
 
                 <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox" name="include_menus" value="1" checked
-                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                     <span class="text-sm text-gray-700">
                         <strong>Menus</strong> — {{ $stats['menus'] }} {{ Str::plural('menu', $stats['menus']) }}
                         <span class="block text-xs text-gray-500">with items and translations</span>
@@ -85,14 +85,14 @@
 
             <div class="px-5 py-3 bg-gray-50 border-t border-gray-100">
                 <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
+                        class="w-full bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
                     Download export
                 </button>
             </div>
         </form>
 
         {{-- ─── Import ─────────────────────────────────────────────────── --}}
-        <form method="POST" action="{{ route('cms.admin.tools.import') }}"
+        <form method="POST" action="{{ route('contensio.account.tools.import') }}"
               enctype="multipart/form-data"
               class="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
             @csrf

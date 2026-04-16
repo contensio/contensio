@@ -6,12 +6,12 @@
  | @license AGPL-3.0-or-later  https://www.gnu.org/licenses/agpl-3.0.txt
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Custom Fields')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">Custom Fields</span>
 @endsection
@@ -29,8 +29,8 @@
         <h1 class="text-xl font-bold text-gray-900">Custom Fields</h1>
         <p class="text-sm text-gray-500 mt-0.5">Field groups are reusable libraries of fields. Attach them to one or more content types.</p>
     </div>
-    <a href="{{ route('cms.admin.field-groups.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+    <a href="{{ route('contensio.account.field-groups.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -48,8 +48,8 @@
     <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
         Create a group to start adding custom fields to your content types — things like price, SKU, specifications, or whatever your content needs.
     </p>
-    <a href="{{ route('cms.admin.field-groups.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+    <a href="{{ route('contensio.account.field-groups.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
         Create your first group
     </a>
 </div>
@@ -71,7 +71,7 @@
             @foreach($groups as $g)
             <tr class="hover:bg-gray-50">
                 <td class="px-5 py-4">
-                    <a href="{{ route('cms.admin.field-groups.edit', $g->id) }}"
+                    <a href="{{ route('contensio.account.field-groups.edit', $g->id) }}"
                        class="font-medium text-gray-900 hover:text-blue-600">{{ $g->label }}</a>
                     @if($g->description)
                     <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ $g->description }}</p>
@@ -92,11 +92,11 @@
                 </td>
                 <td class="px-5 py-4 text-right">
                     <div class="flex items-center justify-end gap-3">
-                        <a href="{{ route('cms.admin.field-groups.edit', $g->id) }}"
+                        <a href="{{ route('contensio.account.field-groups.edit', $g->id) }}"
                            class="text-gray-500 hover:text-blue-600" title="Edit">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <form id="delete-fg-{{ $g->id }}" method="POST" action="{{ route('cms.admin.field-groups.destroy', $g->id) }}" class="hidden">
+                        <form id="delete-fg-{{ $g->id }}" method="POST" action="{{ route('contensio.account.field-groups.destroy', $g->id) }}" class="hidden">
                             @csrf @method('DELETE')
                         </form>
                         <button type="button"

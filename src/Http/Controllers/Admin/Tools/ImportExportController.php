@@ -22,17 +22,17 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin\Tools;
+namespace Contensio\Http\Controllers\Admin\Tools;
 
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentMeta;
-use Contensio\Cms\Models\ContentTranslation;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Menu;
-use Contensio\Cms\Models\MenuItem;
-use Contensio\Cms\Models\MenuItemTranslation;
-use Contensio\Cms\Models\MenuTranslation;
+use Contensio\Models\Content;
+use Contensio\Models\ContentMeta;
+use Contensio\Models\ContentTranslation;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Menu;
+use Contensio\Models\MenuItem;
+use Contensio\Models\MenuItemTranslation;
+use Contensio\Models\MenuTranslation;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -50,7 +50,7 @@ class ImportExportController extends Controller
             'menus' => Menu::count(),
         ];
 
-        return view('cms::admin.tools.import-export', compact('stats'));
+        return view('contensio::admin.tools.import-export', compact('stats'));
     }
 
     public function export(Request $request)

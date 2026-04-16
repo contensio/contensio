@@ -22,9 +22,9 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Models\ActivityLog;
+use Contensio\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -55,7 +55,7 @@ class ActivityLogController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        return view('cms::admin.activity-log.index', compact(
+        return view('contensio::admin.activity-log.index', compact(
             'entries', 'actions', 'subjects', 'users',
             'user', 'action', 'subject', 'from', 'to'
         ));

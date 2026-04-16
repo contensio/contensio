@@ -8,15 +8,15 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::install.layout')
+@extends('contensio::install.layout')
 @php($currentStep = 3)
 
 @section('content')
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">{{ __('cms::install.account.title') }}</h1>
-        <p class="text-gray-500 mt-1">{{ __('cms::install.account.subtitle') }}</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ __('contensio::install.account.title') }}</h1>
+        <p class="text-gray-500 mt-1">{{ __('contensio::install.account.subtitle') }}</p>
     </div>
 
     @if($errors->any())
@@ -25,30 +25,30 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('cms.install.account.store') }}" id="accountForm">
+    <form method="POST" action="{{ route('contensio.install.account.store') }}" id="accountForm">
         @csrf
 
         <div class="space-y-5">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.account.name') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.account.name') }}</label>
                 <input type="text" name="name" value="{{ old('name') }}"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="{{ __('cms::install.account.name_placeholder') }}" autofocus>
+                    placeholder="{{ __('contensio::install.account.name_placeholder') }}" autofocus>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.account.email') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.account.email') }}</label>
                 <input type="email" name="email" value="{{ old('email') }}"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="{{ __('cms::install.account.email_placeholder') }}">
-                <p class="text-gray-400 text-xs mt-1.5">{{ __('cms::install.account.email_hint') }}</p>
+                    placeholder="{{ __('contensio::install.account.email_placeholder') }}">
+                <p class="text-gray-400 text-xs mt-1.5">{{ __('contensio::install.account.email_hint') }}</p>
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.account.password') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.account.password') }}</label>
                 <input type="password" name="password" id="password"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="{{ __('cms::install.account.password_placeholder') }}" oninput="checkStrength(this.value)">
+                    placeholder="{{ __('contensio::install.account.password_placeholder') }}" oninput="checkStrength(this.value)">
 
                 {{-- Strength meter --}}
                 <div class="mt-2">
@@ -63,42 +63,43 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('cms::install.account.confirm_password') }}</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('contensio::install.account.confirm_password') }}</label>
                 <input type="password" name="password_confirmation"
                     class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="{{ __('cms::install.account.confirm_password_placeholder') }}">
+                    placeholder="{{ __('contensio::install.account.confirm_password_placeholder') }}">
             </div>
         </div>
 
         <div class="flex justify-between items-center mt-8">
-            <a href="{{ route('cms.install.website') }}"
+            <a href="{{ route('contensio.install.website') }}"
                class="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1.5 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
-                {{ __('cms::install.buttons.back') }}
+                {{ __('contensio::install.buttons.back') }}
             </a>
 
             <button type="submit" id="installBtn"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2">
+                class="bg-ember-500 hover:bg-ember-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors flex items-center gap-2">
                 <svg id="spinner" class="hidden w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                {{ __('cms::install.account.submit') }}
+                {{ __('contensio::install.account.submit') }}
             </button>
         </div>
     </form>
 </div>
 
 <script>
-const strengthLabels = @json([
-    1 => __('cms::install.account.strength.weak'),
-    2 => __('cms::install.account.strength.fair'),
-    3 => __('cms::install.account.strength.good'),
-    4 => __('cms::install.account.strength.strong'),
-]);
-const installingText = @json(__('cms::install.account.installing'));
+<?php $strengthLabels = [
+    1 => __('contensio::install.account.strength.weak'),
+    2 => __('contensio::install.account.strength.fair'),
+    3 => __('contensio::install.account.strength.good'),
+    4 => __('contensio::install.account.strength.strong'),
+]; ?>
+const strengthLabels = {!! json_encode($strengthLabels, JSON_UNESCAPED_UNICODE) !!};
+const installingText = {!! json_encode(__('contensio::install.account.installing'), JSON_UNESCAPED_UNICODE) !!};
 
 function checkStrength(password) {
     let score = 0;

@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
-@section('title', __('cms::admin.pages.title'))
+@section('title', __('contensio::admin.pages.title'))
 
 @section('breadcrumb')
-    <span class="text-gray-900 font-medium">{{ __('cms::admin.pages.title') }}</span>
+    <span class="text-gray-900 font-medium">{{ __('contensio::admin.pages.title') }}</span>
 @endsection
 
 @section('content')
@@ -31,15 +31,15 @@
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-bold text-gray-900">{{ __('cms::admin.pages.title') }}</h1>
-        <p class="text-sm text-gray-400 mt-0.5">{{ __('cms::admin.pages.subtitle') }}</p>
+        <h1 class="text-xl font-bold text-gray-900">{{ __('contensio::admin.pages.title') }}</h1>
+        <p class="text-sm text-gray-400 mt-0.5">{{ __('contensio::admin.pages.subtitle') }}</p>
     </div>
-    <a href="{{ route('cms.admin.pages.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
+    <a href="{{ route('contensio.account.pages.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        {{ __('cms::admin.pages.create') }}
+        {{ __('contensio::admin.pages.create') }}
     </a>
 </div>
 
@@ -52,14 +52,14 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
     </div>
-    <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ __('cms::admin.pages.empty_title') }}</h3>
-    <p class="text-sm text-gray-400 mb-5 max-w-xs mx-auto">{{ __('cms::admin.pages.empty_subtitle') }}</p>
-    <a href="{{ route('cms.admin.pages.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ __('contensio::admin.pages.empty_title') }}</h3>
+    <p class="text-sm text-gray-400 mb-5 max-w-xs mx-auto">{{ __('contensio::admin.pages.empty_subtitle') }}</p>
+    <a href="{{ route('contensio.account.pages.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        {{ __('cms::admin.pages.create') }}
+        {{ __('contensio::admin.pages.create') }}
     </a>
 </div>
 
@@ -80,9 +80,9 @@
             @foreach($items as $item)
             <tr class="hover:bg-blue-50/40 transition-colors group">
                 <td class="px-4 py-3.5">
-                    <a href="{{ route('cms.admin.pages.edit', $item->id) }}"
+                    <a href="{{ route('contensio.account.pages.edit', $item->id) }}"
                        class="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                        {{ $item->translations->first()?->title ?? __('cms::admin.dashboard.untitled') }}
+                        {{ $item->translations->first()?->title ?? __('contensio::admin.dashboard.untitled') }}
                     </a>
                 </td>
                 <td class="px-4 py-3.5 text-gray-400 hidden sm:table-cell">{{ $item->author?->name ?? '—' }}</td>
@@ -99,7 +99,7 @@
                     @endif
                 </td>
                 <td class="px-4 py-3.5 text-right">
-                    <a href="{{ route('cms.admin.pages.edit', $item->id) }}"
+                    <a href="{{ route('contensio.account.pages.edit', $item->id) }}"
                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 rounded px-2.5 py-1 transition-colors">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

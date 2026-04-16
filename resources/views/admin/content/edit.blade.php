@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @php
     $isNew     = is_null($content);
@@ -46,7 +46,7 @@
 {{-- Autosave restore banner (only shown when a newer autosave exists for this user) --}}
 @if(! $isNew && ! empty($autosave))
 <div id="autosave-banner"
-     x-data="contensioAutosaveBanner(@js($autosave['data']), @js(route('cms.admin.content.autosave.discard', $content->id)))"
+     x-data="contensioAutosaveBanner(@js($autosave['data']), @js(route('contensio.account.content.autosave.discard', $content->id)))"
      x-show="visible"
      x-cloak
      class="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg px-4 py-3">
@@ -134,7 +134,7 @@
                                    @input="generate()"
                                    placeholder="Enter {{ $typeName }} title"
                                    class="w-full text-lg font-medium border border-gray-300 rounded px-3.5 py-2.5
-                                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                          focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent"
                                    {{ $isDefault ? 'required autofocus' : '' }}>
                             @error("translations.{$lang->id}.title")
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -150,7 +150,7 @@
                                    @input="slugTouched = true"
                                    placeholder="auto-generated"
                                    class="flex-1 text-xs border border-gray-200 rounded-r px-2.5 py-1.5
-                                          focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-600 font-mono">
+                                          focus:outline-none focus:ring-1 focus:ring-ember-500 text-gray-600 font-mono">
                         </div>
 
                     </div>
@@ -173,7 +173,7 @@
                               rows="3"
                               placeholder="Short summary shown in listings…"
                               class="w-full rounded border border-gray-300 px-3 py-2 text-sm
-                                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                     focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent
                                      resize-none text-gray-700">{{ $defExcerpt }}</textarea>
                 </div>
                 @endforeach
@@ -187,48 +187,14 @@
                 <h2 class="text-base font-bold text-gray-800">Content Blocks</h2>
 
                 @if (! $isNew)
-                <div x-data="{ open: false }" class="relative">
-                    <button type="button" @click="open = !open"
-                            class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white
-                                   text-sm font-medium px-3 py-1.5 rounded-md transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                        </svg>
-                        Add Block
-                    </button>
-
-                    <div x-show="open" @click.outside="open = false"
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute right-0 mt-1 w-72 bg-white rounded-md shadow-lg border border-gray-200
-                                py-2 z-50 max-h-96 overflow-y-auto">
-                        @php $grouped = $blockTypes->groupBy('category'); @endphp
-                        @foreach ($blockCategories as $catKey => $catLabel)
-                            @if ($grouped->has($catKey))
-                            <div class="px-3 pt-2 pb-1 text-xs text-gray-400 uppercase tracking-wider font-medium
-                                        {{ ! $loop->first ? 'mt-1 border-t border-gray-100' : '' }}">
-                                {{ $catLabel }}
-                            </div>
-                            @foreach ($grouped[$catKey] as $bt)
-                            <a href="{{ route('cms.admin.blocks.new', [$content->id, $bt->name]) }}"
-                               class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                                @include('cms::admin.content.partials.block-icon', ['icon' => $bt->icon])
-                                <div>
-                                    <div class="font-medium">{{ $bt->label }}</div>
-                                    @if ($bt->description)
-                                    <div class="text-xs text-gray-400 leading-tight">{{ $bt->description }}</div>
-                                    @endif
-                                </div>
-                            </a>
-                            @endforeach
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
+                <button type="button" @click="$dispatch('cms:open-block-picker')"
+                        class="inline-flex items-center gap-1.5 bg-ember-500 hover:bg-ember-600 text-white
+                               text-sm font-medium px-3 py-1.5 rounded-md transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Block
+                </button>
                 @endif
             </div>
 
@@ -255,7 +221,7 @@
                 @foreach ($blocks as $block)
                 @php
                     $bType   = $block['type'] ?? 'unknown';
-                    $bConfig = config("cms.blocks.{$bType}", []);
+                    $bConfig = config("contensio.blocks.{$bType}", []);
                     $bName   = $bConfig['label'] ?? ucfirst($bType);
                     $bIcon   = $bConfig['icon'] ?? 'code-bracket';
                     $bActive = $block['is_active'] ?? true;
@@ -284,7 +250,7 @@
                     </div>
 
                     <div class="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center shrink-0">
-                        @include('cms::admin.content.partials.block-icon', ['icon' => $bIcon, 'class' => 'w-4 h-4 text-gray-500'])
+                        @include('contensio::admin.content.partials.block-icon', ['icon' => $bIcon, 'class' => 'w-4 h-4 text-gray-500'])
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-sm font-medium text-gray-900 flex items-center gap-2">
@@ -299,7 +265,7 @@
                     </div>
 
                     <div class="flex items-center gap-1 shrink-0">
-                        <a href="{{ route('cms.admin.blocks.edit', [$content->id, $bId]) }}"
+                        <a href="{{ route('contensio.account.blocks.edit', [$content->id, $bId]) }}"
                            class="p-1.5 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                            title="Edit block">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,7 +277,7 @@
                         <button type="button"
                                 class="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors block-toggle-btn"
                                 data-block-id="{{ $bId }}"
-                                data-toggle-url="{{ route('cms.admin.blocks.toggle', [$content->id, $bId]) }}"
+                                data-toggle-url="{{ route('contensio.account.blocks.toggle', [$content->id, $bId]) }}"
                                 title="{{ $bActive ? 'Hide block' : 'Show block' }}">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 @if ($bActive)
@@ -326,12 +292,6 @@
                             </svg>
                         </button>
 
-                        <form id="delete-block-{{ $bId }}"
-                              method="POST"
-                              action="{{ route('cms.admin.blocks.destroy', [$content->id, $bId]) }}"
-                              class="hidden">
-                            @csrf @method('DELETE')
-                        </form>
                         <button type="button"
                                 @click="$dispatch('cms:confirm', {
                                     title: 'Delete Block',
@@ -356,7 +316,7 @@
     </div>
 
     {{-- ── Sidebar ────────────────────────────────────────────────────────── --}}
-    <div class="w-80 shrink-0 space-y-4">
+    <div id="cms-edit-sidebar" class="w-80 shrink-0 space-y-4">
 
         {{-- Publish --}}
         <div class="bg-white rounded-md border border-gray-200 p-4">
@@ -366,32 +326,90 @@
                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Status</label>
                 <select name="status"
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white
-                               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     <option value="draft"     {{ old('status', $content?->status ?? 'draft') === 'draft'     ? 'selected' : '' }}>Draft</option>
                     <option value="published" {{ old('status', $content?->status ?? 'draft') === 'published' ? 'selected' : '' }}>Published</option>
                 </select>
             </div>
 
+            {{-- Preview button(s) — only for content types with public URLs --}}
+            @if(! $isNew && in_array($typeName, ['post', 'page']))
+            @php
+                $previewLinks = [];
+                foreach ($languages as $lang) {
+                    $slug = $existing[$lang->id]['slug'] ?? null;
+                    if (! $slug) continue;
+                    try {
+                        $url = match($typeName) {
+                            'post' => route('contensio.post', $slug),
+                            'page' => route('contensio.page', $slug),
+                        };
+                    } catch (\Throwable) { continue; }
+                    $previewLinks[] = [
+                        'url'  => $url,
+                        'code' => strtoupper($lang->code),
+                        'name' => $lang->name,
+                    ];
+                }
+            @endphp
+            @if(count($previewLinks) === 1)
+            <div class="mb-4">
+                <a href="{{ $previewLinks[0]['url'] }}" target="_blank" rel="noopener"
+                   class="w-full inline-flex items-center justify-center gap-1.5 text-sm font-medium
+                          text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-md transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Preview
+                </a>
+            </div>
+            @elseif(count($previewLinks) > 1)
+            <div class="mb-4" x-data="{ previewOpen: false }">
+                <button type="button" @click="previewOpen = !previewOpen"
+                        class="w-full inline-flex items-center justify-between gap-1.5 text-sm font-medium
+                               text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-md transition-colors">
+                    <span class="inline-flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                        Preview
+                    </span>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform" :class="previewOpen ? 'rotate-180' : ''"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div x-show="previewOpen" @click.outside="previewOpen = false" x-cloak
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 -translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="mt-1 bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+                    @foreach($previewLinks as $pl)
+                    <a href="{{ $pl['url'] }}" target="_blank" rel="noopener"
+                       class="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                        <span class="inline-flex items-center justify-center w-8 h-5 text-xs font-bold
+                                     bg-slate-100 rounded text-slate-600 shrink-0">{{ $pl['code'] }}</span>
+                        {{ $pl['name'] }}
+                        <svg class="w-3 h-3 text-gray-400 ml-auto shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+            @endif
+
             <div class="flex flex-col gap-2">
                 <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-md transition-colors">
+                        class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-4 py-2.5 rounded-md transition-colors">
                     {{ $isNew ? "Create {$typeLabel}" : 'Save Changes' }}
                 </button>
 
                 @if (! $isNew)
-                @php
-                    $deleteAction = match($typeName) {
-                        'page'  => route('cms.admin.pages.destroy', $content->id),
-                        'post'  => route('cms.admin.posts.destroy', $content->id),
-                        default => route('cms.admin.content.destroy', [$typeName, $content->id]),
-                    };
-                @endphp
-                <form id="delete-content-{{ $content->id }}"
-                      method="POST"
-                      action="{{ $deleteAction }}"
-                      class="hidden">
-                    @csrf @method('DELETE')
-                </form>
                 <button type="button"
                         @click="$dispatch('cms:confirm', {
                             title: 'Delete {{ $typeLabel }}',
@@ -406,6 +424,54 @@
                 @endif
             </div>
         </div>
+
+        {{-- Featured Image --}}
+        @if($type->has_featured_image)
+        <div class="bg-white rounded-md border border-gray-200"
+             x-data="{ imgUrl: @js($content?->featuredImage?->url() ?? null) }"
+             x-on:cms:media-selected.window="if ($event.detail.inputName === 'featured_image_id' && $event.detail.items[0]) imgUrl = $event.detail.items[0].url">
+            <div class="px-4 py-3 border-b border-gray-100">
+                <h3 class="text-base font-bold text-gray-800">Featured Image</h3>
+            </div>
+            <div class="p-4 space-y-3">
+                <input type="hidden" name="featured_image_id" x-ref="featuredImageInput"
+                       value="{{ old('featured_image_id', $content?->featured_image_id ?? '') }}">
+
+                {{-- Preview --}}
+                <div x-show="imgUrl" x-cloak
+                     class="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-video">
+                    <img :src="imgUrl" alt="Featured image" class="w-full h-full object-cover">
+                    <button type="button"
+                            @click="imgUrl = null; $refs.featuredImageInput.value = ''"
+                            class="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white rounded-full
+                                   flex items-center justify-center text-gray-500 hover:text-red-600 shadow-sm transition-colors"
+                            title="Remove image">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Placeholder --}}
+                <div x-show="! imgUrl"
+                     class="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 aspect-video
+                            flex flex-col items-center justify-center text-gray-400">
+                    <svg class="w-8 h-8 mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="text-xs">No image selected</p>
+                </div>
+
+                <button type="button"
+                        @click="$dispatch('cms:media-pick', { inputName: 'featured_image_id', accept: 'image/', multiple: false })"
+                        class="w-full text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50
+                               px-3 py-2 rounded-md transition-colors"
+                        x-text="imgUrl ? 'Change Image' : 'Set Image'">
+                </button>
+            </div>
+        </div>
+        @endif
 
         {{-- Taxonomy term selection --}}
         @foreach($taxonomies as $taxonomy)
@@ -428,7 +494,7 @@
                 <label class="flex items-center gap-2.5 cursor-pointer group">
                     <input type="checkbox" name="term_ids[]" value="{{ $term->id }}"
                            {{ in_array($term->id, $selectedTermIds) ? 'checked' : '' }}
-                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                     <span class="text-sm text-gray-700 group-hover:text-gray-900">{{ $tTrans?->name ?? '—' }}</span>
                 </label>
                 @foreach($taxonomy->terms->where('parent_id', $term->id)->sortBy('position') as $child)
@@ -436,7 +502,7 @@
                 <label class="flex items-center gap-2.5 cursor-pointer group pl-5">
                     <input type="checkbox" name="term_ids[]" value="{{ $child->id }}"
                            {{ in_array($child->id, $selectedTermIds) ? 'checked' : '' }}
-                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500">
                     <span class="text-sm text-gray-500 group-hover:text-gray-700">{{ $cTrans?->name ?? '—' }}</span>
                 </label>
                 @endforeach
@@ -524,7 +590,7 @@
                                 $current = old("fields.{$field->id}.{$lang->id}", $fieldValues[$valKey] ?? '');
                             @endphp
                             <div x-show="activeLang === {{ $lang->id }}">
-                                @include('cms::admin.content.partials.field-input', [
+                                @include('contensio::admin.content.partials.field-input', [
                                     'field'   => $field,
                                     'inputName' => "fields[{$field->id}][{$lang->id}]",
                                     'label'   => $fLabel . ' (' . $lang->code . ')',
@@ -540,7 +606,7 @@
                                 $valKey  = $field->id . ':_';
                                 $current = old("fields.{$field->id}", $fieldValues[$valKey] ?? '');
                             @endphp
-                            @include('cms::admin.content.partials.field-input', [
+                            @include('contensio::admin.content.partials.field-input', [
                                 'field'   => $field,
                                 'inputName' => "fields[{$field->id}]",
                                 'label'   => $fLabel,
@@ -586,7 +652,7 @@
                                value="{{ $defMetaTitle }}"
                                maxlength="120"
                                placeholder="Leave blank to use page title"
-                               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 mb-1">
@@ -596,7 +662,7 @@
                                   rows="3"
                                   maxlength="300"
                                   placeholder="Brief description for search results"
-                                  class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none">{{ $defMetaDesc }}</textarea>
+                                  class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent resize-none">{{ $defMetaDesc }}</textarea>
                     </div>
                 </div>
                 @endforeach
@@ -633,10 +699,38 @@
 
 </form>
 
+{{-- Delete forms live OUTSIDE the main form to avoid invalid nested-form HTML --}}
+@if(! $isNew)
+@php
+    $deleteAction = match($typeName) {
+        'page'  => route('contensio.account.pages.destroy', $content->id),
+        'post'  => route('contensio.account.posts.destroy', $content->id),
+        default => route('contensio.account.content.destroy', [$typeName, $content->id]),
+    };
+@endphp
+<form id="delete-content-{{ $content->id }}" method="POST" action="{{ $deleteAction }}" class="hidden">
+    @csrf @method('DELETE')
+</form>
+@foreach($blocks as $block)
+@php $bId = $block['id'] ?? ''; @endphp
+@if($bId)
+<form id="delete-block-{{ $bId }}" method="POST"
+      action="{{ route('contensio.account.blocks.destroy', [$content->id, $bId]) }}"
+      class="hidden">
+    @csrf @method('DELETE')
+</form>
+@endif
+@endforeach
+@endif
+
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
 <style>
 [x-cloak] { display: none !important; }
+
+@media (min-width: 1400px) {
+    #cms-edit-sidebar { width: 30rem; }
+}
 
 /* Tagify — match admin theme */
 .tagify {
@@ -686,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function () {
             whitelist:        whitelist,
             enforceWhitelist: false,         // allow creating new tags
             dropdown: {
-                enabled:       0,            // show suggestions from 0 chars
+                enabled:       1,            // only show after typing ≥1 char (prevents empty dropdown on focus)
                 maxItems:      30,
                 closeOnSelect: false,
                 highlightFirst: true,
@@ -699,8 +793,10 @@ document.addEventListener('DOMContentLoaded', function () {
             },
         });
 
-        // Keyboard UX: open dropdown on focus
-        input.addEventListener('focus', function () { tagify.dropdown.show(); }, true);
+        // When there are existing terms, show them all on focus as a convenience
+        if (whitelist.length > 0) {
+            input.addEventListener('focus', function () { tagify.dropdown.show(); }, true);
+        }
     });
 
 
@@ -717,7 +813,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .map(el => el.dataset.blockId)
                     .filter(Boolean);
 
-                fetch('{{ route('cms.admin.blocks.reorder', $content->id) }}', {
+                fetch('{{ route('contensio.account.blocks.reorder', $content->id) }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -754,13 +850,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('content-form');
         if (!form) return;
 
-        const autosaveUrl = @js(route('cms.admin.content.autosave', $content->id));
+        const autosaveUrl = @js(route('contensio.account.content.autosave', $content->id));
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
         const indicator = document.getElementById('autosave-indicator');
 
-        let lastSerialized = null;
-        let debounceTimer  = null;
-        let statusTimer    = null;
+        let lastSerialized  = null;
+        let snapshotReady   = false;   // true once Alpine + Tagify have had time to initialize
+        let debounceTimer   = null;
+        let statusTimer     = null;
 
         const setStatus = (text, kind) => {
             if (!indicator) return;
@@ -805,6 +902,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const doAutosave = async () => {
+            if (!snapshotReady) return; // still initializing
             const fd = serializeFD();
             const sig = signature(fd);
             if (sig === lastSerialized) return; // no changes since last save
@@ -840,14 +938,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Final save on unload (best-effort)
         window.addEventListener('beforeunload', () => {
+            if (!snapshotReady) return; // never fully initialized — don't save
             const fd = serializeFD();
             if (signature(fd) === lastSerialized) return;
             fd.set('_token', csrf);
             navigator.sendBeacon(autosaveUrl, fd);
         });
 
-        // Snapshot the initial form state so the first change is detected
-        lastSerialized = signature(serializeFD());
+        // Delay the initial snapshot until Alpine + Tagify have finished
+        // mutating form field values. Without this delay the snapshot captures
+        // the raw HTML values, but beforeunload sees the post-init values, so
+        // an unchanged form looks "dirty" and creates a spurious autosave.
+        setTimeout(() => {
+            lastSerialized = signature(serializeFD());
+            snapshotReady  = true;
+        }, 600);
     })();
 
     // Alpine component for the restore banner
@@ -917,5 +1022,81 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 @endif
 @endpush
+
+{{-- ── Block Picker Modal ──────────────────────────────────────────────── --}}
+@if(! $isNew)
+<div x-data="{ open: false }"
+     @cms:open-block-picker.window="open = true"
+     x-show="open"
+     x-cloak
+     @keydown.escape.window="open = false"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+     @click.self="open = false">
+
+    <div x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[85vh]">
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+            <div>
+                <h2 class="text-base font-bold text-gray-900">Add Block</h2>
+                <p class="text-xs text-gray-500 mt-0.5">Choose a content block to insert.</p>
+            </div>
+            <button type="button" @click="open = false"
+                    class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Scrollable block grid --}}
+        <div class="overflow-y-auto p-6 space-y-6">
+            @php $grouped = $blockTypes->groupBy('category'); @endphp
+            @foreach($blockCategories as $catKey => $catLabel)
+            @if($grouped->has($catKey))
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">{{ $catLabel }}</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    @foreach($grouped[$catKey] as $bt)
+                    <a href="{{ route('contensio.account.blocks.new', [$content->id, $bt->name]) }}"
+                       class="group flex items-start gap-3 p-4 rounded-xl border border-gray-200
+                              hover:border-ember-400 hover:bg-ember-50/40 transition-all">
+                        <div class="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-ember-100
+                                    flex items-center justify-center shrink-0 transition-colors">
+                            @include('contensio::admin.content.partials.block-icon', [
+                                'icon'  => $bt->icon,
+                                'class' => 'w-5 h-5 text-slate-500 group-hover:text-ember-600',
+                            ])
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-gray-800 group-hover:text-ember-700 leading-tight">
+                                {{ $bt->label }}
+                            </p>
+                            @if($bt->description)
+                            <p class="text-xs text-gray-400 mt-1 leading-snug">{{ $bt->description }}</p>
+                            @endif
+                        </div>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
 
 @endsection

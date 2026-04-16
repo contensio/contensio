@@ -26,14 +26,14 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\BlockType;
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\Language;
+use Contensio\Models\BlockType;
+use Contensio\Models\Content;
+use Contensio\Models\Language;
 
 class BlockController extends Controller
 {
@@ -45,11 +45,11 @@ class BlockController extends Controller
         $content = Content::with('contentType')->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.dashboard')->with('error', 'Content not found.');
+            return redirect()->route('contensio.account.dashboard')->with('error', 'Content not found.');
         }
 
         $blockType   = BlockType::where('name', $type)->where('is_active', true)->firstOrFail();
-        $blockConfig = config("cms.blocks.{$type}", []);
+        $blockConfig = config("contensio.blocks.{$type}", []);
 
         $block = [
             'id'           => 'blk_' . Str::random(12),
@@ -63,7 +63,7 @@ class BlockController extends Controller
         $languages       = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defaultLanguage = Language::where('is_default', true)->first();
 
-        return view('cms::admin.blocks.form', compact(
+        return view('contensio::admin.blocks.form', compact(
             'content', 'block', 'blockType', 'blockConfig', 'languages', 'defaultLanguage'
         ));
     }
@@ -78,7 +78,7 @@ class BlockController extends Controller
         $content = Content::find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.dashboard')->with('error', 'Content not found.');
+            return redirect()->route('contensio.account.dashboard')->with('error', 'Content not found.');
         }
 
         $block    = $this->buildBlockFromRequest($request);
@@ -98,7 +98,7 @@ class BlockController extends Controller
         $content = Content::with('contentType')->find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.dashboard')->with('error', 'Content not found.');
+            return redirect()->route('contensio.account.dashboard')->with('error', 'Content not found.');
         }
 
         $block = collect($content->blocks ?? [])->firstWhere('id', $blockId);
@@ -109,12 +109,12 @@ class BlockController extends Controller
 
         $type        = $block['type'];
         $blockType   = BlockType::where('name', $type)->firstOrFail();
-        $blockConfig = config("cms.blocks.{$type}", []);
+        $blockConfig = config("contensio.blocks.{$type}", []);
 
         $languages       = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defaultLanguage = Language::where('is_default', true)->first();
 
-        return view('cms::admin.blocks.form', compact(
+        return view('contensio::admin.blocks.form', compact(
             'content', 'block', 'blockType', 'blockConfig', 'languages', 'defaultLanguage'
         ));
     }
@@ -129,7 +129,7 @@ class BlockController extends Controller
         $content = Content::find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.dashboard')->with('error', 'Content not found.');
+            return redirect()->route('contensio.account.dashboard')->with('error', 'Content not found.');
         }
 
         $blocks = $content->blocks ?? [];
@@ -146,7 +146,7 @@ class BlockController extends Controller
         $content->update(['blocks' => array_values($blocks)]);
 
         if ($request->boolean('_stay')) {
-            return redirect()->route('cms.admin.blocks.edit', [$id, $blockId])
+            return redirect()->route('contensio.account.blocks.edit', [$id, $blockId])
                 ->with('success', 'Block saved.');
         }
 
@@ -161,7 +161,7 @@ class BlockController extends Controller
         $content = Content::find($id);
 
         if (! $content) {
-            return redirect()->route('cms.admin.dashboard');
+            return redirect()->route('contensio.account.dashboard');
         }
 
         $blocks = array_values(
@@ -253,8 +253,8 @@ class BlockController extends Controller
     protected function backUrl(Content $content): string
     {
         return match ($content->contentType?->name) {
-            'post'  => route('cms.admin.posts.edit', $content->id),
-            default => route('cms.admin.pages.edit', $content->id),
+            'post'  => route('contensio.account.posts.edit', $content->id),
+            default => route('contensio.account.pages.edit', $content->id),
         };
     }
 }

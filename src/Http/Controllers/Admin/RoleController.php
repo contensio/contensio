@@ -14,13 +14,13 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Permission;
-use Contensio\Cms\Models\Role;
-use Contensio\Cms\Models\RoleTranslation;
-use Contensio\Cms\Support\Activity;
+use Contensio\Models\Language;
+use Contensio\Models\Permission;
+use Contensio\Models\Role;
+use Contensio\Models\RoleTranslation;
+use Contensio\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +38,7 @@ class RoleController extends Controller
             ->get();
         $defaultLangId = Language::where('is_default', true)->value('id');
 
-        return view('cms::admin.roles.index', compact('roles', 'defaultLangId'));
+        return view('contensio::admin.roles.index', compact('roles', 'defaultLangId'));
     }
 
     public function create()
@@ -46,7 +46,7 @@ class RoleController extends Controller
         $permissions   = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
         $defaultLangId = Language::where('is_default', true)->value('id');
 
-        return view('cms::admin.roles.create', compact('permissions', 'defaultLangId'));
+        return view('contensio::admin.roles.create', compact('permissions', 'defaultLangId'));
     }
 
     public function store(Request $request)
@@ -94,23 +94,34 @@ class RoleController extends Controller
             ->withProperties(['permissions_count' => count($data['permissions'] ?? [])]);
 
         return redirect()
-            ->route('cms.admin.roles.index')
+            ->route('contensio.account.roles.index')
             ->with('success', 'Role created.');
     }
 
     public function edit(int $id)
     {
-        $role          = Role::with(['translations', 'permissions'])->findOrFail($id);
+        $role = Role::with(['translations', 'permissions'])->findOrFail($id);
+
+        if ($role->is_system && $role->permissions->contains('name', '*')) {
+            return redirect()->route('contensio.account.roles.index')
+                ->with('error', 'Super Admin role cannot be edited — it has full access by default.');
+        }
+
         $permissions   = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
         $defaultLangId = Language::where('is_default', true)->value('id');
         $assignedIds   = $role->permissions->pluck('id')->toArray();
 
-        return view('cms::admin.roles.edit', compact('role', 'permissions', 'defaultLangId', 'assignedIds'));
+        return view('contensio::admin.roles.edit', compact('role', 'permissions', 'defaultLangId', 'assignedIds'));
     }
 
     public function update(Request $request, int $id)
     {
-        $role = Role::findOrFail($id);
+        $role = Role::with('permissions')->findOrFail($id);
+
+        if ($role->is_system && $role->permissions->contains('name', '*')) {
+            return redirect()->route('contensio.account.roles.index')
+                ->with('error', 'Super Admin role cannot be edited.');
+        }
 
         $data = $request->validate([
             'label'         => ['required', 'string', 'max:100'],
@@ -145,7 +156,7 @@ class RoleController extends Controller
             ->withProperties(['permissions_count' => count($data['permissions'] ?? [])]);
 
         return redirect()
-            ->route('cms.admin.roles.edit', $role->id)
+            ->route('contensio.account.roles.edit', $role->id)
             ->with('success', 'Role updated.');
     }
 
@@ -171,7 +182,7 @@ class RoleController extends Controller
         Activity::record('deleted', 'role', $id, "Role: {$roleName}");
 
         return redirect()
-            ->route('cms.admin.roles.index')
+            ->route('contensio.account.roles.index')
             ->with('success', 'Role deleted.');
     }
 

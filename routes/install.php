@@ -1,13 +1,13 @@
 <?php
 
-use Contensio\Cms\Http\Controllers\Install\InstallController;
+use Contensio\Http\Controllers\Install\InstallController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('install')
-    ->name('cms.install.')
+    ->name('contensio.install.')
     ->middleware('web')
     ->group(function () {
-        Route::get('/', fn () => redirect()->route('cms.install.requirements'))->name('index');
+        Route::get('/', fn () => redirect()->route('contensio.install.requirements'))->name('index');
         Route::get('/requirements', [InstallController::class, 'requirements'])->name('requirements');
         Route::get('/database',     [InstallController::class, 'database'])->name('database');
         Route::post('/database',    [InstallController::class, 'storeDatabase'])->name('database.store');

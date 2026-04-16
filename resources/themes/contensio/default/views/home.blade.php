@@ -27,7 +27,7 @@
         @if($slug)
         <article class="group">
             @if($post->featuredImage)
-            <a href="{{ route('cms.post', $slug) }}">
+            <a href="{{ route('contensio.post', $slug) }}">
                 <div class="aspect-video rounded-xl overflow-hidden mb-3 bg-gray-100">
                     <img src="{{ Storage::disk($post->featuredImage->disk)->url($post->featuredImage->file_path) }}"
                          alt="{{ $title }}"
@@ -37,7 +37,7 @@
             @endif
             <p class="text-xs text-gray-400 mb-1.5">{{ $post->published_at?->format('M d, Y') }}</p>
             <h3 class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
-                <a href="{{ route('cms.post', $slug) }}">{{ $title }}</a>
+                <a href="{{ route('contensio.post', $slug) }}">{{ $title }}</a>
             </h3>
             @if($trans?->excerpt)
             <p class="mt-1.5 text-sm text-gray-500 line-clamp-2">{{ $trans->excerpt }}</p>
@@ -48,7 +48,7 @@
     </div>
 
     <div class="mt-10 text-center">
-        <a href="{{ route('cms.blog') }}"
+        <a href="{{ route('contensio.blog') }}"
            class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
             View all posts
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

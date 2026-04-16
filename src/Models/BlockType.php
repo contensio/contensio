@@ -26,7 +26,7 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Models;
+namespace Contensio\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -58,7 +58,7 @@ class BlockType extends Model
      */
     public function getConfig(): array
     {
-        return config("cms.blocks.{$this->name}", [
+        return config("contensio.blocks.{$this->name}", [
             'label'       => $this->label,
             'description' => $this->description,
             'icon'        => $this->icon,

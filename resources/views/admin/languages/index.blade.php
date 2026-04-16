@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Languages')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">Languages</span>
 @endsection
@@ -36,8 +36,8 @@
         <h1 class="text-xl font-bold text-gray-900">Languages</h1>
         <p class="text-sm text-gray-500 mt-0.5">Define which languages your site supports.</p>
     </div>
-    <a href="{{ route('cms.admin.languages.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+    <a href="{{ route('contensio.account.languages.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -56,8 +56,8 @@
     </div>
     <h3 class="text-base font-semibold text-gray-900 mb-1">No languages configured</h3>
     <p class="text-sm text-gray-500 mb-6 max-w-xs mx-auto">Add at least one language to start managing multilingual content.</p>
-    <a href="{{ route('cms.admin.languages.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+    <a href="{{ route('contensio.account.languages.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -115,7 +115,7 @@
 
                         @if(! $lang->is_default)
                         <form id="default-lang-{{ $lang->id }}" method="POST"
-                              action="{{ route('cms.admin.languages.default', $lang->id) }}" class="hidden">
+                              action="{{ route('contensio.account.languages.default', $lang->id) }}" class="hidden">
                             @csrf
                         </form>
                         <button type="button"
@@ -130,7 +130,7 @@
                         </button>
                         @endif
 
-                        <a href="{{ route('cms.admin.languages.edit', $lang->id) }}"
+                        <a href="{{ route('contensio.account.languages.edit', $lang->id) }}"
                            class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 rounded px-2.5 py-1 transition-colors">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -141,7 +141,7 @@
 
                         @if(! $lang->is_default)
                         <form id="delete-lang-{{ $lang->id }}" method="POST"
-                              action="{{ route('cms.admin.languages.destroy', $lang->id) }}" class="hidden">
+                              action="{{ route('contensio.account.languages.destroy', $lang->id) }}" class="hidden">
                             @csrf @method('DELETE')
                         </form>
                         <button type="button"

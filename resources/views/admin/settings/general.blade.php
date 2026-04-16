@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'General Settings')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">General</span>
 @endsection
@@ -41,7 +41,7 @@
     <p class="text-sm text-gray-500 mt-0.5">Basic site identity and display preferences.</p>
 </div>
 
-<form method="POST" action="{{ route('cms.admin.settings.general.save') }}" class="max-w-lg space-y-5">
+<form method="POST" action="{{ route('contensio.account.settings.general.save') }}" class="max-w-lg space-y-5">
 @csrf
 
     {{-- Site identity --}}
@@ -59,7 +59,7 @@
                        name="site_name"
                        value="{{ old('site_name', $settings['site_name'] ?? config('app.name')) }}"
                        required
-                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 <p class="mt-1 text-xs text-gray-400">Displayed in the browser tab, header, and emails.</p>
             </div>
 
@@ -69,7 +69,7 @@
                        name="site_tagline"
                        value="{{ old('site_tagline', $settings['site_tagline'] ?? '') }}"
                        placeholder="Just another website"
-                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                       class="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 <p class="mt-1 text-xs text-gray-400">A short description shown on the homepage.</p>
             </div>
 
@@ -98,7 +98,7 @@
                     }
                 @endphp
                 <select name="timezone"
-                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     @foreach($grouped as $region => $zones)
                     <optgroup label="{{ $region }}">
                         @foreach($zones as $tz)
@@ -125,7 +125,7 @@
                     ];
                 @endphp
                 <select name="date_format"
-                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        class="w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                     @foreach($formats as $fmt => $example)
                     <option value="{{ $fmt }}" {{ $currentFmt === $fmt ? 'selected' : '' }}>
                         {{ $example }}
@@ -139,7 +139,7 @@
 
     <div class="flex justify-end">
         <button type="submit"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
+                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">
             Save Settings
         </button>
     </div>

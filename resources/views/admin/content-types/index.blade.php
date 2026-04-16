@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', 'Content Types')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">Content Types</span>
 @endsection
@@ -36,8 +36,8 @@
         <h1 class="text-xl font-bold text-gray-900">Content Types</h1>
         <p class="text-sm text-gray-500 mt-0.5">Manage post types and their taxonomies.</p>
     </div>
-    <a href="{{ route('cms.admin.content-types.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+    <a href="{{ route('contensio.account.content-types.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -102,7 +102,7 @@
 
             {{-- Actions --}}
             <div class="flex items-center gap-2 shrink-0">
-                <a href="{{ route('cms.admin.content-types.edit', $type->id) }}"
+                <a href="{{ route('contensio.account.content-types.edit', $type->id) }}"
                    class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-white transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -115,7 +115,7 @@
                 {{-- Hidden delete form --}}
                 <form id="delete-type-{{ $type->id }}"
                       method="POST"
-                      action="{{ route('cms.admin.content-types.destroy', $type->id) }}"
+                      action="{{ route('contensio.account.content-types.destroy', $type->id) }}"
                       class="hidden">
                     @csrf @method('DELETE')
                 </form>
@@ -162,17 +162,17 @@
                     <p class="text-xs text-gray-400 font-mono">{{ $txSlug }}</p>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                    <a href="{{ route('cms.admin.terms.index', $taxonomy->id) }}"
+                    <a href="{{ route('contensio.account.terms.index', $taxonomy->id) }}"
                        class="text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors">Terms</a>
                     <span class="text-gray-200">|</span>
-                    <a href="{{ route('cms.admin.taxonomies.edit', [$type->id, $taxonomy->id]) }}"
+                    <a href="{{ route('contensio.account.taxonomies.edit', [$type->id, $taxonomy->id]) }}"
                        class="text-xs font-medium text-gray-500 hover:text-gray-800 transition-colors">Edit</a>
 
                     @if(! $taxonomy->is_system)
                     <span class="text-gray-200">|</span>
                     <form id="delete-tax-{{ $taxonomy->id }}"
                           method="POST"
-                          action="{{ route('cms.admin.taxonomies.destroy', [$type->id, $taxonomy->id]) }}"
+                          action="{{ route('contensio.account.taxonomies.destroy', [$type->id, $taxonomy->id]) }}"
                           class="hidden">
                         @csrf @method('DELETE')
                     </form>
@@ -193,8 +193,8 @@
 
             {{-- Add taxonomy link --}}
             <div class="px-5 py-2.5 pl-14">
-                <a href="{{ route('cms.admin.taxonomies.create', $type->id) }}"
-                   class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors">
+                <a href="{{ route('contensio.account.taxonomies.create', $type->id) }}"
+                   class="inline-flex items-center gap-1.5 text-xs font-medium text-ember-600 hover:text-ember-700 transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -215,8 +215,8 @@
         </div>
         <h3 class="text-base font-semibold text-gray-900 mb-1">No content types yet</h3>
         <p class="text-sm text-gray-500 mb-6 max-w-xs mx-auto">Create your first content type to start managing custom post types.</p>
-        <a href="{{ route('cms.admin.content-types.create') }}"
-           class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+        <a href="{{ route('contensio.account.content-types.create') }}"
+           class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>

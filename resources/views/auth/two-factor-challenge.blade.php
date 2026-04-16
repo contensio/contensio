@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::auth.partials.layout')
+@extends('contensio::auth.partials.layout')
 @section('title', 'Two-factor authentication')
 
 @section('card')
@@ -43,7 +43,7 @@
         </div>
 
         <button type="submit"
-            class="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg transition-colors">
+            class="w-full mt-5 bg-[#d04a1f] hover:bg-[#b23e18] text-white font-medium text-sm py-2.5 rounded-lg transition-colors">
             Verify code
         </button>
     </form>
@@ -61,25 +61,25 @@
         </div>
 
         <button type="submit"
-            class="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 rounded-lg transition-colors">
+            class="w-full mt-5 bg-[#d04a1f] hover:bg-[#b23e18] text-white font-medium text-sm py-2.5 rounded-lg transition-colors">
             Sign in
         </button>
     </form>
 
     <p class="text-center text-sm text-gray-500 mt-6">
         <template x-if="mode === 'code'">
-            <button type="button" @click="mode = 'recovery'" class="text-blue-600 hover:text-blue-700 font-medium">
+            <button type="button" @click="mode = 'recovery'" class="text-[#b23e18] hover:text-[#8f3112] font-medium">
                 Use a recovery code instead
             </button>
         </template>
         <template x-if="mode === 'recovery'">
-            <button type="button" @click="mode = 'code'" class="text-blue-600 hover:text-blue-700 font-medium">
+            <button type="button" @click="mode = 'code'" class="text-[#b23e18] hover:text-[#8f3112] font-medium">
                 Use an authenticator code instead
             </button>
         </template>
     </p>
 
-    <form method="POST" action="{{ route('cms.logout') }}" class="mt-3">
+    <form method="POST" action="{{ route('contensio.logout') }}" class="mt-3">
         @csrf
         <button type="submit" class="w-full text-xs text-gray-400 hover:text-gray-600 py-2">
             Cancel and sign out

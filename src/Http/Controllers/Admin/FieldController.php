@@ -22,11 +22,11 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
-use Contensio\Cms\Models\Field;
-use Contensio\Cms\Models\FieldGroup;
-use Contensio\Cms\Models\Language;
+use Contensio\Models\Field;
+use Contensio\Models\FieldGroup;
+use Contensio\Models\Language;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;

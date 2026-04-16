@@ -34,7 +34,7 @@
             </div>
             <div class="p-4 space-y-3">
                 @foreach ($subFields as $subName => $subDef)
-                    @include('cms::admin.blocks.partials.field', [
+                    @include('contensio::admin.blocks.partials.field', [
                         'fieldName'  => $subName,
                         'fieldDef'   => $subDef,
                         'namePrefix' => "{$fullPrefix}[{$idx}]",
@@ -48,7 +48,7 @@
         @endforelse
     </div>
 
-    <button type="button" class="repeater-add mt-3 inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium">
+    <button type="button" class="repeater-add mt-3 inline-flex items-center gap-1.5 text-sm text-ember-600 hover:text-ember-700 font-medium">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
@@ -101,9 +101,9 @@ document.addEventListener('DOMContentLoaded', function () {
             inner += `<div class="block-field">`;
             inner += `<label for="${id}" class="block text-sm font-medium text-gray-700 mb-1.5">${lbl}</label>`;
             if (type === 'textarea') {
-                inner += `<textarea id="${id}" name="${iName}" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" ${req}></textarea>`;
+                inner += `<textarea id="${id}" name="${iName}" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500" ${req}></textarea>`;
             } else {
-                inner += `<input type="${type === 'richtext' ? 'text' : type}" id="${id}" name="${iName}" value="" class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" ${req}>`;
+                inner += `<input type="${type === 'richtext' ? 'text' : type}" id="${id}" name="${iName}" value="" class="w-full border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500" ${req}>`;
             }
             inner += `</div>`;
         });

@@ -8,14 +8,14 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::install.layout')
+@extends('contensio::install.layout')
 
 @section('content')
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
 
     <div class="mb-8">
-        <h1 class="text-2xl font-bold text-gray-900">{{ __('cms::install.requirements.title') }}</h1>
-        <p class="text-gray-500 mt-1">{{ __('cms::install.requirements.subtitle') }}</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ __('contensio::install.requirements.title') }}</h1>
+        <p class="text-gray-500 mt-1">{{ __('contensio::install.requirements.subtitle') }}</p>
     </div>
 
     @if(!$passes)
@@ -24,17 +24,17 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.538-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
         </svg>
         <div>
-            <p class="font-medium text-red-800">{{ __('cms::install.requirements.failed_title') }}</p>
-            <p class="text-red-700 text-sm mt-0.5">{{ __('cms::install.requirements.failed_subtitle') }}</p>
+            <p class="font-medium text-red-800">{{ __('contensio::install.requirements.failed_title') }}</p>
+            <p class="text-red-700 text-sm mt-0.5">{{ __('contensio::install.requirements.failed_subtitle') }}</p>
         </div>
     </div>
     @endif
 
     {{-- PHP Version --}}
     <div class="mb-6">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('cms::install.requirements.php_version') }}</h2>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('contensio::install.requirements.php_version') }}</h2>
         <div class="flex items-center justify-between py-3 border-b border-gray-100">
-            <span class="text-gray-700">{{ __('cms::install.requirements.php_required', ['version' => $results['php']['required']]) }}</span>
+            <span class="text-gray-700">{{ __('contensio::install.requirements.php_required', ['version' => $results['php']['required']]) }}</span>
             @if($results['php']['passes'])
                 <span class="flex items-center gap-1.5 text-green-600 text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -54,7 +54,7 @@
 
     {{-- Extensions --}}
     <div class="mb-6">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('cms::install.requirements.extensions') }}</h2>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('contensio::install.requirements.extensions') }}</h2>
         @foreach($results['extensions']['required'] as $ext)
         <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
             <div>
@@ -72,7 +72,7 @@
         @endforeach
 
         @if(count($results['extensions']['recommended']) > 0)
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 mt-5">{{ __('cms::install.requirements.recommended') }}</h2>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 mt-5">{{ __('contensio::install.requirements.recommended') }}</h2>
         @foreach($results['extensions']['recommended'] as $ext)
         <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
             <div>
@@ -93,7 +93,7 @@
 
     {{-- Permissions --}}
     <div class="mb-6">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('cms::install.requirements.permissions') }}</h2>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('contensio::install.requirements.permissions') }}</h2>
         @foreach($results['permissions']['items'] as $item)
         <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
             <div>
@@ -113,13 +113,13 @@
 
     {{-- Disk --}}
     <div class="mb-8">
-        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('cms::install.requirements.disk_space') }}</h2>
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">{{ __('contensio::install.requirements.disk_space') }}</h2>
         <div class="flex items-center justify-between py-3">
-            <span class="text-gray-700">{{ __('cms::install.requirements.disk_required') }}</span>
+            <span class="text-gray-700">{{ __('contensio::install.requirements.disk_required') }}</span>
             @if($results['disk']['passes'])
                 <span class="flex items-center gap-1.5 text-green-600 text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    {{ __('cms::install.requirements.disk_available', ['mb' => $results['disk']['free_mb']]) }}
+                    {{ __('contensio::install.requirements.disk_available', ['mb' => $results['disk']['free_mb']]) }}
                 </span>
             @else
                 <span class="flex items-center gap-1.5 text-red-600 text-sm font-medium">
@@ -132,16 +132,16 @@
 
     <div class="flex justify-between items-center">
         <button onclick="location.reload()" class="text-gray-500 text-sm hover:text-gray-700">
-            {{ __('cms::install.requirements.check_again') }}
+            {{ __('contensio::install.requirements.check_again') }}
         </button>
         @if($passes)
-        <a href="{{ route('cms.install.database') }}"
-           class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2.5 rounded-lg transition-colors">
-            {{ __('cms::install.buttons.continue') }}
+        <a href="{{ route('contensio.install.database') }}"
+           class="bg-ember-500 hover:bg-ember-600 text-white font-medium px-6 py-2.5 rounded-lg transition-colors">
+            {{ __('contensio::install.buttons.continue') }}
         </a>
         @else
         <button disabled class="bg-gray-200 text-gray-400 font-medium px-6 py-2.5 rounded-lg cursor-not-allowed">
-            {{ __('cms::install.requirements.fix_issues') }}
+            {{ __('contensio::install.requirements.fix_issues') }}
         </button>
         @endif
     </div>

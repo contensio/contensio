@@ -26,10 +26,10 @@
  * update. For custom changes, use themes and plugins.
  */
 
-use Contensio\Cms\Support\MenuRenderer;
-use Contensio\Cms\Support\PluginOptions;
-use Contensio\Cms\Support\ThemeOptions;
-use Contensio\Cms\Support\ThemeRegistry;
+use Contensio\Support\MenuRenderer;
+use Contensio\Support\PluginOptions;
+use Contensio\Support\ThemeOptions;
+use Contensio\Support\ThemeRegistry;
 
 if (! function_exists('theme_asset')) {
     /**

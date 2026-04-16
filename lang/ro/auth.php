@@ -4,7 +4,7 @@ return [
 
     'login' => [
         'title'                => 'Bine ai revenit',
-        'subtitle'             => 'Autentifică-te în panoul de administrare',
+        'subtitle'             => 'Autentifică-te în contul tău',
         'email'                => 'Adresă de email',
         'email_placeholder'    => 'tu@exemplu.com',
         'password'             => 'Parolă',

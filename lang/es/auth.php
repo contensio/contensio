@@ -4,7 +4,7 @@ return [
 
     'login' => [
         'title'                => 'Bienvenido de nuevo',
-        'subtitle'             => 'Inicie sesión en su panel de administración',
+        'subtitle'             => 'Inicie sesión en su cuenta',
         'email'                => 'Dirección de correo',
         'email_placeholder'    => 'usted@ejemplo.com',
         'password'             => 'Contraseña',

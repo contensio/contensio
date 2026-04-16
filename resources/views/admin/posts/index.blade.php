@@ -8,12 +8,12 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
-@section('title', __('cms::admin.posts.title'))
+@section('title', __('contensio::admin.posts.title'))
 
 @section('breadcrumb')
-    <span class="text-gray-900 font-medium">{{ __('cms::admin.posts.title') }}</span>
+    <span class="text-gray-900 font-medium">{{ __('contensio::admin.posts.title') }}</span>
 @endsection
 
 @section('content')
@@ -31,15 +31,15 @@
 
 <div class="flex items-center justify-between mb-5">
     <div>
-        <h1 class="text-xl font-bold text-gray-900">{{ __('cms::admin.posts.title') }}</h1>
-        <p class="text-sm text-gray-400 mt-0.5">{{ __('cms::admin.posts.subtitle') }}</p>
+        <h1 class="text-xl font-bold text-gray-900">{{ __('contensio::admin.posts.title') }}</h1>
+        <p class="text-sm text-gray-400 mt-0.5">{{ __('contensio::admin.posts.subtitle') }}</p>
     </div>
-    <a href="{{ route('cms.admin.posts.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
+    <a href="{{ route('contensio.account.posts.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        {{ __('cms::admin.posts.create') }}
+        {{ __('contensio::admin.posts.create') }}
     </a>
 </div>
 
@@ -52,14 +52,14 @@
                   d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
         </svg>
     </div>
-    <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ __('cms::admin.posts.empty_title') }}</h3>
-    <p class="text-sm text-gray-400 mb-5 max-w-xs mx-auto">{{ __('cms::admin.posts.empty_subtitle') }}</p>
-    <a href="{{ route('cms.admin.posts.create') }}"
-       class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
+    <h3 class="text-sm font-semibold text-gray-900 mb-1">{{ __('contensio::admin.posts.empty_title') }}</h3>
+    <p class="text-sm text-gray-400 mb-5 max-w-xs mx-auto">{{ __('contensio::admin.posts.empty_subtitle') }}</p>
+    <a href="{{ route('contensio.account.posts.create') }}"
+       class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-semibold text-sm px-4 py-2 rounded-md transition-colors shadow-sm">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        {{ __('cms::admin.posts.create') }}
+        {{ __('contensio::admin.posts.create') }}
     </a>
 </div>
 
@@ -79,13 +79,63 @@
         <tbody class="divide-y divide-gray-100">
             @foreach($items as $item)
             <tr class="hover:bg-blue-50/40 transition-colors group">
-                <td class="px-4 py-3.5">
-                    <a href="{{ route('cms.admin.posts.edit', $item->id) }}"
-                       class="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
-                        {{ $item->translations->first()?->title ?? __('cms::admin.dashboard.untitled') }}
-                    </a>
+                <td class="px-4 py-2.5">
+                    <div class="flex items-center gap-3">
+                        {{-- Thumbnail --}}
+                        <a href="{{ route('contensio.account.posts.edit', $item->id) }}"
+                           class="shrink-0 w-10 h-10 rounded overflow-hidden bg-gray-100 flex items-center justify-center">
+                            @if($item->featuredImage)
+                            <img src="{{ $item->featuredImage->variantUrl('thumbnail') }}"
+                                 alt="" class="w-full h-full object-cover">
+                            @else
+                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            @endif
+                        </a>
+                        {{-- Title --}}
+                        <a href="{{ route('contensio.account.posts.edit', $item->id) }}"
+                           class="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
+                            {{ $item->translations->first()?->title ?? __('contensio::admin.dashboard.untitled') }}
+                        </a>
+                    </div>
                 </td>
-                <td class="px-4 py-3.5 text-gray-400 hidden sm:table-cell">{{ $item->author?->name ?? '—' }}</td>
+                <td class="px-4 py-2.5 hidden sm:table-cell">
+                    @if($item->author)
+                    @php
+                        $author    = $item->author;
+                        $thumbPath = $author->avatar_path
+                            ? dirname($author->avatar_path) . '/thumb_' . basename($author->avatar_path)
+                            : null;
+                    @endphp
+                    <div class="flex items-center gap-2.5">
+                        @if($thumbPath)
+                        <img src="{{ asset('storage/' . $thumbPath) }}"
+                             class="w-8 h-8 rounded-full object-cover shrink-0"
+                             alt="{{ $author->name }}">
+                        @else
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600
+                                    flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            {{ strtoupper(substr($author->name, 0, 1)) }}
+                        </div>
+                        @endif
+                        <div class="min-w-0">
+                            @if(auth()->user()?->hasPermission('users.view'))
+                            <a href="{{ route('contensio.account.users.edit', $author->id) }}"
+                               class="block text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors truncate">
+                                {{ $author->name }}
+                            </a>
+                            @else
+                            <span class="block text-sm font-medium text-gray-900 truncate">{{ $author->name }}</span>
+                            @endif
+                            <span class="block text-xs text-gray-400 truncate">{{ $author->email }}</span>
+                        </div>
+                    </div>
+                    @else
+                    <span class="text-gray-400">—</span>
+                    @endif
+                </td>
                 <td class="px-4 py-3.5 text-gray-400 hidden md:table-cell">{{ $item->created_at->format('M d, Y') }}</td>
                 <td class="px-4 py-3.5">
                     @if($item->status === 'published')
@@ -99,7 +149,7 @@
                     @endif
                 </td>
                 <td class="px-4 py-3.5 text-right">
-                    <a href="{{ route('cms.admin.posts.edit', $item->id) }}"
+                    <a href="{{ route('contensio.account.posts.edit', $item->id) }}"
                        class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 rounded px-2.5 py-1 transition-colors">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

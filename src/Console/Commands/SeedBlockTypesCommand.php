@@ -26,21 +26,21 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Console\Commands;
+namespace Contensio\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class SeedBlockTypesCommand extends Command
 {
-    protected $signature = 'cms:seed-blocks
+    protected $signature = 'contensio:seed-blocks
                             {--fresh : Deactivate all existing core types before re-seeding}';
 
     protected $description = 'Seed (or re-seed) core block types into the block_types table';
 
     public function handle(): int
     {
-        $definitions = config('cms.blocks', []);
+        $definitions = config('contensio.blocks', []);
 
         if (empty($definitions)) {
             $this->error('No block type definitions found in config(\'cms.blocks\').');

@@ -26,9 +26,9 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Auth;
+namespace Contensio\Http\Controllers\Auth;
 
-use Contensio\Cms\Support\Activity;
+use Contensio\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +41,7 @@ class LoginController extends Controller
             return $this->redirectAfterLogin(Auth::user());
         }
 
-        return view('cms::auth.login');
+        return view('contensio::auth.login');
     }
 
     public function login(Request $request)
@@ -103,15 +103,15 @@ class LoginController extends Controller
             Activity::record('logout', 'user', $user->id, "User: {$user->email}");
         }
 
-        return redirect()->route('cms.login');
+        return redirect()->route('contensio.login');
     }
 
     private function redirectAfterLogin($user)
     {
         if ($user->canAccessAdmin()) {
-            return redirect()->intended(route('cms.admin.dashboard'));
+            return redirect()->intended(route('contensio.account.dashboard'));
         }
 
-        return redirect()->intended(route('cms.home'));
+        return redirect()->intended(route('contensio.home'));
     }
 }

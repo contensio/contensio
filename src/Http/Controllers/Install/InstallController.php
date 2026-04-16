@@ -26,10 +26,11 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Install;
+namespace Contensio\Http\Controllers\Install;
 
-use Contensio\Cms\Services\Install\EnvWriter;
-use Contensio\Cms\Services\Install\RequirementsChecker;
+use Contensio\Services\Install\EnvWriter;
+use Contensio\Services\Install\Installer;
+use Contensio\Services\Install\RequirementsChecker;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
@@ -42,42 +43,43 @@ class InstallController extends Controller
     public function __construct(
         private RequirementsChecker $checker,
         private EnvWriter $env,
+        private Installer $installer,
     ) {}
 
     // ─── Requirements ────────────────────────────────────────────────────────
 
     public function requirements()
     {
-        if ((bool) env('CMS_INSTALLED', false)) {
+        if ((bool) env('CONTENSIO_INSTALLED', false)) {
             return redirect('/');
         }
 
         $results = $this->checker->check();
         $passes  = $this->checker->passes();
 
-        return view('cms::install.requirements', compact('results', 'passes'));
+        return view('contensio::install.requirements', compact('results', 'passes'));
     }
 
     // ─── Step 1: Database ────────────────────────────────────────────────────
 
     public function database()
     {
-        if ((bool) env('CMS_INSTALLED', false)) {
+        if ((bool) env('CONTENSIO_INSTALLED', false)) {
             return redirect('/');
         }
 
         if (!$this->checker->passes()) {
-            return redirect()->route('cms.install.requirements');
+            return redirect()->route('contensio.install.requirements');
         }
 
         // Auto-skip only on first visit — not when navigating back
         if (! session('install_db_done') && $this->isDatabaseAlreadyConfigured()) {
             Artisan::call('migrate', ['--force' => true]);
             session(['install_db_done' => true]);
-            return redirect()->route('cms.install.website');
+            return redirect()->route('contensio.install.website');
         }
 
-        return view('cms::install.database');
+        return view('contensio::install.database');
     }
 
     public function testDatabase(Request $request)
@@ -141,23 +143,23 @@ class InstallController extends Controller
 
         session(['install_db_done' => true]);
 
-        return redirect()->route('cms.install.website');
+        return redirect()->route('contensio.install.website');
     }
 
     // ─── Step 2: Website ─────────────────────────────────────────────────────
 
     public function website()
     {
-        if ((bool) env('CMS_INSTALLED', false)) {
+        if ((bool) env('CONTENSIO_INSTALLED', false)) {
             return redirect('/');
         }
 
         if (!session('install_db_done') && !$this->isDatabaseAlreadyConfigured()) {
-            return redirect()->route('cms.install.database');
+            return redirect()->route('contensio.install.database');
         }
 
-        return view('cms::install.website', [
-            'languages' => $this->availableLanguages(),
+        return view('contensio::install.website', [
+            'languages' => $this->installer->availableLanguages(),
         ]);
     }
 
@@ -177,31 +179,11 @@ class InstallController extends Controller
             'APP_NAME' => $request->site_name,
         ]);
 
-        // Seed default language
-        DB::table('languages')->insertOrIgnore([
-            'code'       => $request->language,
-            'name'       => $this->availableLanguages()[$request->language] ?? $request->language,
-            'is_default' => true,
-            'status'     => 'active',
-            'direction'  => in_array($request->language, ['ar', 'he', 'fa', 'ur']) ? 'rtl' : 'ltr',
-            'position'   => 1,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $languageId = DB::table('languages')->where('code', $request->language)->value('id');
-
-        // Seed default settings
-        $this->seedSettings($request->site_name, $languageId);
-
-        // Seed default content types (Page, Post)
-        $this->seedContentTypes($languageId);
-
-        // Seed default taxonomies (Category, Tag)
-        $this->seedTaxonomies($languageId);
-
-        // Seed core block types
-        $this->seedBlockTypes();
+        $languageId = $this->installer->seedLanguage($request->language);
+        $this->installer->seedSettings($request->site_name, $languageId);
+        $this->installer->seedContentTypes($languageId);
+        $this->installer->seedTaxonomies($languageId);
+        $this->installer->seedBlockTypes();
 
         session([
             'install_db_done'      => true,
@@ -209,22 +191,22 @@ class InstallController extends Controller
             'install_language_id'  => $languageId,
         ]);
 
-        return redirect()->route('cms.install.account');
+        return redirect()->route('contensio.install.account');
     }
 
     // ─── Step 3: Admin Account ───────────────────────────────────────────────
 
     public function account()
     {
-        if ((bool) env('CMS_INSTALLED', false)) {
+        if ((bool) env('CONTENSIO_INSTALLED', false)) {
             return redirect('/');
         }
 
         if (!session('install_website_done')) {
-            return redirect()->route('cms.install.website');
+            return redirect()->route('contensio.install.website');
         }
 
-        return view('cms::install.account');
+        return view('contensio::install.account');
     }
 
     public function storeAccount(Request $request)
@@ -235,55 +217,31 @@ class InstallController extends Controller
             'password'              => 'required|string|min:8|confirmed',
         ]);
 
-        // Seed roles and permissions
-        $superAdminRoleId = $this->seedRolesAndPermissions(session('install_language_id'));
+        $languageId = (int) session('install_language_id');
+        $superAdminRoleId = $this->installer->seedRolesAndPermissions($languageId);
 
-        // Create or update Super Admin user
-        $existingUser = DB::table('users')->where('email', $request->email)->first();
+        $this->installer->createAdmin(
+            name:              $request->name,
+            email:             $request->email,
+            password:          $request->password,
+            superAdminRoleId:  $superAdminRoleId,
+            languageId:        $languageId,
+        );
 
-        if ($existingUser) {
-            $userId = $existingUser->id;
-            DB::table('users')->where('id', $userId)->update([
-                'name'       => $request->name,
-                'password'   => Hash::make($request->password),
-                'is_active'  => true,
-                'updated_at' => now(),
-            ]);
-        } else {
-            $userId = DB::table('users')->insertGetId([
-                'code'              => Str::random(16),
-                'name'              => $request->name,
-                'email'             => $request->email,
-                'password'          => Hash::make($request->password),
-                'is_active'         => true,
-                'language_id'       => session('install_language_id'),
-                'email_verified_at' => now(),
-                'created_at'        => now(),
-                'updated_at'        => now(),
-            ]);
-        }
-
-        // Assign Super Admin role (ignore if already assigned)
-        DB::table('user_roles')->insertOrIgnore([
-            'user_id' => $userId,
-            'role_id' => $superAdminRoleId,
-        ]);
-
-        // Mark as installed
-        $this->env->set('CMS_INSTALLED', 'true');
+        $this->installer->markInstalled();
 
         // Clear session
         session()->forget(['install_db_done', 'install_website_done', 'install_language_id']);
 
-        return redirect()->route('cms.install.complete');
+        return redirect()->route('contensio.install.complete');
     }
 
     // ─── Complete ─────────────────────────────────────────────────────────────
 
     public function complete()
     {
-        return view('cms::install.complete', [
-            'admin_url'   => url(config('cms.route_prefix')),
+        return view('contensio::install.complete', [
+            'admin_url'   => url(config('contensio.route_prefix')),
             'website_url' => url('/'),
         ]);
     }
@@ -320,369 +278,5 @@ class InstallController extends Controller
 
         DB::purge('mysql');
         DB::reconnect('mysql');
-    }
-
-    private function seedSettings(string $siteName, int $languageId): void
-    {
-        $settings = [
-            ['module' => 'core', 'setting_key' => 'site_name',    'value' => $siteName, 'is_translatable' => true],
-            ['module' => 'core', 'setting_key' => 'site_tagline', 'value' => '',         'is_translatable' => true],
-            ['module' => 'core', 'setting_key' => 'timezone',     'value' => 'UTC',      'is_translatable' => false],
-            ['module' => 'core', 'setting_key' => 'date_format',  'value' => 'Y-m-d',    'is_translatable' => false],
-            ['module' => 'core', 'setting_key' => 'time_format',  'value' => 'H:i',      'is_translatable' => false],
-        ];
-
-        foreach ($settings as $setting) {
-            DB::table('settings')->updateOrInsert(
-                ['module' => $setting['module'], 'setting_key' => $setting['setting_key']],
-                array_merge($setting, ['updated_at' => now()])
-            );
-
-            if ($setting['is_translatable']) {
-                $id = DB::table('settings')
-                    ->where('module', $setting['module'])
-                    ->where('setting_key', $setting['setting_key'])
-                    ->value('id');
-
-                DB::table('setting_translations')->updateOrInsert(
-                    ['setting_id' => $id, 'language_id' => $languageId],
-                    ['value' => $setting['value']]
-                );
-            }
-        }
-    }
-
-    private function seedContentTypes(int $languageId): void
-    {
-        $types = [
-            [
-                'name'                => 'page',
-                'icon'                => 'document',
-                'has_slug'            => true,
-                'has_editor'          => true,
-                'has_excerpt'         => false,
-                'has_featured_image'  => false,
-                'has_categories'      => false,
-                'has_tags'            => false,
-                'has_comments'        => false,
-                'has_seo'             => true,
-                'has_autosave'        => true,
-                'is_hierarchical'     => true,
-                'is_system'           => true,
-                'position'            => 1,
-                'labels' => [
-                    'singular'  => 'Page',
-                    'plural'    => 'Pages',
-                    'create'    => 'Add New Page',
-                    'edit'      => 'Edit Page',
-                    'delete'    => 'Delete Page',
-                    'all'       => 'All Pages',
-                    'search'    => 'Search Pages',
-                    'not_found' => 'No pages found',
-                ],
-                'slug' => 'page',
-            ],
-            [
-                'name'                => 'post',
-                'icon'                => 'pencil',
-                'has_slug'            => true,
-                'has_editor'          => true,
-                'has_excerpt'         => true,
-                'has_featured_image'  => true,
-                'has_categories'      => true,
-                'has_tags'            => true,
-                'has_comments'        => true,
-                'has_seo'             => true,
-                'has_autosave'        => true,
-                'is_hierarchical'     => false,
-                'is_system'           => true,
-                'position'            => 2,
-                'labels' => [
-                    'singular'  => 'Post',
-                    'plural'    => 'Posts',
-                    'create'    => 'Add New Post',
-                    'edit'      => 'Edit Post',
-                    'delete'    => 'Delete Post',
-                    'all'       => 'All Posts',
-                    'search'    => 'Search Posts',
-                    'not_found' => 'No posts found',
-                ],
-                'slug' => 'blog',
-            ],
-        ];
-
-        foreach ($types as $type) {
-            $labels = $type['labels'];
-            $slug   = $type['slug'];
-            unset($type['labels'], $type['slug']);
-
-            if (DB::table('content_types')->where('name', $type['name'])->exists()) {
-                continue;
-            }
-
-            $type['created_at'] = now();
-            $type['updated_at'] = now();
-
-            $id = DB::table('content_types')->insertGetId($type);
-
-            DB::table('content_type_translations')->insert([
-                'content_type_id' => $id,
-                'language_id'     => $languageId,
-                'slug'            => $slug,
-                'labels'          => json_encode($labels),
-            ]);
-        }
-    }
-
-    private function seedTaxonomies(int $languageId): void
-    {
-        $taxonomies = [
-            [
-                'name'            => 'category',
-                'is_hierarchical' => true,
-                'is_system'       => true,
-                'labels' => [
-                    'singular'  => 'Category',
-                    'plural'    => 'Categories',
-                    'create'    => 'Add New Category',
-                    'all'       => 'All Categories',
-                    'not_found' => 'No categories found',
-                ],
-                'slug' => 'category',
-            ],
-            [
-                'name'            => 'tag',
-                'is_hierarchical' => false,
-                'is_system'       => true,
-                'labels' => [
-                    'singular'  => 'Tag',
-                    'plural'    => 'Tags',
-                    'create'    => 'Add New Tag',
-                    'all'       => 'All Tags',
-                    'not_found' => 'No tags found',
-                ],
-                'slug' => 'tag',
-            ],
-        ];
-
-        foreach ($taxonomies as $taxonomy) {
-            $labels = $taxonomy['labels'];
-            $slug   = $taxonomy['slug'];
-            unset($taxonomy['labels'], $taxonomy['slug']);
-
-            if (DB::table('taxonomies')->where('name', $taxonomy['name'])->exists()) {
-                // Still try to link to post type if needed
-                if (in_array($taxonomy['name'], ['category', 'tag'])) {
-                    $existingTaxId = DB::table('taxonomies')->where('name', $taxonomy['name'])->value('id');
-                    $postTypeId    = DB::table('content_types')->where('name', 'post')->value('id');
-                    if ($postTypeId && $existingTaxId) {
-                        DB::table('content_type_taxonomies')->insertOrIgnore([
-                            'content_type_id' => $postTypeId,
-                            'taxonomy_id'     => $existingTaxId,
-                        ]);
-                    }
-                }
-                continue;
-            }
-
-            $taxonomy['created_at'] = now();
-            $taxonomy['updated_at'] = now();
-
-            $id = DB::table('taxonomies')->insertGetId($taxonomy);
-
-            DB::table('taxonomy_translations')->insert([
-                'taxonomy_id' => $id,
-                'language_id' => $languageId,
-                'slug'        => $slug,
-                'labels'      => json_encode($labels),
-            ]);
-
-            // Assign category and tag to Post content type
-            if (in_array($taxonomy['name'], ['category', 'tag'])) {
-                $postTypeId = DB::table('content_types')->where('name', 'post')->value('id');
-                if ($postTypeId) {
-                    DB::table('content_type_taxonomies')->insertOrIgnore([
-                        'content_type_id' => $postTypeId,
-                        'taxonomy_id'     => $id,
-                    ]);
-                }
-            }
-        }
-    }
-
-    private function seedRolesAndPermissions(int $languageId): int
-    {
-        // Roles
-        $roles = [
-            ['name' => 'super_admin', 'is_system' => true, 'position' => 1, 'label' => 'Super Admin', 'description' => 'Full access to everything'],
-            ['name' => 'admin',       'is_system' => true, 'position' => 2, 'label' => 'Admin',       'description' => 'Manages content and users'],
-            ['name' => 'editor',      'is_system' => true, 'position' => 3, 'label' => 'Editor',      'description' => 'Creates and edits own content'],
-        ];
-
-        $roleIds = [];
-
-        foreach ($roles as $role) {
-            $label       = $role['label'];
-            $description = $role['description'];
-            unset($role['label'], $role['description']);
-
-            $existing = DB::table('roles')->where('name', $role['name'])->first();
-            if ($existing) {
-                $roleIds[$role['name']] = $existing->id;
-                continue;
-            }
-
-            $role['created_at'] = now();
-            $role['updated_at'] = now();
-
-            $id = DB::table('roles')->insertGetId($role);
-            $roleIds[$role['name']] = $id;
-
-            DB::table('role_translations')->insert([
-                'role_id'     => $id,
-                'language_id' => $languageId,
-                'labels'      => json_encode(['title' => $label, 'description' => $description]),
-            ]);
-        }
-
-        // Permissions
-        $permissions = [
-            // Content
-            ['module' => 'content', 'name' => 'content.view'],
-            ['module' => 'content', 'name' => 'content.create'],
-            ['module' => 'content', 'name' => 'content.edit_own'],
-            ['module' => 'content', 'name' => 'content.edit_all'],
-            ['module' => 'content', 'name' => 'content.publish'],
-            ['module' => 'content', 'name' => 'content.delete_own'],
-            ['module' => 'content', 'name' => 'content.delete_all'],
-            ['module' => 'content', 'name' => 'content.manage_types'],
-            ['module' => 'content', 'name' => 'fields.manage'],
-            // Media
-            ['module' => 'media', 'name' => 'media.upload'],
-            ['module' => 'media', 'name' => 'media.view_all'],
-            ['module' => 'media', 'name' => 'media.delete_own'],
-            ['module' => 'media', 'name' => 'media.delete_all'],
-            // Taxonomy
-            ['module' => 'taxonomy', 'name' => 'taxonomy.manage'],
-            // Menus
-            ['module' => 'menu', 'name' => 'menu.manage'],
-            // SEO
-            ['module' => 'seo', 'name' => 'seo.edit_content'],
-            ['module' => 'seo', 'name' => 'seo.manage_settings'],
-            // Users
-            ['module' => 'users', 'name' => 'users.view'],
-            ['module' => 'users', 'name' => 'users.create_editors'],
-            ['module' => 'users', 'name' => 'users.create_admins'],
-            ['module' => 'users', 'name' => 'users.manage_roles'],
-            ['module' => 'users', 'name' => 'users.delete'],
-            // Redirects
-            ['module' => 'seo', 'name' => 'seo.manage_redirects'],
-            // System (Super Admin only)
-            ['module' => 'system', 'name' => 'system.plugins'],
-            ['module' => 'system', 'name' => 'system.themes'],
-            ['module' => 'system', 'name' => 'system.settings'],
-            ['module' => 'system', 'name' => 'system.languages'],
-            ['module' => 'system', 'name' => 'system.backup'],
-            ['module' => 'system', 'name' => 'system.updates'],
-        ];
-
-        $permissionIds = [];
-        foreach ($permissions as $permission) {
-            $existing = DB::table('permissions')->where('name', $permission['name'])->first();
-            if ($existing) {
-                $permissionIds[$permission['name']] = $existing->id;
-            } else {
-                $id = DB::table('permissions')->insertGetId($permission);
-                $permissionIds[$permission['name']] = $id;
-            }
-        }
-
-        // Assign all permissions to Super Admin
-        foreach ($permissionIds as $permId) {
-            DB::table('role_permissions')->insertOrIgnore([
-                'role_id'         => $roleIds['super_admin'],
-                'permission_id'   => $permId,
-                'content_type_id' => null,
-            ]);
-        }
-
-        // Admin permissions (everything except system)
-        $adminPermissions = [
-            'content.view', 'content.create', 'content.edit_own', 'content.edit_all',
-            'content.publish', 'content.delete_own', 'content.delete_all',
-            'content.manage_types', 'fields.manage',
-            'media.upload', 'media.view_all', 'media.delete_own', 'media.delete_all',
-            'taxonomy.manage', 'menu.manage',
-            'seo.edit_content', 'seo.manage_settings', 'seo.manage_redirects',
-            'users.view', 'users.create_editors', 'users.delete',
-        ];
-
-        foreach ($adminPermissions as $perm) {
-            DB::table('role_permissions')->insertOrIgnore([
-                'role_id'         => $roleIds['admin'],
-                'permission_id'   => $permissionIds[$perm],
-                'content_type_id' => null,
-            ]);
-        }
-
-        // Editor permissions
-        $editorPermissions = [
-            'content.view', 'content.create', 'content.edit_own', 'content.delete_own',
-            'media.upload', 'media.delete_own',
-            'seo.edit_content',
-        ];
-
-        foreach ($editorPermissions as $perm) {
-            DB::table('role_permissions')->insertOrIgnore([
-                'role_id'         => $roleIds['editor'],
-                'permission_id'   => $permissionIds[$perm],
-                'content_type_id' => null,
-            ]);
-        }
-
-        return $roleIds['super_admin'];
-    }
-
-    private function seedBlockTypes(): void
-    {
-        $definitions = config('cms.blocks', []);
-
-        foreach ($definitions as $name => $def) {
-            DB::table('block_types')->updateOrInsert(
-                ['name' => $name],
-                [
-                    'label'       => $def['label']       ?? ucfirst($name),
-                    'icon'        => $def['icon']         ?? null,
-                    'description' => $def['description']  ?? null,
-                    'category'    => $def['category']     ?? 'text',
-                    'is_core'     => true,
-                    'is_active'   => true,
-                    'sort_order'  => $def['sort_order']   ?? 0,
-                    'updated_at'  => now(),
-                    'created_at'  => now(),
-                ]
-            );
-        }
-    }
-
-    private function availableLanguages(): array
-    {
-        return [
-            'en' => 'English',
-            'fr' => 'French',
-            'de' => 'German',
-            'es' => 'Spanish',
-            'it' => 'Italian',
-            'pt' => 'Portuguese',
-            'ro' => 'Romanian',
-            'nl' => 'Dutch',
-            'pl' => 'Polish',
-            'ru' => 'Russian',
-            'ar' => 'Arabic',
-            'zh' => 'Chinese',
-            'ja' => 'Japanese',
-            'ko' => 'Korean',
-            'tr' => 'Turkish',
-        ];
     }
 }

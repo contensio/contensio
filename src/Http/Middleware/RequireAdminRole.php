@@ -26,7 +26,7 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Middleware;
+namespace Contensio\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;

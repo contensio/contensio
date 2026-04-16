@@ -26,15 +26,15 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
 use Illuminate\Support\Collection;
-use Contensio\Cms\Models\Content;
-use Contensio\Cms\Models\ContentTranslation;
-use Contensio\Cms\Models\Menu;
-use Contensio\Cms\Models\MenuLocation;
-use Contensio\Cms\Models\Term;
-use Contensio\Cms\Models\TermTranslation;
+use Contensio\Models\Content;
+use Contensio\Models\ContentTranslation;
+use Contensio\Models\Menu;
+use Contensio\Models\MenuLocation;
+use Contensio\Models\Term;
+use Contensio\Models\TermTranslation;
 
 /**
  * Resolves the menu assigned to a theme location and returns a nested tree
@@ -158,9 +158,9 @@ class MenuRenderer
                 $slug = $pageSlugs[$item->reference_id] ?? null;
                 if (! $slug) return null;
                 if ($item->type === 'post') {
-                    return route('cms.post', $slug);
+                    return route('contensio.post', $slug);
                 }
-                return route('cms.page', $slug);
+                return route('contensio.page', $slug);
 
             case 'term':
                 $slug = $termSlugs[$item->reference_id] ?? null;
@@ -194,8 +194,8 @@ class MenuRenderer
     protected static function defaultLanguageId(): int
     {
         try {
-            return \Contensio\Cms\Models\Language::where('is_default', true)->value('id')
-                ?? \Contensio\Cms\Models\Language::orderBy('position')->value('id')
+            return \Contensio\Models\Language::where('is_default', true)->value('id')
+                ?? \Contensio\Models\Language::orderBy('position')->value('id')
                 ?? 0;
         } catch (\Throwable) {
             return 0;

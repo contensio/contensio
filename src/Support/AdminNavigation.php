@@ -14,7 +14,7 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
 /**
  * Registry of sidebar entries contributed by plugins.
@@ -31,7 +31,7 @@ namespace Contensio\Cms\Support;
  * }
  * ```
  *
- * CmsServiceProvider::boot() reads this when each enabled plugin is booted
+ * ContensioServiceProvider::boot() reads this when each enabled plugin is booted
  * and calls `AdminNavigation::register()`. The admin layout reads the
  * registered entries at render time via `rootItems()` / `toolsItems()`.
  *
@@ -54,7 +54,7 @@ class AdminNavigation
     protected static array $entries = [];
 
     /**
-     * Register a sidebar entry. Typically called from CmsServiceProvider
+     * Register a sidebar entry. Typically called from ContensioServiceProvider
      * after a plugin's provider has booted and its routes are loaded.
      *
      * Silently ignores entries with placement=none (or missing placement)

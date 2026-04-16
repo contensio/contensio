@@ -17,7 +17,7 @@
 
 @php
     $moduleLabels = [
-        'system'    => 'Super admin',
+        'system'    => 'System',
         'dashboard' => 'Dashboard',
         'content'   => 'Content',
         'media'     => 'Media',
@@ -30,7 +30,7 @@
         'activity'  => 'Activity log',
     ];
     $moduleIcons = [
-        'system'    => 'bi-star-fill',
+        'system'    => 'bi-shield',
         'dashboard' => 'bi-speedometer2',
         'content'   => 'bi-file-text',
         'media'     => 'bi-image',
@@ -47,25 +47,23 @@
 <div class="space-y-4">
     @foreach($permissions as $module => $perms)
     @php
+        // The wildcard '*' is an internal permission for super_admin only — never shown in the UI
+        $visiblePerms = $perms->filter(fn($p) => $p->name !== '*');
         $label = $moduleLabels[$module] ?? ucfirst($module);
         $icon  = $moduleIcons[$module]  ?? 'bi-folder';
     @endphp
+    @if($visiblePerms->isEmpty()) @continue @endif
     <div class="border border-gray-200 rounded-lg overflow-hidden">
         <div class="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border-b border-gray-200">
             <i class="bi {{ $icon }} text-gray-500"></i>
             <h3 class="text-sm font-bold text-gray-800">{{ $label }}</h3>
-            @if($module === 'system')
-            <span class="text-xs text-yellow-700 bg-yellow-100 border border-yellow-200 px-1.5 py-0.5 rounded ml-auto">
-                Grants ALL permissions
-            </span>
-            @endif
         </div>
         <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            @foreach($perms as $perm)
+            @foreach($visiblePerms as $perm)
             <label class="flex items-start gap-2.5 cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors">
                 <input type="checkbox" name="permissions[]" value="{{ $perm->id }}"
                        {{ in_array($perm->id, (array) old('permissions', $assignedIds ?? [])) ? 'checked' : '' }}
-                       class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0">
+                       class="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-ember-500 shrink-0">
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-gray-800 font-mono">{{ $perm->name }}</p>
                     @if($perm->description)

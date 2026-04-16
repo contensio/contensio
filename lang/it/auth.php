@@ -4,7 +4,7 @@ return [
 
     'login' => [
         'title'                => 'Bentornato',
-        'subtitle'             => 'Accedi al tuo pannello di amministrazione',
+        'subtitle'             => 'Accedi al tuo account',
         'email'                => 'Indirizzo email',
         'email_placeholder'    => 'tu@esempio.it',
         'password'             => 'Password',

@@ -26,11 +26,12 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Models;
+namespace Contensio\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Media extends Model
 {
@@ -59,8 +60,35 @@ class Media extends Model
         return $this->hasMany(MediaMeta::class);
     }
 
+    public function variants(): HasMany
+    {
+        return $this->hasMany(MediaVariant::class);
+    }
+
     public function isImage(): bool
     {
         return str_starts_with($this->mime_type, 'image/');
+    }
+
+    /**
+     * Return the URL for a named size variant, falling back to the original.
+     */
+    public function variantUrl(string $sizeKey): string
+    {
+        $variant = $this->variants->firstWhere('size_key', $sizeKey);
+
+        if ($variant) {
+            return Storage::disk($this->disk)->url($variant->path);
+        }
+
+        return Storage::disk($this->disk)->url($this->file_path);
+    }
+
+    /**
+     * Return the URL for the original file.
+     */
+    public function url(): string
+    {
+        return Storage::disk($this->disk)->url($this->file_path);
     }
 }

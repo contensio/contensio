@@ -1,64 +1,64 @@
 <?php
 
-use Contensio\Cms\Http\Controllers\Admin\ActivityLogController;
-use Contensio\Cms\Http\Controllers\Admin\BlockController;
-use Contensio\Cms\Http\Controllers\Admin\ContentController;
-use Contensio\Cms\Http\Controllers\Admin\ContentTypeController;
-use Contensio\Cms\Http\Controllers\Admin\FieldController;
-use Contensio\Cms\Http\Controllers\Admin\FieldGroupController;
-use Contensio\Cms\Http\Controllers\Admin\TaxonomyController;
-use Contensio\Cms\Http\Controllers\Admin\TermController;
-use Contensio\Cms\Http\Controllers\Admin\DashboardController;
-use Contensio\Cms\Http\Controllers\Admin\LanguageController;
-use Contensio\Cms\Http\Controllers\Admin\MediaController;
-use Contensio\Cms\Http\Controllers\Admin\MenuController;
-use Contensio\Cms\Http\Controllers\Admin\PluginController;
-use Contensio\Cms\Http\Controllers\Admin\ProfileController;
-use Contensio\Cms\Http\Controllers\Admin\RedirectController;
-use Contensio\Cms\Http\Controllers\Admin\RoleController;
-use Contensio\Cms\Http\Controllers\Admin\SettingController;
-use Contensio\Cms\Http\Controllers\Admin\ThemeController;
-use Contensio\Cms\Http\Controllers\Admin\Tools\ImportExportController;
-use Contensio\Cms\Http\Controllers\Admin\UserController;
-use Contensio\Cms\Http\Controllers\Auth\LoginController;
-use Contensio\Cms\Http\Controllers\Frontend\FrontendController;
-use Contensio\Cms\Http\Controllers\Frontend\SeoController;
+use Contensio\Http\Controllers\Admin\ActivityLogController;
+use Contensio\Http\Controllers\Admin\BlockController;
+use Contensio\Http\Controllers\Admin\ContentController;
+use Contensio\Http\Controllers\Admin\ContentTypeController;
+use Contensio\Http\Controllers\Admin\FieldController;
+use Contensio\Http\Controllers\Admin\FieldGroupController;
+use Contensio\Http\Controllers\Admin\TaxonomyController;
+use Contensio\Http\Controllers\Admin\TermController;
+use Contensio\Http\Controllers\Admin\DashboardController;
+use Contensio\Http\Controllers\Admin\LanguageController;
+use Contensio\Http\Controllers\Admin\MediaController;
+use Contensio\Http\Controllers\Admin\MenuController;
+use Contensio\Http\Controllers\Admin\PluginController;
+use Contensio\Http\Controllers\Admin\ProfileController;
+use Contensio\Http\Controllers\Admin\RedirectController;
+use Contensio\Http\Controllers\Admin\RoleController;
+use Contensio\Http\Controllers\Admin\SettingController;
+use Contensio\Http\Controllers\Admin\ThemeController;
+use Contensio\Http\Controllers\Admin\Tools\ImportExportController;
+use Contensio\Http\Controllers\Admin\UserController;
+use Contensio\Http\Controllers\Auth\LoginController;
+use Contensio\Http\Controllers\Frontend\FrontendController;
+use Contensio\Http\Controllers\Frontend\SeoController;
 use Illuminate\Support\Facades\Route;
 
 // ─── SEO (sitemap + robots) ────────────────────────────────────────────────
 // Registered outside the 'web' group so no session/CSRF overhead for crawlers.
-Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('cms.seo.sitemap');
-Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('cms.seo.robots');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('contensio.seo.sitemap');
+Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('contensio.seo.robots');
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 // Declared BEFORE the frontend catch-all so /login + /logout win the match race
 // even when Laravel's router compiles in registration order.
 Route::middleware('web')->group(function () {
-    Route::get('/login',  [LoginController::class, 'showLogin'])->name('cms.login');
-    Route::post('/login', [LoginController::class, 'login'])->name('cms.login.store');
-    Route::post('/logout', [LoginController::class, 'logout'])->name('cms.logout')->middleware('auth');
+    Route::get('/login',  [LoginController::class, 'showLogin'])->name('contensio.login');
+    Route::post('/login', [LoginController::class, 'login'])->name('contensio.login.store');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('contensio.logout')->middleware('auth');
 });
 
 // ─── Frontend ──────────────────────────────────────────────────────────────
 Route::middleware('web')->group(function () {
-    Route::get('/',              [FrontendController::class, 'home'])->name('cms.home');
-    Route::get('/blog',          [FrontendController::class, 'archive'])->name('cms.blog');
-    Route::get('/blog/{slug}',   [FrontendController::class, 'post'])->name('cms.post');
+    Route::get('/',              [FrontendController::class, 'home'])->name('contensio.home');
+    Route::get('/blog',          [FrontendController::class, 'archive'])->name('contensio.blog');
+    Route::get('/blog/{slug}',   [FrontendController::class, 'post'])->name('contensio.post');
 
     // Catch-all for pages by slug. Constrained to keep framework/admin/auth
     // paths out so they always reach their dedicated routes even if the route
     // cache is rebuilt in a different order. Reserved prefixes: login, logout,
-    // admin, Fortify auth (forgot-password, reset-password, email, user,
+    // account, Fortify auth (forgot-password, reset-password, email, user,
     // two-factor-*), sitemap/robots/up, api, livewire, dev tooling.
     Route::get('/{slug}', [FrontendController::class, 'page'])
-        ->where('slug', '^(?!login$|logout$|admin(?:/|$)|forgot-password(?:/|$)?$|reset-password(?:/|$)|email(?:/|$)|user(?:/|$)|two-factor(?:-|$)|sitemap\.xml$|robots\.txt$|up$|api(?:/|$)|livewire(?:/|$)|_debugbar(?:/|$)|_ignition(?:/|$))[^.]+$')
-        ->name('cms.page');
+        ->where('slug', '^(?!login$|logout$|account(?:/|$)|forgot-password(?:/|$)?$|reset-password(?:/|$)|email(?:/|$)|user(?:/|$)|two-factor(?:-|$)|sitemap\.xml$|robots\.txt$|up$|api(?:/|$)|livewire(?:/|$)|_debugbar(?:/|$)|_ignition(?:/|$))[^.]+$')
+        ->name('contensio.page');
 });
 
 // ─── Admin panel ───────────────────────────────────────────────────────────
-Route::prefix(config('cms.route_prefix'))
-    ->name('cms.admin.')
-    ->middleware(['web', 'cms.auth', 'cms.admin'])
+Route::prefix(config('contensio.route_prefix'))
+    ->name('contensio.account.')
+    ->middleware(['web', 'contensio.auth', 'contensio.admin'])
     ->group(function () {
 
         // Dashboard
@@ -68,6 +68,8 @@ Route::prefix(config('cms.route_prefix'))
         Route::get('/profile',              [ProfileController::class, 'index'])->name('profile');
         Route::put('/profile',              [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password',     [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/profile/avatar',      [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+        Route::delete('/profile/avatar',    [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
 
         // Pages
         Route::get('/pages',             [ContentController::class, 'pages'])->name('pages.index');
@@ -107,18 +109,18 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/content/{id}/blocks/{blockId}/toggle', [BlockController::class, 'toggle'])->name('blocks.toggle');
 
         // Field Groups (Custom Fields library)
-        Route::get('/field-groups',                [FieldGroupController::class, 'index'])->middleware('cms.permission:fields.manage')->name('field-groups.index');
-        Route::get('/field-groups/create',         [FieldGroupController::class, 'create'])->middleware('cms.permission:fields.manage')->name('field-groups.create');
-        Route::post('/field-groups',               [FieldGroupController::class, 'store'])->middleware('cms.permission:fields.manage')->name('field-groups.store');
-        Route::get('/field-groups/{id}/edit',      [FieldGroupController::class, 'edit'])->middleware('cms.permission:fields.manage')->name('field-groups.edit');
-        Route::put('/field-groups/{id}',           [FieldGroupController::class, 'update'])->middleware('cms.permission:fields.manage')->name('field-groups.update');
-        Route::delete('/field-groups/{id}',        [FieldGroupController::class, 'destroy'])->middleware('cms.permission:fields.manage')->name('field-groups.destroy');
+        Route::get('/field-groups',                [FieldGroupController::class, 'index'])->middleware('contensio.permission:fields.manage')->name('field-groups.index');
+        Route::get('/field-groups/create',         [FieldGroupController::class, 'create'])->middleware('contensio.permission:fields.manage')->name('field-groups.create');
+        Route::post('/field-groups',               [FieldGroupController::class, 'store'])->middleware('contensio.permission:fields.manage')->name('field-groups.store');
+        Route::get('/field-groups/{id}/edit',      [FieldGroupController::class, 'edit'])->middleware('contensio.permission:fields.manage')->name('field-groups.edit');
+        Route::put('/field-groups/{id}',           [FieldGroupController::class, 'update'])->middleware('contensio.permission:fields.manage')->name('field-groups.update');
+        Route::delete('/field-groups/{id}',        [FieldGroupController::class, 'destroy'])->middleware('contensio.permission:fields.manage')->name('field-groups.destroy');
 
         // Fields (nested under a group)
-        Route::post('/field-groups/{group}/fields',          [FieldController::class, 'store'])->middleware('cms.permission:fields.manage')->name('fields.store');
-        Route::put('/fields/{id}',                            [FieldController::class, 'update'])->middleware('cms.permission:fields.manage')->name('fields.update');
-        Route::delete('/fields/{id}',                         [FieldController::class, 'destroy'])->middleware('cms.permission:fields.manage')->name('fields.destroy');
-        Route::post('/field-groups/{group}/fields/reorder',  [FieldController::class, 'reorder'])->middleware('cms.permission:fields.manage')->name('fields.reorder');
+        Route::post('/field-groups/{group}/fields',          [FieldController::class, 'store'])->middleware('contensio.permission:fields.manage')->name('fields.store');
+        Route::put('/fields/{id}',                            [FieldController::class, 'update'])->middleware('contensio.permission:fields.manage')->name('fields.update');
+        Route::delete('/fields/{id}',                         [FieldController::class, 'destroy'])->middleware('contensio.permission:fields.manage')->name('fields.destroy');
+        Route::post('/field-groups/{group}/fields/reorder',  [FieldController::class, 'reorder'])->middleware('contensio.permission:fields.manage')->name('fields.reorder');
 
         // Content Types
         Route::get('/content-types',               [ContentTypeController::class, 'index'])->name('content-types.index');
@@ -171,20 +173,20 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/menus/{id}/items/reorder',    [MenuController::class, 'reorderItems'])->name('menus.items.reorder');
 
         // Users
-        Route::get('/users',                [UserController::class, 'index'])->middleware('cms.permission:users.view')->name('users.index');
-        Route::get('/users/create',         [UserController::class, 'create'])->middleware('cms.permission:users.create')->name('users.create');
-        Route::post('/users',               [UserController::class, 'store'])->middleware('cms.permission:users.create')->name('users.store');
-        Route::get('/users/{id}/edit',      [UserController::class, 'edit'])->middleware('cms.permission:users.update')->name('users.edit');
-        Route::put('/users/{id}',           [UserController::class, 'update'])->middleware('cms.permission:users.update')->name('users.update');
-        Route::delete('/users/{id}',        [UserController::class, 'destroy'])->middleware('cms.permission:users.delete')->name('users.destroy');
+        Route::get('/users',                [UserController::class, 'index'])->middleware('contensio.permission:users.view')->name('users.index');
+        Route::get('/users/create',         [UserController::class, 'create'])->middleware('contensio.permission:users.create')->name('users.create');
+        Route::post('/users',               [UserController::class, 'store'])->middleware('contensio.permission:users.create')->name('users.store');
+        Route::get('/users/{id}/edit',      [UserController::class, 'edit'])->middleware('contensio.permission:users.update')->name('users.edit');
+        Route::put('/users/{id}',           [UserController::class, 'update'])->middleware('contensio.permission:users.update')->name('users.update');
+        Route::delete('/users/{id}',        [UserController::class, 'destroy'])->middleware('contensio.permission:users.delete')->name('users.destroy');
 
         // Roles
-        Route::get('/roles',                [RoleController::class, 'index'])->middleware('cms.permission:roles.manage')->name('roles.index');
-        Route::get('/roles/create',         [RoleController::class, 'create'])->middleware('cms.permission:roles.manage')->name('roles.create');
-        Route::post('/roles',               [RoleController::class, 'store'])->middleware('cms.permission:roles.manage')->name('roles.store');
-        Route::get('/roles/{id}/edit',      [RoleController::class, 'edit'])->middleware('cms.permission:roles.manage')->name('roles.edit');
-        Route::put('/roles/{id}',           [RoleController::class, 'update'])->middleware('cms.permission:roles.manage')->name('roles.update');
-        Route::delete('/roles/{id}',        [RoleController::class, 'destroy'])->middleware('cms.permission:roles.manage')->name('roles.destroy');
+        Route::get('/roles',                [RoleController::class, 'index'])->middleware('contensio.permission:roles.manage')->name('roles.index');
+        Route::get('/roles/create',         [RoleController::class, 'create'])->middleware('contensio.permission:roles.manage')->name('roles.create');
+        Route::post('/roles',               [RoleController::class, 'store'])->middleware('contensio.permission:roles.manage')->name('roles.store');
+        Route::get('/roles/{id}/edit',      [RoleController::class, 'edit'])->middleware('contensio.permission:roles.manage')->name('roles.edit');
+        Route::put('/roles/{id}',           [RoleController::class, 'update'])->middleware('contensio.permission:roles.manage')->name('roles.update');
+        Route::delete('/roles/{id}',        [RoleController::class, 'destroy'])->middleware('contensio.permission:roles.manage')->name('roles.destroy');
 
         // Settings / configuration hub
         Route::get('/settings',          [SettingController::class, 'index'])->name('settings.index');
@@ -207,16 +209,16 @@ Route::prefix(config('cms.route_prefix'))
 
         // Activity log (read-only audit trail)
         Route::get('/activity-log', [ActivityLogController::class, 'index'])
-            ->middleware('cms.permission:activity_log.view')
+            ->middleware('contensio.permission:activity_log.view')
             ->name('activity-log.index');
 
         // Redirects (SEO)
-        Route::get('/redirects',                [RedirectController::class, 'index'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.index');
-        Route::get('/redirects/create',         [RedirectController::class, 'create'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.create');
-        Route::post('/redirects',               [RedirectController::class, 'store'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.store');
-        Route::get('/redirects/{id}/edit',      [RedirectController::class, 'edit'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.edit');
-        Route::put('/redirects/{id}',           [RedirectController::class, 'update'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.update');
-        Route::delete('/redirects/{id}',        [RedirectController::class, 'destroy'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.destroy');
+        Route::get('/redirects',                [RedirectController::class, 'index'])->middleware('contensio.permission:seo.manage_redirects')->name('redirects.index');
+        Route::get('/redirects/create',         [RedirectController::class, 'create'])->middleware('contensio.permission:seo.manage_redirects')->name('redirects.create');
+        Route::post('/redirects',               [RedirectController::class, 'store'])->middleware('contensio.permission:seo.manage_redirects')->name('redirects.store');
+        Route::get('/redirects/{id}/edit',      [RedirectController::class, 'edit'])->middleware('contensio.permission:seo.manage_redirects')->name('redirects.edit');
+        Route::put('/redirects/{id}',           [RedirectController::class, 'update'])->middleware('contensio.permission:seo.manage_redirects')->name('redirects.update');
+        Route::delete('/redirects/{id}',        [RedirectController::class, 'destroy'])->middleware('contensio.permission:seo.manage_redirects')->name('redirects.destroy');
 
         // Tools — Import / Export
         Route::get('/tools/import-export',  [ImportExportController::class, 'index'])->name('tools.import-export');

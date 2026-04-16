@@ -4,7 +4,7 @@ return [
 
     'login' => [
         'title'                => 'Willkommen zurück',
-        'subtitle'             => 'Melden Sie sich in Ihrem Admin-Panel an',
+        'subtitle'             => 'Melden Sie sich in Ihrem Konto an',
         'email'                => 'E-Mail-Adresse',
         'email_placeholder'    => 'sie@beispiel.de',
         'password'             => 'Passwort',

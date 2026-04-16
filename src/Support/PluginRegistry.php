@@ -14,11 +14,11 @@
  * @author      Iosif Gabriel Chimilevschi <office@contensio.com>
  */
 
-namespace Contensio\Cms\Support;
+namespace Contensio\Support;
 
 use Composer\Autoload\ClassLoader;
-use Contensio\Cms\Models\Setting;
-use Contensio\Cms\Support\AccessControl;
+use Contensio\Models\Setting;
+use Contensio\Support\AccessControl;
 
 /**
  * Central registry for all discovered plugins.
@@ -39,14 +39,14 @@ class PluginRegistry
 
     /**
      * Discover all available plugins from both sources and seed the registry.
-     * Called once from CmsServiceProvider::boot().
+     * Called once from ContensioServiceProvider::boot().
      */
     public static function discover(): void
     {
         static::$plugins = [];
 
         // ── Plugins installed in packages/plugins/{vendor}/{name}/ ────────
-        $pluginsRoot = rtrim(config('cms.packages_path', base_path('packages')), '/') . '/plugins';
+        $pluginsRoot = rtrim(config('contensio.packages_path', base_path('packages')), '/') . '/plugins';
         if (is_dir($pluginsRoot)) {
             foreach (glob("{$pluginsRoot}/*/*/plugin.json") ?: [] as $manifest) {
                 $meta = json_decode(file_get_contents($manifest), true);

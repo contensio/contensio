@@ -8,7 +8,7 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::auth.partials.layout')
+@extends('contensio::auth.partials.layout')
 @section('title', 'Reset password')
 
 @section('card')
@@ -41,7 +41,7 @@
         </div>
 
         <button type="submit"
-            class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm
+            class="w-full mt-6 bg-[#d04a1f] hover:bg-[#b23e18] text-white font-medium text-sm
                    py-2.5 rounded-lg transition-colors">
             Send reset link
         </button>
@@ -49,7 +49,7 @@
 
     <p class="text-sm text-gray-500 text-center mt-6">
         Remember your password?
-        <a href="{{ route('cms.login') }}" class="text-blue-600 hover:text-blue-700 font-medium">Sign in</a>
+        <a href="{{ route('contensio.login') }}" class="text-[#b23e18] hover:text-[#8f3112] font-medium">Sign in</a>
     </p>
 
 @endsection

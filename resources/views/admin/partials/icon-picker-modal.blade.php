@@ -78,7 +78,7 @@
                        id="iconPickerSearch"
                        placeholder="Search icons…"
                        autocomplete="off"
-                       class="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                       class="w-full pl-9 pr-9 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
                 <button type="button"
                         id="iconPickerClearSearch"
                         class="hidden absolute inset-y-0 right-2 flex items-center px-1.5 text-gray-400 hover:text-gray-600">

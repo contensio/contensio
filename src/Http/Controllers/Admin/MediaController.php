@@ -26,13 +26,14 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\Media;
+use Contensio\Jobs\ProcessMediaVariants;
+use Contensio\Models\Media;
 
 class MediaController extends Controller
 {
@@ -40,7 +41,7 @@ class MediaController extends Controller
     {
         $items = Media::latest()->paginate(48);
 
-        return view('cms::admin.media.index', compact('items'));
+        return view('contensio::admin.media.index', compact('items'));
     }
 
     public function upload(Request $request)
@@ -68,7 +69,7 @@ class MediaController extends Controller
                 $height = $size[1] ?? null;
             }
 
-            Media::create([
+            $media = Media::create([
                 'code'      => Str::random(16),
                 'user_id'   => auth()->id(),
                 'file_name' => $original,
@@ -79,19 +80,29 @@ class MediaController extends Controller
                 'width'     => $width,
                 'height'    => $height,
             ]);
+
+            if ($media->isImage()) {
+                ProcessMediaVariants::dispatch($media);
+            }
         }
 
-        return redirect()->route('cms.admin.media.index')
+        return redirect()->route('contensio.account.media.index')
             ->with('success', 'Files uploaded successfully.');
     }
 
     public function destroy(int $id)
     {
-        $media = Media::findOrFail($id);
-        Storage::disk($media->disk)->delete($media->file_path);
-        $media->delete();
+        $media = Media::with('variants')->findOrFail($id);
 
-        return redirect()->route('cms.admin.media.index')
+        // Delete all variant files before removing the original
+        foreach ($media->variants as $variant) {
+            Storage::disk($media->disk)->delete($variant->path);
+        }
+
+        Storage::disk($media->disk)->delete($media->file_path);
+        $media->delete(); // variants cascade via FK
+
+        return redirect()->route('contensio.account.media.index')
             ->with('success', 'File deleted.');
     }
 
@@ -158,6 +169,10 @@ class MediaController extends Controller
             'width'     => $width,
             'height'    => $height,
         ]);
+
+        if ($media->isImage()) {
+            ProcessMediaVariants::dispatch($media);
+        }
 
         return response()->json(['item' => $this->mediaAsJson($media)]);
     }

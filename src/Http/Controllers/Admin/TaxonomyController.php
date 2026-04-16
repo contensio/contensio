@@ -26,16 +26,16 @@
  * update. For custom changes, use themes and plugins.
  */
 
-namespace Contensio\Cms\Http\Controllers\Admin;
+namespace Contensio\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Contensio\Cms\Models\ContentType;
-use Contensio\Cms\Models\Language;
-use Contensio\Cms\Models\Taxonomy;
-use Contensio\Cms\Models\TaxonomyTranslation;
+use Contensio\Models\ContentType;
+use Contensio\Models\Language;
+use Contensio\Models\Taxonomy;
+use Contensio\Models\TaxonomyTranslation;
 
 class TaxonomyController extends Controller
 {
@@ -44,14 +44,14 @@ class TaxonomyController extends Controller
         $type = ContentType::find($typeId);
 
         if (! $type) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Content type not found.');
         }
 
         $languages       = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defaultLanguage = Language::where('is_default', true)->first() ?? $languages->first();
 
-        return view('cms::admin.taxonomies.form', [
+        return view('contensio::admin.taxonomies.form', [
             'taxonomy'        => null,
             'type'            => $type,
             'languages'       => $languages,
@@ -65,7 +65,7 @@ class TaxonomyController extends Controller
         $type = ContentType::find($typeId);
 
         if (! $type) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Content type not found.');
         }
 
@@ -116,7 +116,7 @@ class TaxonomyController extends Controller
             'taxonomy_id'     => $taxonomy->id,
         ]);
 
-        return redirect()->route('cms.admin.content-types.index')
+        return redirect()->route('contensio.account.content-types.index')
             ->with('success', "Taxonomy \"{$defaultSingular}\" added to {$type->name}.");
     }
 
@@ -126,7 +126,7 @@ class TaxonomyController extends Controller
         $taxonomy = Taxonomy::with('translations')->find($id);
 
         if (! $type || ! $taxonomy) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Not found.');
         }
 
@@ -146,7 +146,7 @@ class TaxonomyController extends Controller
             ];
         }
 
-        return view('cms::admin.taxonomies.form', [
+        return view('contensio::admin.taxonomies.form', [
             'taxonomy'        => $taxonomy,
             'type'            => $type,
             'languages'       => $languages,
@@ -161,7 +161,7 @@ class TaxonomyController extends Controller
         $taxonomy = Taxonomy::find($id);
 
         if (! $type || ! $taxonomy) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Not found.');
         }
 
@@ -200,7 +200,7 @@ class TaxonomyController extends Controller
 
         $defaultSingular = $request->input("translations.{$defaultLangId}.singular");
 
-        return redirect()->route('cms.admin.content-types.index')
+        return redirect()->route('contensio.account.content-types.index')
             ->with('success', "Taxonomy \"{$defaultSingular}\" saved.");
     }
 
@@ -209,24 +209,24 @@ class TaxonomyController extends Controller
         $taxonomy = Taxonomy::find($id);
 
         if (! $taxonomy) {
-            return redirect()->route('cms.admin.content-types.index');
+            return redirect()->route('contensio.account.content-types.index');
         }
 
         if ($taxonomy->is_system) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', 'Core taxonomies cannot be deleted.');
         }
 
         $termCount = DB::table('terms')->where('taxonomy_id', $taxonomy->id)->count();
 
         if ($termCount > 0) {
-            return redirect()->route('cms.admin.content-types.index')
+            return redirect()->route('contensio.account.content-types.index')
                 ->with('error', "Cannot delete taxonomy — it still has {$termCount} term(s).");
         }
 
         $taxonomy->delete();
 
-        return redirect()->route('cms.admin.content-types.index')
+        return redirect()->route('contensio.account.content-types.index')
             ->with('success', 'Taxonomy deleted.');
     }
 

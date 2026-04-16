@@ -8,14 +8,14 @@
  | @author   Iosif Gabriel Chimilevschi <office@contensio.com>
 --}}
 
-@extends('cms::admin.layout')
+@extends('contensio::admin.layout')
 
 @section('title', $language ? 'Edit Language' : 'Add Language')
 
 @section('breadcrumb')
-    <a href="{{ route('cms.admin.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
+    <a href="{{ route('contensio.account.settings.index') }}" class="text-gray-500 hover:text-gray-700">Configuration</a>
     <span class="mx-2 text-gray-300">/</span>
-    <a href="{{ route('cms.admin.languages.index') }}" class="text-gray-500 hover:text-gray-700">Languages</a>
+    <a href="{{ route('contensio.account.languages.index') }}" class="text-gray-500 hover:text-gray-700">Languages</a>
     <span class="mx-2 text-gray-300">/</span>
     <span class="text-gray-900 font-medium">{{ $language ? 'Edit' : 'Add Language' }}</span>
 @endsection
@@ -42,7 +42,7 @@
     @endif
 
     <form method="POST"
-          action="{{ $language ? route('cms.admin.languages.update', $language->id) : route('cms.admin.languages.store') }}">
+          action="{{ $language ? route('contensio.account.languages.update', $language->id) : route('contensio.account.languages.store') }}">
         @csrf
         @if($language) @method('PUT') @endif
 
@@ -57,7 +57,7 @@
                            name="name"
                            value="{{ old('name', $language?->name ?? '') }}"
                            placeholder="e.g. English, French, Arabic"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('name') border-red-400 @enderror"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent @error('name') border-red-400 @enderror"
                            required>
                     @error('name')
                     <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -74,7 +74,7 @@
                            placeholder="e.g. en, fr, pt-BR"
                            maxlength="5"
                            {{ $language ? 'readonly' : '' }}
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('code') border-red-400 @enderror {{ $language ? 'bg-gray-50 text-gray-500' : '' }}"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent @error('code') border-red-400 @enderror {{ $language ? 'bg-gray-50 text-gray-500' : '' }}"
                            required>
                     <p class="mt-1 text-xs text-gray-400">
                         ISO 639-1 code (e.g. <code class="font-mono">en</code>, <code class="font-mono">fr</code>, <code class="font-mono">pt-BR</code>).
@@ -91,13 +91,13 @@
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="direction" value="ltr"
                                    {{ old('direction', $language?->direction ?? 'ltr') === 'ltr' ? 'checked' : '' }}
-                                   class="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                   class="w-4 h-4 border-gray-300 text-blue-600 focus:ring-ember-500">
                             <span class="text-sm text-gray-700">LTR <span class="text-gray-400 text-xs">(Left to right)</span></span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="direction" value="rtl"
                                    {{ old('direction', $language?->direction ?? 'ltr') === 'rtl' ? 'checked' : '' }}
-                                   class="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                   class="w-4 h-4 border-gray-300 text-blue-600 focus:ring-ember-500">
                             <span class="text-sm text-gray-700">RTL <span class="text-gray-400 text-xs">(Right to left)</span></span>
                         </label>
                     </div>
@@ -119,7 +119,7 @@
                               {{ $currentStatus === 'active' ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:bg-gray-50' }}">
                     <input type="radio" name="status" value="active"
                            {{ $currentStatus === 'active' ? 'checked' : '' }}
-                           class="mt-0.5 w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 border-gray-300 text-blue-600 focus:ring-ember-500">
                     <div>
                         <div class="flex items-center gap-2">
                             <p class="text-sm font-medium text-gray-800">Active</p>
@@ -133,7 +133,7 @@
                               {{ $currentStatus === 'inactive' ? 'border-amber-300 bg-amber-50' : 'border-gray-200 hover:bg-gray-50' }}">
                     <input type="radio" name="status" value="inactive"
                            {{ $currentStatus === 'inactive' ? 'checked' : '' }}
-                           class="mt-0.5 w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 border-gray-300 text-blue-600 focus:ring-ember-500">
                     <div>
                         <div class="flex items-center gap-2">
                             <p class="text-sm font-medium text-gray-800">Inactive</p>
@@ -149,7 +149,7 @@
                     <input type="radio" name="status" value="disabled"
                            {{ $currentStatus === 'disabled' ? 'checked' : '' }}
                            {{ $language?->is_default ? 'disabled' : '' }}
-                           class="mt-0.5 w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                           class="mt-0.5 w-4 h-4 border-gray-300 text-blue-600 focus:ring-ember-500">
                     <div>
                         <div class="flex items-center gap-2">
                             <p class="text-sm font-medium text-gray-800">Disabled</p>
@@ -169,13 +169,13 @@
 
         <div class="flex items-center gap-3">
             <button type="submit"
-                    class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors shadow-sm">
+                    class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
                 {{ $language ? 'Save Changes' : 'Add Language' }}
             </button>
-            <a href="{{ route('cms.admin.languages.index') }}"
+            <a href="{{ route('contensio.account.languages.index') }}"
                class="text-sm font-medium text-gray-500 hover:text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
                 Cancel
             </a>
