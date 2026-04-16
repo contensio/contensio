@@ -483,6 +483,22 @@ class ContentController extends Controller
             }
         }
 
+        // Custom field groups attached to this content type, with fields + any
+        // existing values (per language for translatable fields).
+        $fieldGroups = $type->fieldGroups()
+            ->with(['fields' => fn ($q) => $q->orderBy('position')->with('translations')])
+            ->orderBy('field_group_attachments.position')
+            ->get();
+
+        $fieldValues = [];
+        if ($content) {
+            $rows = $content->fieldValues()->get(['field_id', 'language_id', 'value']);
+            foreach ($rows as $row) {
+                $key = $row->language_id ? $row->field_id . ':' . $row->language_id : $row->field_id . ':_';
+                $fieldValues[$key] = $row->value;
+            }
+        }
+
         return [
             'languages'       => $languages,
             'defaultLanguage' => $defaultLanguage,
@@ -492,6 +508,8 @@ class ContentController extends Controller
             'existing'        => $existing,
             'selectedTermIds' => $selectedTermIds,
             'autosave'        => $autosave,
+            'fieldGroups'     => $fieldGroups,
+            'fieldValues'     => $fieldValues,
         ];
     }
 
@@ -612,6 +630,64 @@ class ContentController extends Controller
                     'meta_description' => $request->input("translations.{$lang->id}.meta_description") ?: null,
                 ]
             );
+        }
+
+        // Custom field values — accepts "fields" array from the edit form.
+        $this->syncFieldValues($request, $content);
+    }
+
+    /**
+     * Persist submitted custom-field values. Shape of `fields` request data:
+     *   fields[{id}]              = "value"                (non-translatable, scalar)
+     *   fields[{id}][]            = [...]                  (non-translatable, multi-select)
+     *   fields[{id}][{language}]  = "value"                (translatable, scalar)
+     *   fields[{id}][{language}][]= [...]                  (translatable, multi-select)
+     *
+     * Only fields belonging to groups attached to the content's type are
+     * persisted — anti-tamper check on field_id.
+     */
+    private function syncFieldValues(Request $request, Content $content): void
+    {
+        $payload = (array) $request->input('fields', []);
+        if (empty($payload)) return;
+
+        // Whitelist: fields reachable from this content's type via attached groups
+        $validFieldIds = \Contensio\Cms\Models\Field::query()
+            ->whereHas('group.contentTypes', fn ($q) => $q->where('content_types.id', $content->content_type_id))
+            ->pluck('id')
+            ->flip(); // for O(1) isset checks
+
+        foreach ($payload as $fieldId => $submitted) {
+            if (! isset($validFieldIds[(int) $fieldId])) continue;
+
+            $field = \Contensio\Cms\Models\Field::find($fieldId);
+            if (! $field) continue;
+
+            $isMulti = in_array($field->type, ['multi-select'], true);
+
+            if ($field->is_translatable && is_array($submitted)) {
+                foreach ($submitted as $langId => $value) {
+                    $saveValue = $isMulti ? json_encode(array_values((array) $value)) : (string) ($value ?? '');
+                    \Contensio\Cms\Models\ContentFieldValue::updateOrCreate(
+                        [
+                            'content_id'  => $content->id,
+                            'field_id'    => (int) $fieldId,
+                            'language_id' => (int) $langId,
+                        ],
+                        ['value' => $saveValue, 'position' => 0]
+                    );
+                }
+            } else {
+                $saveValue = $isMulti ? json_encode(array_values((array) $submitted)) : (string) (is_array($submitted) ? '' : $submitted);
+                \Contensio\Cms\Models\ContentFieldValue::updateOrCreate(
+                    [
+                        'content_id'  => $content->id,
+                        'field_id'    => (int) $fieldId,
+                        'language_id' => null,
+                    ],
+                    ['value' => $saveValue, 'position' => 0]
+                );
+            }
         }
     }
 

@@ -33,6 +33,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Contensio\Cms\Models\ContentType;
 use Contensio\Cms\Models\ContentTypeTranslation;
+use Contensio\Cms\Models\FieldGroup;
 use Contensio\Cms\Models\Language;
 
 class ContentTypeController extends Controller
@@ -56,6 +57,8 @@ class ContentTypeController extends Controller
             'languages'       => $languages,
             'defaultLanguage' => $defaultLanguage,
             'existing'        => [],
+            'allFieldGroups'  => FieldGroup::orderBy('label')->get(['id', 'label', 'key']),
+            'attachedGroupIds'=> [],
         ]);
     }
 
@@ -116,6 +119,8 @@ class ContentTypeController extends Controller
             ]);
         }
 
+        $this->syncFieldGroups($type, (array) $request->input('field_group_ids', []));
+
         return redirect()->route('cms.admin.content-types.index')
             ->with('success', "Content type \"{$defaultSingular}\" created.");
     }
@@ -148,11 +153,15 @@ class ContentTypeController extends Controller
             ];
         }
 
+        $attached = $type->fieldGroups()->orderBy('field_group_attachments.position')->pluck('field_groups.id')->all();
+
         return view('cms::admin.content-types.form', [
-            'type'            => $type,
-            'languages'       => $languages,
-            'defaultLanguage' => $defaultLanguage,
-            'existing'        => $existing,
+            'type'             => $type,
+            'languages'        => $languages,
+            'defaultLanguage'  => $defaultLanguage,
+            'existing'         => $existing,
+            'allFieldGroups'   => FieldGroup::orderBy('label')->get(['id', 'label', 'key']),
+            'attachedGroupIds' => $attached,
         ]);
     }
 
@@ -206,10 +215,29 @@ class ContentTypeController extends Controller
             );
         }
 
+        // Sync attached field groups, preserving the submitted order
+        $this->syncFieldGroups($type, (array) $request->input('field_group_ids', []));
+
         $defaultSingular = $request->input("translations.{$defaultLangId}.singular");
 
         return redirect()->route('cms.admin.content-types.index')
             ->with('success', "Content type \"{$defaultSingular}\" saved.");
+    }
+
+    /**
+     * Attach / detach FieldGroups to a content type through the polymorphic
+     * pivot, preserving the submitted order in `field_group_attachments.position`.
+     */
+    protected function syncFieldGroups(ContentType $type, array $groupIds): void
+    {
+        $groupIds = array_values(array_unique(array_filter(array_map('intval', $groupIds))));
+
+        $payload = [];
+        foreach ($groupIds as $i => $id) {
+            $payload[$id] = ['position' => $i];
+        }
+
+        $type->fieldGroups()->sync($payload);
     }
 
     public function destroy(int $id)

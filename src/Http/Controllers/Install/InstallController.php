@@ -556,6 +556,7 @@ class InstallController extends Controller
             ['module' => 'content', 'name' => 'content.delete_own'],
             ['module' => 'content', 'name' => 'content.delete_all'],
             ['module' => 'content', 'name' => 'content.manage_types'],
+            ['module' => 'content', 'name' => 'fields.manage'],
             // Media
             ['module' => 'media', 'name' => 'media.upload'],
             ['module' => 'media', 'name' => 'media.view_all'],
@@ -609,6 +610,7 @@ class InstallController extends Controller
         $adminPermissions = [
             'content.view', 'content.create', 'content.edit_own', 'content.edit_all',
             'content.publish', 'content.delete_own', 'content.delete_all',
+            'content.manage_types', 'fields.manage',
             'media.upload', 'media.view_all', 'media.delete_own', 'media.delete_all',
             'taxonomy.manage', 'menu.manage',
             'seo.edit_content', 'seo.manage_settings', 'seo.manage_redirects',

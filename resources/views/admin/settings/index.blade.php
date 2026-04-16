@@ -46,6 +46,23 @@
     {{-- Plugins can register additional cards here (social login, analytics, email, etc.) --}}
     {!! \Contensio\Cms\Support\Hook::render('settings.hub_cards') !!}
 
+    {{-- Email --}}
+    <a href="{{ route('cms.admin.settings.email') }}"
+       class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 group-hover:bg-amber-100 transition-colors">
+                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900">Email</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">SMTP settings for password reset, verification and notifications.</p>
+            </div>
+        </div>
+    </a>
+
     {{-- SEO --}}
     <a href="{{ route('cms.admin.settings.seo') }}"
        class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
@@ -62,6 +79,22 @@
             </div>
         </div>
     </a>
+
+    {{-- Redirects --}}
+    @if(auth()->user()?->hasPermission('seo.manage_redirects'))
+    <a href="{{ route('cms.admin.redirects.index') }}"
+       class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 group-hover:bg-rose-100 transition-colors">
+                <i class="bi bi-arrow-left-right text-rose-600 text-xl"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900">Redirects</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Forward old URLs to new ones — 301 or 302.</p>
+            </div>
+        </div>
+    </a>
+    @endif
 
     {{-- Languages --}}
     <a href="{{ route('cms.admin.languages.index') }}"
@@ -85,6 +118,22 @@
         </div>
     </a>
 
+    {{-- Custom Fields --}}
+    @if(auth()->user()?->hasPermission('fields.manage'))
+    <a href="{{ route('cms.admin.field-groups.index') }}"
+       class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors">
+                <i class="bi bi-ui-checks-grid text-indigo-600 text-xl"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900">Custom Fields</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Reusable field groups — attach them to any content type.</p>
+            </div>
+        </div>
+    </a>
+    @endif
+
     {{-- Content Types --}}
     <a href="{{ route('cms.admin.content-types.index') }}"
        class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
@@ -106,6 +155,22 @@
             </div>
         </div>
     </a>
+
+    {{-- Activity log --}}
+    @if(auth()->user()?->hasPermission('activity_log.view'))
+    <a href="{{ route('cms.admin.activity-log.index') }}"
+       class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-200 transition-colors">
+                <i class="bi bi-clock-history text-slate-600 text-xl"></i>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900">Activity log</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Audit trail of admin actions — read-only.</p>
+            </div>
+        </div>
+    </a>
+    @endif
 
     {{-- Plugins --}}
     <a href="{{ route('cms.admin.plugins.index') }}"

@@ -31,6 +31,7 @@ namespace Contensio\Cms;
 use Contensio\Cms\Console\Commands\InstallCommand;
 use Contensio\Cms\Console\Commands\SeedBlockTypesCommand;
 use Contensio\Cms\Http\Middleware\AdminAuthenticate;
+use Contensio\Cms\Http\Middleware\HandleRedirects;
 use Contensio\Cms\Http\Middleware\RequireAdminRole;
 use Contensio\Cms\Http\Middleware\RequirePermission;
 use Contensio\Cms\Models\ContentType;
@@ -38,6 +39,7 @@ use Contensio\Cms\Services\Install\EnvWriter;
 use Contensio\Cms\Services\Install\RequirementsChecker;
 use Contensio\Cms\Support\AccessControl;
 use Contensio\Cms\Support\AdminNavigation;
+use Contensio\Cms\Support\EmailConfig;
 use Contensio\Cms\Support\FortifyIntegration;
 use Contensio\Cms\Support\PluginRegistry;
 use Contensio\Cms\Support\ThemeRegistry;
@@ -75,6 +77,11 @@ class CmsServiceProvider extends ServiceProvider
         $this->app['router']->aliasMiddleware('cms.admin', RequireAdminRole::class);
         $this->app['router']->aliasMiddleware('cms.permission', RequirePermission::class);
 
+        // Global: serve admin-configured URL redirects on every public request.
+        // Prepended so it runs before route resolution — an existing page with
+        // the same URL is still overridden by a matching redirect (admin intent wins).
+        $this->app['router']->prependMiddlewareToGroup('web', HandleRedirects::class);
+
         // Always load install routes — the controller guards each step internally.
         // This ensures /install/complete is reachable after storeAccount() writes
         // CMS_INSTALLED=true and redirects (which would be a new request).
@@ -82,6 +89,14 @@ class CmsServiceProvider extends ServiceProvider
 
         if ($this->isInstalled()) {
             $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+
+            // Overlay stored email/SMTP settings onto Laravel's mail config before
+            // anything else that might send mail (Fortify, plugins, etc.).
+            try {
+                EmailConfig::apply();
+            } catch (\Throwable) {
+                // Settings table may not exist during fresh install
+            }
 
             // Wire Fortify (password reset + email verification views) into Contensio.
             // Must run during boot so view callbacks are in place before Fortify resolves routes.

@@ -1,8 +1,11 @@
 <?php
 
+use Contensio\Cms\Http\Controllers\Admin\ActivityLogController;
 use Contensio\Cms\Http\Controllers\Admin\BlockController;
 use Contensio\Cms\Http\Controllers\Admin\ContentController;
 use Contensio\Cms\Http\Controllers\Admin\ContentTypeController;
+use Contensio\Cms\Http\Controllers\Admin\FieldController;
+use Contensio\Cms\Http\Controllers\Admin\FieldGroupController;
 use Contensio\Cms\Http\Controllers\Admin\TaxonomyController;
 use Contensio\Cms\Http\Controllers\Admin\TermController;
 use Contensio\Cms\Http\Controllers\Admin\DashboardController;
@@ -11,6 +14,7 @@ use Contensio\Cms\Http\Controllers\Admin\MediaController;
 use Contensio\Cms\Http\Controllers\Admin\MenuController;
 use Contensio\Cms\Http\Controllers\Admin\PluginController;
 use Contensio\Cms\Http\Controllers\Admin\ProfileController;
+use Contensio\Cms\Http\Controllers\Admin\RedirectController;
 use Contensio\Cms\Http\Controllers\Admin\RoleController;
 use Contensio\Cms\Http\Controllers\Admin\SettingController;
 use Contensio\Cms\Http\Controllers\Admin\ThemeController;
@@ -92,6 +96,20 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/content/{id}/blocks/reorder',   [BlockController::class, 'reorder'])->name('blocks.reorder');
         Route::post('/content/{id}/blocks/{blockId}/toggle', [BlockController::class, 'toggle'])->name('blocks.toggle');
 
+        // Field Groups (Custom Fields library)
+        Route::get('/field-groups',                [FieldGroupController::class, 'index'])->middleware('cms.permission:fields.manage')->name('field-groups.index');
+        Route::get('/field-groups/create',         [FieldGroupController::class, 'create'])->middleware('cms.permission:fields.manage')->name('field-groups.create');
+        Route::post('/field-groups',               [FieldGroupController::class, 'store'])->middleware('cms.permission:fields.manage')->name('field-groups.store');
+        Route::get('/field-groups/{id}/edit',      [FieldGroupController::class, 'edit'])->middleware('cms.permission:fields.manage')->name('field-groups.edit');
+        Route::put('/field-groups/{id}',           [FieldGroupController::class, 'update'])->middleware('cms.permission:fields.manage')->name('field-groups.update');
+        Route::delete('/field-groups/{id}',        [FieldGroupController::class, 'destroy'])->middleware('cms.permission:fields.manage')->name('field-groups.destroy');
+
+        // Fields (nested under a group)
+        Route::post('/field-groups/{group}/fields',          [FieldController::class, 'store'])->middleware('cms.permission:fields.manage')->name('fields.store');
+        Route::put('/fields/{id}',                            [FieldController::class, 'update'])->middleware('cms.permission:fields.manage')->name('fields.update');
+        Route::delete('/fields/{id}',                         [FieldController::class, 'destroy'])->middleware('cms.permission:fields.manage')->name('fields.destroy');
+        Route::post('/field-groups/{group}/fields/reorder',  [FieldController::class, 'reorder'])->middleware('cms.permission:fields.manage')->name('fields.reorder');
+
         // Content Types
         Route::get('/content-types',               [ContentTypeController::class, 'index'])->name('content-types.index');
         Route::get('/content-types/create',        [ContentTypeController::class, 'create'])->name('content-types.create');
@@ -161,6 +179,9 @@ Route::prefix(config('cms.route_prefix'))
         Route::post('/settings/general', [SettingController::class, 'saveGeneral'])->name('settings.general.save');
         Route::get('/settings/seo',      [SettingController::class, 'seo'])->name('settings.seo');
         Route::post('/settings/seo',     [SettingController::class, 'saveSeo'])->name('settings.seo.save');
+        Route::get('/settings/email',        [SettingController::class, 'email'])->name('settings.email');
+        Route::post('/settings/email',       [SettingController::class, 'saveEmail'])->name('settings.email.save');
+        Route::post('/settings/email/test',  [SettingController::class, 'sendTestEmail'])->name('settings.email.test');
 
         // Languages
         Route::get('/languages',               [LanguageController::class, 'index'])->name('languages.index');
@@ -170,6 +191,19 @@ Route::prefix(config('cms.route_prefix'))
         Route::put('/languages/{id}',          [LanguageController::class, 'update'])->name('languages.update');
         Route::delete('/languages/{id}',       [LanguageController::class, 'destroy'])->name('languages.destroy');
         Route::post('/languages/{id}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
+
+        // Activity log (read-only audit trail)
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])
+            ->middleware('cms.permission:activity_log.view')
+            ->name('activity-log.index');
+
+        // Redirects (SEO)
+        Route::get('/redirects',                [RedirectController::class, 'index'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.index');
+        Route::get('/redirects/create',         [RedirectController::class, 'create'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.create');
+        Route::post('/redirects',               [RedirectController::class, 'store'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.store');
+        Route::get('/redirects/{id}/edit',      [RedirectController::class, 'edit'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.edit');
+        Route::put('/redirects/{id}',           [RedirectController::class, 'update'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.update');
+        Route::delete('/redirects/{id}',        [RedirectController::class, 'destroy'])->middleware('cms.permission:seo.manage_redirects')->name('redirects.destroy');
 
         // Tools — Import / Export
         Route::get('/tools/import-export',  [ImportExportController::class, 'index'])->name('tools.import-export');

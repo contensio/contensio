@@ -30,9 +30,12 @@ namespace Contensio\Cms\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Mail;
 use Contensio\Cms\Models\ContentType;
 use Contensio\Cms\Models\Language;
 use Contensio\Cms\Models\Setting;
+use Contensio\Cms\Support\EmailConfig;
 
 class SettingController extends Controller
 {
@@ -118,5 +121,70 @@ class SettingController extends Controller
         }
 
         return redirect()->route('cms.admin.settings.seo')->with('success', 'SEO settings saved.');
+    }
+
+    /** Email / SMTP settings. */
+    public function email()
+    {
+        $settings = EmailConfig::load();
+
+        return view('cms::admin.settings.email', compact('settings'));
+    }
+
+    public function saveEmail(Request $request)
+    {
+        $data = $request->validate([
+            'mailer'       => 'required|in:smtp,sendmail,log,array',
+            'host'         => 'nullable|string|max:255',
+            'port'         => 'nullable|integer|min:1|max:65535',
+            'encryption'   => 'nullable|in:tls,ssl,',
+            'username'     => 'nullable|string|max:255',
+            'password'     => 'nullable|string|max:500',
+            'from_address' => 'required|email|max:255',
+            'from_name'    => 'required|string|max:255',
+        ]);
+
+        // When password is empty, keep the previously-stored value —
+        // the form shows a placeholder, not the actual secret.
+        if ($data['password'] === null || $data['password'] === '') {
+            unset($data['password']);
+        } else {
+            $data['password'] = Crypt::encryptString($data['password']);
+        }
+
+        foreach ($data as $key => $value) {
+            Setting::updateOrCreate(
+                ['module' => 'email', 'setting_key' => $key],
+                ['value' => (string) $value, 'updated_at' => now()]
+            );
+        }
+
+        // Re-apply so the next request (and any test email) uses fresh config
+        EmailConfig::apply();
+
+        return redirect()->route('cms.admin.settings.email')->with('success', 'Email settings saved.');
+    }
+
+    public function sendTestEmail(Request $request)
+    {
+        $request->validate(['to' => 'required|email']);
+
+        EmailConfig::apply();
+
+        try {
+            Mail::raw(
+                "This is a test email from " . config('cms.name', 'Contensio') . ".\n\n"
+                . "If you received this, your email settings are working correctly.",
+                function ($m) use ($request) {
+                    $m->to($request->to)->subject('Test email from ' . config('cms.name', 'Contensio'));
+                }
+            );
+        } catch (\Throwable $e) {
+            return redirect()->route('cms.admin.settings.email')
+                ->with('error', 'Failed to send: ' . $e->getMessage());
+        }
+
+        return redirect()->route('cms.admin.settings.email')
+            ->with('success', 'Test email sent to ' . $request->to . '.');
     }
 }

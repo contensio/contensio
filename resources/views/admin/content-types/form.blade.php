@@ -303,6 +303,91 @@
             </div>
         </div>
 
+        {{-- ── Custom Fields (attached field groups) ──────────────────── --}}
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6"
+             x-data="cfAttach(@js($allFieldGroups->map(fn($g)=>['id'=>$g->id,'label'=>$g->label,'key'=>$g->key])->all()), @js($attachedGroupIds))">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-base font-semibold text-gray-900">Custom fields</h2>
+                    <p class="text-xs text-gray-500 mt-0.5">Attach field groups. Their fields will appear on this content type's edit form.</p>
+                </div>
+                @if(empty($allFieldGroups ?? []))
+                <a href="{{ route('cms.admin.field-groups.create') }}"
+                   class="text-sm font-medium text-blue-600 hover:text-blue-700">Create a field group →</a>
+                @endif
+            </div>
+
+            {{-- Hidden inputs — rebuilt from Alpine state in submission order --}}
+            <template x-for="id in attached" :key="id">
+                <input type="hidden" name="field_group_ids[]" :value="id">
+            </template>
+
+            {{-- Attached chips --}}
+            <template x-if="attached.length > 0">
+                <ul class="space-y-2 mb-3">
+                    <template x-for="(id, i) in attached" :key="id">
+                        <li class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5">
+                            <span class="text-gray-400 font-mono text-xs" x-text="i + 1 + '.'"></span>
+                            <span class="flex-1 text-sm font-medium text-gray-900" x-text="labelFor(id)"></span>
+                            <span class="text-xs text-gray-400 font-mono" x-text="keyFor(id)"></span>
+                            <div class="flex items-center gap-1">
+                                <button type="button" @click="moveUp(i)" :disabled="i === 0"
+                                        class="w-7 h-7 rounded hover:bg-gray-200 text-gray-500 disabled:opacity-30 disabled:hover:bg-transparent" title="Move up">
+                                    <i class="bi bi-chevron-up"></i>
+                                </button>
+                                <button type="button" @click="moveDown(i)" :disabled="i === attached.length - 1"
+                                        class="w-7 h-7 rounded hover:bg-gray-200 text-gray-500 disabled:opacity-30 disabled:hover:bg-transparent" title="Move down">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                                <button type="button" @click="detach(id)"
+                                        class="w-7 h-7 rounded hover:bg-red-50 text-gray-500 hover:text-red-600" title="Detach">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+            <template x-if="attached.length === 0">
+                <p class="text-sm text-gray-500 italic mb-3">No field groups attached yet.</p>
+            </template>
+
+            {{-- Attach picker --}}
+            <div x-show="available.length > 0" class="flex items-center gap-2">
+                <select x-ref="picker" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <template x-for="g in available" :key="g.id">
+                        <option :value="g.id" x-text="g.label + ' (' + g.key + ')'"></option>
+                    </template>
+                </select>
+                <button type="button" @click="attach($refs.picker.value)"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+                    Attach
+                </button>
+            </div>
+            <p x-show="available.length === 0 && all.length > 0" class="text-xs text-gray-400 italic">All field groups are already attached.</p>
+        </div>
+
+        <script>
+            function cfAttach(all, initial) {
+                return {
+                    all: all,
+                    attached: initial.map(v => parseInt(v)).filter(Boolean),
+                    get available() {
+                        return this.all.filter(g => !this.attached.includes(parseInt(g.id)));
+                    },
+                    labelFor(id) { const g = this.all.find(g => g.id == id); return g ? g.label : '?'; },
+                    keyFor(id)   { const g = this.all.find(g => g.id == id); return g ? g.key   : ''; },
+                    attach(id) {
+                        id = parseInt(id);
+                        if (id && ! this.attached.includes(id)) this.attached.push(id);
+                    },
+                    detach(id) { this.attached = this.attached.filter(x => x !== id); },
+                    moveUp(i)  { if (i > 0) [this.attached[i-1], this.attached[i]] = [this.attached[i], this.attached[i-1]]; },
+                    moveDown(i){ if (i < this.attached.length - 1) [this.attached[i+1], this.attached[i]] = [this.attached[i], this.attached[i+1]]; },
+                };
+            }
+        </script>
+
         <div class="flex items-center gap-3">
             <button type="submit"
                     class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-5 py-2.5 rounded-md transition-colors shadow-sm">

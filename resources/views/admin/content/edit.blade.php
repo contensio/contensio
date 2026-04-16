@@ -477,6 +477,87 @@
 
         @endforeach
 
+        {{-- Custom Fields (from attached groups) --}}
+        @if(isset($fieldGroups) && $fieldGroups->isNotEmpty())
+        @foreach($fieldGroups as $group)
+        @php
+            if ($group->fields->isEmpty()) continue;
+            $groupTrans = $group->translations->firstWhere('language_id', $defaultLangId) ?? $group->translations->first();
+            $groupLabel = $groupTrans?->label ?? $group->label;
+
+            // Group fields by section (preserving order; null section first)
+            $bySection = [];
+            foreach ($group->fields as $field) {
+                $bySection[$field->section ?? ''][] = $field;
+            }
+        @endphp
+        <div class="bg-white rounded-md border border-gray-200" x-data="{ cfOpen: true }">
+            <button type="button" @click="cfOpen = !cfOpen"
+                    class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors rounded-md">
+                <h3 class="text-base font-bold text-gray-800">{{ $groupLabel }}</h3>
+                <svg class="w-4 h-4 text-gray-400 transition-transform duration-150 shrink-0"
+                     :class="cfOpen ? 'rotate-180' : ''"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div x-show="cfOpen" class="border-t border-gray-100 px-4 py-4 space-y-5">
+
+                @foreach($bySection as $sectionName => $sectionFields)
+                    @if($sectionName !== '')
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider pt-2 border-t border-gray-100 first:border-0 first:pt-0">{{ $sectionName }}</p>
+                    @endif
+
+                    @foreach($sectionFields as $field)
+                        @php
+                            $fTrans = $field->translations->firstWhere('language_id', $defaultLangId) ?? $field->translations->first();
+                            $fLabel = $fTrans?->label ?? $field->key;
+                            $fHelp  = $fTrans?->help_text;
+                            $fPh    = $fTrans?->placeholder;
+                            $cfg    = $field->config ?? [];
+                        @endphp
+
+                        @if($field->is_translatable)
+                            @foreach($languages as $lang)
+                            @php
+                                $valKey  = $field->id . ':' . $lang->id;
+                                $current = old("fields.{$field->id}.{$lang->id}", $fieldValues[$valKey] ?? '');
+                            @endphp
+                            <div x-show="activeLang === {{ $lang->id }}">
+                                @include('cms::admin.content.partials.field-input', [
+                                    'field'   => $field,
+                                    'inputName' => "fields[{$field->id}][{$lang->id}]",
+                                    'label'   => $fLabel . ' (' . $lang->code . ')',
+                                    'help'    => $fHelp,
+                                    'placeholder' => $fPh,
+                                    'cfg'     => $cfg,
+                                    'current' => $current,
+                                ])
+                            </div>
+                            @endforeach
+                        @else
+                            @php
+                                $valKey  = $field->id . ':_';
+                                $current = old("fields.{$field->id}", $fieldValues[$valKey] ?? '');
+                            @endphp
+                            @include('cms::admin.content.partials.field-input', [
+                                'field'   => $field,
+                                'inputName' => "fields[{$field->id}]",
+                                'label'   => $fLabel,
+                                'help'    => $fHelp,
+                                'placeholder' => $fPh,
+                                'cfg'     => $cfg,
+                                'current' => $current,
+                            ])
+                        @endif
+                    @endforeach
+                @endforeach
+
+            </div>
+        </div>
+        @endforeach
+        @endif
+
         {{-- SEO --}}
         <div class="bg-white rounded-md border border-gray-200" x-data="{ seoOpen: false }">
             <button type="button"

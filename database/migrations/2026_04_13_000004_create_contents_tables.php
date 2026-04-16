@@ -50,7 +50,7 @@ return new class extends Migration
         Schema::create('content_field_values', function (Blueprint $table) {
             $table->id();
             $table->foreignId('content_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('field_id')->constrained('content_type_fields')->cascadeOnDelete();
+            $table->foreignId('field_id')->constrained('fields')->cascadeOnDelete();
             $table->foreignId('language_id')->nullable()->constrained('languages')->restrictOnDelete();
             $table->longText('value')->nullable();
             $table->unsignedSmallInteger('position')->default(0); // for repeater fields

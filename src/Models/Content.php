@@ -85,6 +85,56 @@ class Content extends Model
         return $this->hasMany(ContentFieldValue::class);
     }
 
+    /**
+     * Retrieve the value of a custom field by its key, for the given language.
+     *
+     * Looks up the field across all groups attached to this content's type.
+     * Translatable fields resolve by language_id; non-translatable fields
+     * match any language_id (stored as null or the first-saved language).
+     *
+     * Returns the raw stored value (string, or JSON-decoded array for
+     * multi-value types). Type-specific casting happens in themes/helpers.
+     *
+     * @param  string  $key       Field key, e.g. 'price'
+     * @param  int|null  $languageId  Defaults to current app locale's language
+     * @return mixed
+     */
+    public function field(string $key, ?int $languageId = null)
+    {
+        static $resolved = [];
+
+        $cacheKey = $this->id . ':' . $key . ':' . ($languageId ?? 'current');
+        if (array_key_exists($cacheKey, $resolved)) {
+            return $resolved[$cacheKey];
+        }
+
+        // Find the field via the content type's attached groups
+        $field = Field::where('key', $key)
+            ->whereHas('group.contentTypes', fn ($q) => $q->where('content_types.id', $this->content_type_id))
+            ->first();
+
+        if (! $field) {
+            return $resolved[$cacheKey] = null;
+        }
+
+        $query = $this->fieldValues()->where('field_id', $field->id);
+
+        if ($field->is_translatable) {
+            $langId = $languageId ?? Language::where('code', app()->getLocale())->value('id');
+            $query->where('language_id', $langId);
+        }
+
+        $value = $query->value('value');
+
+        // Decode JSON for multi-value types
+        if (in_array($field->type, ['multi-select', 'media'], true) && is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = $decoded ?: $value;
+        }
+
+        return $resolved[$cacheKey] = $value;
+    }
+
     public function meta(): HasMany
     {
         return $this->hasMany(ContentMeta::class);

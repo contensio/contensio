@@ -31,6 +31,7 @@ namespace Contensio\Cms\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class ContentType extends Model
 {
@@ -61,9 +62,14 @@ class ContentType extends Model
         return $this->hasMany(ContentTypeMeta::class);
     }
 
-    public function fields(): HasMany
+    /** Field groups attached to this content type (polymorphic). */
+    public function fieldGroups(): MorphToMany
     {
-        return $this->hasMany(ContentTypeField::class)->orderBy('position');
+        return $this->morphToMany(
+            FieldGroup::class,
+            'attachable',
+            'field_group_attachments'
+        )->withPivot('position')->withTimestamps()->orderBy('field_group_attachments.position');
     }
 
     public function contents(): HasMany
