@@ -137,6 +137,9 @@ Route::prefix(config('cms.route_prefix'))
         Route::get('/media',          [MediaController::class, 'index'])->name('media.index');
         Route::post('/media/upload',  [MediaController::class, 'upload'])->name('media.upload');
         Route::delete('/media/{id}',  [MediaController::class, 'destroy'])->name('media.destroy');
+        // JSON endpoints for the Media Library picker modal
+        Route::get('/media/pick',         [MediaController::class, 'pick'])->name('media.pick');
+        Route::post('/media/pick/upload', [MediaController::class, 'pickUpload'])->name('media.pick.upload');
 
         // Appearance — Themes
         Route::get('/themes',                    [ThemeController::class, 'index'])->name('themes.index');

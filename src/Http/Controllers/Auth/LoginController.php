@@ -28,6 +28,7 @@
 
 namespace Contensio\Cms\Http\Controllers\Auth;
 
+use Contensio\Cms\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -86,14 +87,21 @@ class LoginController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
+        Activity::record('login', 'user', $user->id, "User: {$user->email}");
+
         return $this->redirectAfterLogin($user);
     }
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($user) {
+            Activity::record('logout', 'user', $user->id, "User: {$user->email}");
+        }
 
         return redirect()->route('cms.login');
     }

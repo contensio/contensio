@@ -21,6 +21,7 @@ use Contensio\Cms\Models\Language;
 use Contensio\Cms\Models\Role;
 use Contensio\Cms\Models\RoleTranslation;
 use Contensio\Cms\Support\AccessControl;
+use Contensio\Cms\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,8 @@ class UserController extends Controller
             'roles.*'  => ['integer', 'exists:roles,id'],
         ]);
 
-        DB::transaction(function () use ($data) {
+        $createdId = null;
+        DB::transaction(function () use ($data, &$createdId) {
             $user = User::create([
                 'name'     => $data['name'],
                 'email'    => $data['email'],
@@ -63,7 +65,11 @@ class UserController extends Controller
             ]);
 
             $user->roles()->sync($data['roles'] ?? []);
+            $createdId = $user->id;
         });
+
+        Activity::record('created', 'user', $createdId, "User: {$data['email']}")
+            ->withProperties(['name' => $data['name'], 'email' => $data['email']]);
 
         return redirect()
             ->route('cms.admin.users.index')
@@ -92,6 +98,8 @@ class UserController extends Controller
             'roles.*'  => ['integer', 'exists:roles,id'],
         ]);
 
+        $before = ['name' => $user->name, 'email' => $user->email];
+
         DB::transaction(function () use ($data, $user) {
             $user->name  = $data['name'];
             $user->email = $data['email'];
@@ -106,6 +114,13 @@ class UserController extends Controller
 
             $user->roles()->sync($newRoles);
         });
+
+        Activity::record('updated', 'user', $user->id, "User: {$user->email}")
+            ->withChanges($before, [
+                'name'              => $data['name'],
+                'email'             => $data['email'],
+                'password_changed'  => ! empty($data['password']),
+            ]);
 
         return redirect()
             ->route('cms.admin.users.edit', $user->id)
@@ -122,8 +137,11 @@ class UserController extends Controller
 
         $this->guardLastAdministrator($user, []);
 
+        $email = $user->email;
         $user->roles()->detach();
         $user->delete();
+
+        Activity::record('deleted', 'user', $id, "User: {$email}");
 
         return redirect()
             ->route('cms.admin.users.index')

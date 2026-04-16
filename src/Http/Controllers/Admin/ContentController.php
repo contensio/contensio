@@ -33,6 +33,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Contensio\Cms\Models\Autosave;
 use Contensio\Cms\Models\BlockType;
+use Contensio\Cms\Support\Activity;
 use Contensio\Cms\Models\Content;
 use Contensio\Cms\Models\ContentTranslation;
 use Contensio\Cms\Models\ContentType;
@@ -98,6 +99,13 @@ class ContentController extends Controller
 
         $this->syncContent($request, $content, $languages);
 
+        Activity::record(
+            $request->status === 'published' ? 'published' : 'created',
+            'content',
+            $content->id,
+            'Page: ' . $request->input("translations.{$defLangId}.title")
+        )->withProperties(['type' => 'page', 'status' => $content->status]);
+
         return redirect()->route('cms.admin.pages.edit', $content->id)
             ->with('success', 'Page created.');
     }
@@ -149,6 +157,8 @@ class ContentController extends Controller
             'status'                           => 'required|in:draft,published',
         ]);
 
+        $prevStatus = $content->status;
+
         $content->update([
             'status'       => $request->status,
             'published_at' => $request->status === 'published' && ! $content->published_at
@@ -157,6 +167,11 @@ class ContentController extends Controller
 
         $this->syncContent($request, $content, $languages);
         $this->clearAutosave($content);
+
+        $verb = ($prevStatus !== 'published' && $request->status === 'published') ? 'published' : 'updated';
+        Activity::record($verb, 'content', $content->id,
+            'Page: ' . $request->input("translations.{$defLangId}.title")
+        )->withProperties(['type' => 'page', 'status' => $content->status]);
 
         return redirect()->route('cms.admin.pages.edit', $id)->with('success', 'Page saved.');
     }
@@ -170,7 +185,11 @@ class ContentController extends Controller
             return redirect()->route('cms.admin.pages.index');
         }
 
+        $title = $content->translations()->value('title');
         $content->delete();
+
+        Activity::record('deleted', 'content', $id, "Page: {$title}")
+            ->withProperties(['type' => 'page']);
 
         return redirect()->route('cms.admin.pages.index')->with('success', 'Page deleted.');
     }
@@ -231,6 +250,13 @@ class ContentController extends Controller
 
         $this->syncContent($request, $content, $languages);
 
+        Activity::record(
+            $request->status === 'published' ? 'published' : 'created',
+            'content',
+            $content->id,
+            'Post: ' . $request->input("translations.{$defLangId}.title")
+        )->withProperties(['type' => 'post', 'status' => $content->status]);
+
         return redirect()->route('cms.admin.posts.edit', $content->id)
             ->with('success', 'Post created.');
     }
@@ -282,6 +308,8 @@ class ContentController extends Controller
             'status'                           => 'required|in:draft,published',
         ]);
 
+        $prevStatus = $content->status;
+
         $content->update([
             'status'       => $request->status,
             'published_at' => $request->status === 'published' && ! $content->published_at
@@ -290,6 +318,11 @@ class ContentController extends Controller
 
         $this->syncContent($request, $content, $languages);
         $this->clearAutosave($content);
+
+        $verb = ($prevStatus !== 'published' && $request->status === 'published') ? 'published' : 'updated';
+        Activity::record($verb, 'content', $content->id,
+            'Post: ' . $request->input("translations.{$defLangId}.title")
+        )->withProperties(['type' => 'post', 'status' => $content->status]);
 
         return redirect()->route('cms.admin.posts.edit', $id)->with('success', 'Post saved.');
     }
@@ -303,7 +336,11 @@ class ContentController extends Controller
             return redirect()->route('cms.admin.posts.index');
         }
 
+        $title = $content->translations()->value('title');
         $content->delete();
+
+        Activity::record('deleted', 'content', $id, "Post: {$title}")
+            ->withProperties(['type' => 'post']);
 
         return redirect()->route('cms.admin.posts.index')->with('success', 'Post deleted.');
     }
@@ -663,7 +700,9 @@ class ContentController extends Controller
             $field = \Contensio\Cms\Models\Field::find($fieldId);
             if (! $field) continue;
 
-            $isMulti = in_array($field->type, ['multi-select'], true);
+            $cfg     = $field->config ?? [];
+            $isMulti = in_array($field->type, ['multi-select'], true)
+                    || ($field->type === 'media' && ! empty($cfg['multiple']));
 
             if ($field->is_translatable && is_array($submitted)) {
                 foreach ($submitted as $langId => $value) {

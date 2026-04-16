@@ -448,6 +448,12 @@
     {{-- ─── Icon picker modal ──────────────────────────────────────────────────── --}}
     @include('cms::admin.partials.icon-picker-modal')
 
+    {{-- ─── Media Library picker modal ─────────────────────────────────────────── --}}
+    @include('cms::admin.partials.media-picker')
+
+    {{-- ─── Rich Text Editor (Tiptap) — loaded once; opts-in per textarea via window.initRTE() ─── --}}
+    @include('cms::admin.partials.rich-text-editor')
+
     {{-- ─── Confirmation modal ───────────────────────────────────────────────── --}}
     {{--
         Trigger from any page with:

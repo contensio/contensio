@@ -29,6 +29,7 @@
 namespace Contensio\Cms\Http\Controllers\Admin;
 
 use Contensio\Cms\Support\AccessControl;
+use Contensio\Cms\Support\Activity;
 use Contensio\Cms\Support\PluginOptions;
 use Contensio\Cms\Support\PluginRegistry;
 use Illuminate\Http\Request;
@@ -70,6 +71,9 @@ class PluginController extends Controller
             $message .= ' ' . $migrationWarning;
         }
 
+        Activity::record('plugin_enabled', 'plugin', null, "Plugin: {$plugin['name']}")
+            ->withProperties(['name' => $plugin['name'], 'version' => $plugin['meta']['version'] ?? null]);
+
         return back()->with('success', $message);
     }
 
@@ -110,6 +114,8 @@ class PluginController extends Controller
         $data = $request->validate(['plugin' => 'required|string']);
 
         PluginRegistry::disable($data['plugin']);
+
+        Activity::record('plugin_disabled', 'plugin', null, "Plugin: {$data['plugin']}");
 
         return back()->with('success', 'Plugin disabled.');
     }

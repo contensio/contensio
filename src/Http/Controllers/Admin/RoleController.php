@@ -20,6 +20,7 @@ use Contensio\Cms\Models\Language;
 use Contensio\Cms\Models\Permission;
 use Contensio\Cms\Models\Role;
 use Contensio\Cms\Models\RoleTranslation;
+use Contensio\Cms\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -57,7 +58,8 @@ class RoleController extends Controller
             'permissions.*' => ['integer', 'exists:permissions,id'],
         ]);
 
-        DB::transaction(function () use ($data) {
+        $createdRoleId = null;
+        DB::transaction(function () use ($data, &$createdRoleId) {
             $name = $this->uniqueSlug($data['label']);
 
             $role = Role::create([
@@ -66,6 +68,7 @@ class RoleController extends Controller
                 'plugin_name' => null,
                 'position'    => 100,
             ]);
+            $createdRoleId = $role->id;
 
             $langId = Language::where('is_default', true)->value('id')
                 ?? Language::orderBy('position')->value('id');
@@ -86,6 +89,9 @@ class RoleController extends Controller
             }
             $role->permissions()->sync($sync);
         });
+
+        Activity::record('created', 'role', $createdRoleId, "Role: {$data['label']}")
+            ->withProperties(['permissions_count' => count($data['permissions'] ?? [])]);
 
         return redirect()
             ->route('cms.admin.roles.index')
@@ -135,6 +141,9 @@ class RoleController extends Controller
             $role->permissions()->sync($sync);
         });
 
+        Activity::record('updated', 'role', $role->id, "Role: {$data['label']}")
+            ->withProperties(['permissions_count' => count($data['permissions'] ?? [])]);
+
         return redirect()
             ->route('cms.admin.roles.edit', $role->id)
             ->with('success', 'Role updated.');
@@ -156,7 +165,10 @@ class RoleController extends Controller
             return back()->withErrors(['role' => 'This role is assigned to ' . $role->users_count . ' user(s). Reassign them first, then delete the role.']);
         }
 
+        $roleName = $role->name;
         $role->delete();
+
+        Activity::record('deleted', 'role', $id, "Role: {$roleName}");
 
         return redirect()
             ->route('cms.admin.roles.index')

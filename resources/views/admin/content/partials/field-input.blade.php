@@ -50,12 +50,12 @@
         @break
 
     @case('rich-text')
-        {{-- Rich text currently uses a plain textarea as a safe fallback.
-             Upgrade later with a shared RTE component (Tiptap, Trix, etc.). --}}
+        {{-- Tiptap-backed. admin/partials/rich-text-editor.blade.php defines
+             window.initRTE(textareaEl) which replaces the textarea with the editor. --}}
         <textarea id="{{ $fieldId }}" name="{{ $inputName }}" rows="6"
                   @if($isRequired) required @endif
-                  placeholder="{{ $placeholder ?: 'HTML or Markdown' }}"
-                  class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">{{ is_array($current) ? '' : $current }}</textarea>
+                  x-data x-init="window.initRTE && window.initRTE($el)"
+                  data-placeholder="{{ $placeholder ?: 'Start writing…' }}">{{ is_array($current) ? '' : $current }}</textarea>
         @break
 
     @case('number')
@@ -120,12 +120,42 @@
         @break
 
     @case('media')
-        {{-- Simple file input for v1. Later: integrate with the Media Library picker. --}}
-        <input type="text" id="{{ $fieldId }}" name="{{ $inputName }}"
-               value="{{ is_array($current) ? '' : $current }}"
-               placeholder="{{ $placeholder ?: 'Media URL or ID (Media Library picker coming soon)' }}"
-               @if($isRequired) required @endif
-               class="w-full rounded border border-gray-300 px-2.5 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        @php
+            $multiple = (bool) ($cfg['multiple'] ?? false);
+            $accept   = (string) ($cfg['accept']   ?? '');
+            $stored   = is_array($current) ? $current : (is_string($current) && $current !== '' && str_starts_with($current, '[') ? (json_decode($current, true) ?: []) : ($current !== '' ? [$current] : []));
+            $previewItems = [];
+            if (! empty($stored)) {
+                $ids = array_filter(array_map('intval', $stored));
+                if ($ids) {
+                    $previewItems = \Contensio\Cms\Models\Media::whereIn('id', $ids)->get();
+                }
+            }
+        @endphp
+        <input type="hidden" id="{{ $fieldId }}" name="{{ $inputName }}" value="{{ is_array($current) ? json_encode($current) : $current }}">
+        <div class="space-y-2">
+            <div data-media-preview="{{ $inputName }}" class="flex flex-wrap gap-2">
+                @foreach($previewItems as $m)
+                <div class="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-white flex items-center justify-center">
+                    @if(str_starts_with((string) $m->mime_type, 'image/'))
+                    <img src="{{ \Illuminate\Support\Facades\Storage::disk($m->disk)->url($m->file_path) }}" class="w-full h-full object-cover" alt="">
+                    @else
+                    <div class="text-[10px] p-1 font-mono break-all text-gray-500 text-center">{{ $m->file_name }}</div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            <button type="button"
+                    @click.prevent="$dispatch('cms:media-pick', { inputName: '{{ $inputName }}', multiple: {{ $multiple ? 'true' : 'false' }}, accept: '{{ $accept }}' })"
+                    class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium text-sm px-4 py-2 rounded-lg transition-colors">
+                <i class="bi bi-images"></i>
+                @if($previewItems->isNotEmpty() ?? false)
+                    Change
+                @else
+                    Select from library
+                @endif
+            </button>
+        </div>
         @break
 
     @case('url')

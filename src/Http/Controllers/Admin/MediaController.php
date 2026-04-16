@@ -94,4 +94,85 @@ class MediaController extends Controller
         return redirect()->route('cms.admin.media.index')
             ->with('success', 'File deleted.');
     }
+
+    /**
+     * JSON endpoint for the Media Library picker modal.
+     * Returns paginated media items with optional MIME filter + search.
+     *
+     *   GET /admin/media/pick?q=hero&mime=image%2F&page=2
+     */
+    public function pick(Request $request)
+    {
+        $q    = trim((string) $request->input('q', ''));
+        $mime = trim((string) $request->input('mime', '')); // e.g. "image/"
+
+        $items = Media::query()
+            ->when($q,    fn ($qb) => $qb->where('file_name', 'like', "%{$q}%"))
+            ->when($mime, fn ($qb) => $qb->where('mime_type', 'like', "{$mime}%"))
+            ->latest()
+            ->paginate(36);
+
+        return response()->json([
+            'items' => $items->map(fn (Media $m) => $this->mediaAsJson($m))->values(),
+            'page'  => $items->currentPage(),
+            'pages' => $items->lastPage(),
+            'total' => $items->total(),
+        ]);
+    }
+
+    /**
+     * JSON upload endpoint for the picker. Single-file upload, returns the
+     * newly-created media item in the same shape as pick().
+     */
+    public function pickUpload(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|max:20480',
+        ]);
+
+        $file   = $request->file('file');
+        $year   = date('Y');
+        $month  = date('m');
+        $folder = "uploads/{$year}/{$month}";
+
+        $original = $file->getClientOriginalName();
+        $ext      = strtolower($file->getClientOriginalExtension());
+        $stored   = Str::uuid() . ($ext ? ".{$ext}" : '');
+        $path     = Storage::disk('public')->putFileAs($folder, $file, $stored);
+
+        $width = $height = null;
+        if (str_starts_with($file->getMimeType(), 'image/')) {
+            $size   = @getimagesize($file->getRealPath());
+            $width  = $size[0] ?? null;
+            $height = $size[1] ?? null;
+        }
+
+        $media = Media::create([
+            'code'      => Str::random(16),
+            'user_id'   => auth()->id(),
+            'file_name' => $original,
+            'file_path' => $path,
+            'disk'      => 'public',
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'width'     => $width,
+            'height'    => $height,
+        ]);
+
+        return response()->json(['item' => $this->mediaAsJson($media)]);
+    }
+
+    protected function mediaAsJson(Media $m): array
+    {
+        return [
+            'id'        => $m->id,
+            'file_name' => $m->file_name,
+            'url'       => Storage::disk($m->disk)->url($m->file_path),
+            'mime_type' => $m->mime_type,
+            'file_size' => $m->file_size,
+            'width'     => $m->width,
+            'height'    => $m->height,
+            'is_image'  => str_starts_with((string) $m->mime_type, 'image/'),
+        ];
+    }
 }
