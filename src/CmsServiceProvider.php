@@ -102,6 +102,14 @@ class CmsServiceProvider extends ServiceProvider
             // Must run during boot so view callbacks are in place before Fortify resolves routes.
             FortifyIntegration::configure($this->app);
 
+            // Ensure Fortify's service provider is loaded — this defines the named
+            // routes (password.request, password.reset, verification.*, etc.) that
+            // our views reference. Users don't need to add it to their own
+            // bootstrap/providers.php manually.
+            if (class_exists(\Laravel\Fortify\FortifyServiceProvider::class)) {
+                $this->app->register(\Laravel\Fortify\FortifyServiceProvider::class);
+            }
+
             // Seed core permissions + roles on first boot. Idempotent —
             // running this every boot is safe; subsequent calls are effectively no-ops.
             try {

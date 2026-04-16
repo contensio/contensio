@@ -30,19 +30,29 @@ use Illuminate\Support\Facades\Route;
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('cms.seo.sitemap');
 Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('cms.seo.robots');
 
+// ─── Auth ──────────────────────────────────────────────────────────────────
+// Declared BEFORE the frontend catch-all so /login + /logout win the match race
+// even when Laravel's router compiles in registration order.
+Route::middleware('web')->group(function () {
+    Route::get('/login',  [LoginController::class, 'showLogin'])->name('cms.login');
+    Route::post('/login', [LoginController::class, 'login'])->name('cms.login.store');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('cms.logout')->middleware('auth');
+});
+
 // ─── Frontend ──────────────────────────────────────────────────────────────
 Route::middleware('web')->group(function () {
     Route::get('/',              [FrontendController::class, 'home'])->name('cms.home');
     Route::get('/blog',          [FrontendController::class, 'archive'])->name('cms.blog');
     Route::get('/blog/{slug}',   [FrontendController::class, 'post'])->name('cms.post');
-    Route::get('/{slug}',        [FrontendController::class, 'page'])->name('cms.page');
-});
 
-// ─── Auth ──────────────────────────────────────────────────────────────────
-Route::middleware('web')->group(function () {
-    Route::get('/login',  [LoginController::class, 'showLogin'])->name('cms.login');
-    Route::post('/login', [LoginController::class, 'login'])->name('cms.login.store');
-    Route::post('/logout', [LoginController::class, 'logout'])->name('cms.logout')->middleware('auth');
+    // Catch-all for pages by slug. Constrained to keep framework/admin/auth
+    // paths out so they always reach their dedicated routes even if the route
+    // cache is rebuilt in a different order. Reserved prefixes: login, logout,
+    // admin, Fortify auth (forgot-password, reset-password, email, user,
+    // two-factor-*), sitemap/robots/up, api, livewire, dev tooling.
+    Route::get('/{slug}', [FrontendController::class, 'page'])
+        ->where('slug', '^(?!login$|logout$|admin(?:/|$)|forgot-password(?:/|$)?$|reset-password(?:/|$)|email(?:/|$)|user(?:/|$)|two-factor(?:-|$)|sitemap\.xml$|robots\.txt$|up$|api(?:/|$)|livewire(?:/|$)|_debugbar(?:/|$)|_ignition(?:/|$))[^.]+$')
+        ->name('cms.page');
 });
 
 // ─── Admin panel ───────────────────────────────────────────────────────────

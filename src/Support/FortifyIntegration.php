@@ -67,7 +67,11 @@ class FortifyIntegration
         $app['config']->set('fortify.home', '/' . ltrim(config('cms.route_prefix', 'admin'), '/'));
 
         // Contensio renders its own login — Fortify's /login route is disabled
-        // by omitting Features::login(). We leave /forgot-password etc. enabled.
+        // by omitting Features::login(). BUT Fortify's route file unconditionally
+        // binds GET+POST /login regardless of feature flags — we re-map them to
+        // dead paths so they can't override our cms.login route.
+        $app['config']->set('fortify.paths.login',  '__fortify_login_disabled__');
+        $app['config']->set('fortify.paths.logout', '__fortify_logout_disabled__');
 
         // ── View callbacks ───────────────────────────────────────────────
         // Fortify is headless — we register callbacks that return our Blade views.
