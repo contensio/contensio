@@ -29,7 +29,16 @@
 </div>
 @endif
 
-<div x-data="{ uploading: false }">
+<div x-data="{
+    uploading: false,
+    selected: [],
+    toggleSelect(id) {
+        const i = this.selected.indexOf(id);
+        i === -1 ? this.selected.push(id) : this.selected.splice(i, 1);
+    },
+    selectAll(ids) { this.selected = [...ids]; },
+    clearAll() { this.selected = []; },
+}">
 
     {{-- Header --}}
     <div class="flex items-center justify-between mb-6">
@@ -46,6 +55,42 @@
             </svg>
             Upload Files
         </button>
+    </div>
+
+    {{-- Bulk action bar --}}
+    <div x-show="selected.length > 0"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 -translate-y-1"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="mb-4 flex items-center gap-3 bg-gray-900 text-white rounded-lg px-4 py-2.5"
+         style="display: none;">
+        <span class="text-sm font-medium" x-text="selected.length + ' selected'"></span>
+        <div class="flex-1"></div>
+        <button type="button" @click="clearAll()"
+                class="text-sm text-gray-400 hover:text-white transition-colors px-2">
+            Deselect all
+        </button>
+        <form method="POST" action="{{ route('contensio.account.media.bulk-destroy') }}"
+              id="bulk-destroy-form" class="inline"
+              @submit.prevent="$dispatch('cms:confirm', {
+                  title: 'Delete ' + selected.length + ' file(s)?',
+                  description: 'This will permanently delete the selected files from the server.',
+                  confirmLabel: 'Delete',
+                  formId: 'bulk-destroy-form',
+                  onConfirm: () => $el.submit()
+              })">
+            @csrf
+            <template x-for="id in selected" :key="id">
+                <input type="hidden" name="ids[]" :value="id">
+            </template>
+            <button type="submit"
+                    class="inline-flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete selected
+            </button>
+        </form>
     </div>
 
     {{-- Upload modal --}}
@@ -166,7 +211,17 @@
             $ext = strtoupper(pathinfo($item->file_name, PATHINFO_EXTENSION));
         @endphp
 
-        <div class="group relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="group relative bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-blue-300 hover:shadow-sm transition-all"
+             :class="selected.includes({{ $item->id }}) ? 'ring-2 ring-blue-500 border-blue-400' : ''">
+
+            {{-- Select checkbox --}}
+            <div class="absolute top-1.5 left-1.5 z-10">
+                <input type="checkbox"
+                       @click.stop="toggleSelect({{ $item->id }})"
+                       :checked="selected.includes({{ $item->id }})"
+                       class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                       :class="selected.includes({{ $item->id }}) ? '!opacity-100' : ''">
+            </div>
 
             {{-- Thumbnail --}}
             <div class="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
@@ -200,7 +255,12 @@
                 <p class="text-xs text-gray-700 truncate font-medium" title="{{ $item->file_name }}">
                     {{ $item->file_name }}
                 </p>
-                <p class="text-xs text-gray-400 mt-0.5">{{ $sizeText }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                    {{ $sizeText }}
+                    @if($isImage && $item->width && $item->height)
+                    &middot; {{ $item->width }}&times;{{ $item->height }}
+                    @endif
+                </p>
             </div>
 
             {{-- Delete overlay --}}

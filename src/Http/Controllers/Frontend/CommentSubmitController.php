@@ -11,11 +11,13 @@
 
 namespace Contensio\Http\Controllers\Frontend;
 
+use Contensio\Mail\NewCommentNotification;
 use Contensio\Models\Comment;
 use Contensio\Models\Content;
 use Contensio\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CommentSubmitController extends Controller
@@ -77,7 +79,7 @@ class CommentSubmitController extends Controller
 
         $status = $requireApproval ? Comment::STATUS_PENDING : Comment::STATUS_APPROVED;
 
-        Comment::create([
+        $comment = Comment::create([
             'code'         => Str::random(16),
             'content_id'   => $content->id,
             'parent_id'    => $request->filled('parent_id') ? (int) $request->parent_id : null,
@@ -87,6 +89,21 @@ class CommentSubmitController extends Controller
             'body'         => $request->body,
             'status'       => $status,
         ]);
+
+        // Notify admin when a comment needs moderation
+        if ($status === Comment::STATUS_PENDING) {
+            $adminEmail = config('mail.from.address');
+            if ($adminEmail) {
+                $moderateUrl = url(config('contensio.route_prefix', 'account') . '/comments');
+                try {
+                    Mail::to($adminEmail)->queue(
+                        new NewCommentNotification($comment->load('author'), $content, $moderateUrl)
+                    );
+                } catch (\Throwable) {
+                    // Non-fatal — don't break comment submission if mail fails
+                }
+            }
+        }
 
         $message = $status === Comment::STATUS_PENDING
             ? 'Your comment has been submitted and is awaiting moderation.'

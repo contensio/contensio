@@ -25,7 +25,10 @@ use Contensio\Http\Controllers\Admin\Tools\ImportExportController;
 use Contensio\Http\Controllers\Admin\UserController;
 use Contensio\Http\Controllers\Auth\LoginController;
 use Contensio\Http\Controllers\Auth\RegisterController;
+use Contensio\Http\Controllers\Frontend\FeedController;
 use Contensio\Http\Controllers\Frontend\FrontendController;
+use Contensio\Http\Controllers\Frontend\FrontendSearchController;
+use Contensio\Http\Controllers\Frontend\FrontendTaxonomyController;
 use Contensio\Http\Controllers\Frontend\SeoController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +36,7 @@ use Illuminate\Support\Facades\Route;
 // Registered outside the 'web' group so no session/CSRF overhead for crawlers.
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('contensio.seo.sitemap');
 Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('contensio.seo.robots');
+Route::get('/feed',        [FeedController::class, 'index'])->name('contensio.feed');
 
 // ─── Auth ──────────────────────────────────────────────────────────────────
 // Declared BEFORE the frontend catch-all so /login + /logout win the match race
@@ -54,6 +58,14 @@ Route::middleware('web')->group(function () {
     Route::get('/',              [FrontendController::class, 'home'])->name('contensio.home');
     Route::get('/blog',          [FrontendController::class, 'archive'])->name('contensio.blog');
     Route::get('/blog/{slug}',   [FrontendController::class, 'post'])->name('contensio.post');
+    Route::get('/search',        [FrontendSearchController::class, 'index'])->name('contensio.search');
+
+    // Taxonomy term archives: /{taxonomy-slug}/{term-slug}
+    // Registered before the page catch-all so two-segment taxonomy URLs take priority.
+    Route::get('/{taxonomySlug}/{termSlug}', [FrontendTaxonomyController::class, 'term'])
+        ->where('taxonomySlug', '[a-z][a-z0-9-]*')
+        ->where('termSlug',     '[a-z][a-z0-9-]*')
+        ->name('contensio.taxonomy.term');
 
     // Catch-all for pages by slug. Constrained to keep framework/admin/auth
     // paths out so they always reach their dedicated routes even if the route
@@ -157,9 +169,10 @@ Route::prefix(config('contensio.route_prefix'))
         Route::delete('/taxonomies/{taxonomyId}/terms/{id}',    [TermController::class, 'destroy'])->name('terms.destroy');
 
         // Media
-        Route::get('/media',          [MediaController::class, 'index'])->name('media.index');
-        Route::post('/media/upload',  [MediaController::class, 'upload'])->name('media.upload');
-        Route::delete('/media/{id}',  [MediaController::class, 'destroy'])->name('media.destroy');
+        Route::get('/media',                  [MediaController::class, 'index'])->name('media.index');
+        Route::post('/media/upload',          [MediaController::class, 'upload'])->name('media.upload');
+        Route::post('/media/bulk-destroy',    [MediaController::class, 'bulkDestroy'])->name('media.bulk-destroy');
+        Route::delete('/media/{id}',          [MediaController::class, 'destroy'])->name('media.destroy');
         // JSON endpoints for the Media Library picker modal
         Route::get('/media/pick',         [MediaController::class, 'pick'])->name('media.pick');
         Route::post('/media/pick/upload', [MediaController::class, 'pickUpload'])->name('media.pick.upload');
@@ -234,6 +247,8 @@ Route::prefix(config('contensio.route_prefix'))
         // Users & registration settings
         Route::get('/settings/users',            [SettingController::class, 'users'])->name('settings.users');
         Route::post('/settings/users',           [SettingController::class, 'saveUsers'])->name('settings.users.save');
+        Route::get('/settings/reading',          [SettingController::class, 'reading'])->name('settings.reading');
+        Route::post('/settings/reading',         [SettingController::class, 'saveReading'])->name('settings.reading.save');
 
         // Activity log (read-only audit trail)
         Route::get('/activity-log', [ActivityLogController::class, 'index'])

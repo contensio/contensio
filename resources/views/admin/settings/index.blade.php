@@ -46,6 +46,23 @@
     {{-- Plugins can register additional cards here (social login, analytics, email, etc.) --}}
     {!! \Contensio\Support\Hook::render('settings.hub_cards') !!}
 
+    {{-- Reading --}}
+    <a href="{{ route('contensio.account.settings.reading') }}"
+       class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 group-hover:bg-orange-100 transition-colors">
+                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+            </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-gray-900">Reading</h3>
+                <p class="text-xs text-gray-500 mt-1 leading-relaxed">Homepage display, posts per page.</p>
+            </div>
+        </div>
+    </a>
+
     {{-- Email --}}
     <a href="{{ route('contensio.account.settings.email') }}"
        class="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all">

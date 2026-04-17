@@ -33,6 +33,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Contensio\Models\Content;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
 use Contensio\Models\Role;
@@ -253,6 +254,47 @@ class SettingController extends Controller
         }
 
         return redirect()->route('contensio.account.settings.users')->with('success', 'Settings saved.');
+    }
+
+    /** Reading settings — homepage display and posts per page. */
+    public function reading()
+    {
+        $settings      = Setting::where('module', 'reading')->pluck('value', 'setting_key');
+        $pageType      = ContentType::where('name', 'page')->first();
+        $defaultLangId = Language::where('is_default', true)->value('id');
+
+        $pages = $pageType
+            ? Content::where('content_type_id', $pageType->id)
+                ->where('status', 'published')
+                ->with(['translations' => fn ($q) => $q->where('language_id', $defaultLangId)])
+                ->get()
+            : collect();
+
+        return view('contensio::admin.settings.reading', compact('settings', 'pages'));
+    }
+
+    public function saveReading(Request $request)
+    {
+        $request->validate([
+            'homepage_display'  => 'required|in:latest_posts,static_page',
+            'homepage_page_id'  => 'nullable|integer|exists:contents,id',
+            'posts_per_page'    => 'required|integer|min:1|max:100',
+        ]);
+
+        $map = [
+            'homepage_display' => $request->homepage_display,
+            'homepage_page_id' => (string) intval($request->homepage_page_id),
+            'posts_per_page'   => (string) intval($request->posts_per_page),
+        ];
+
+        foreach ($map as $key => $value) {
+            Setting::updateOrCreate(
+                ['module' => 'reading', 'setting_key' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('contensio.account.settings.reading')->with('success', 'Reading settings saved.');
     }
 
     public function sendTestEmail(Request $request)

@@ -43,13 +43,36 @@ class FrontendController extends Controller
         $site = $this->siteConfig();
         $lang = $this->defaultLang();
 
+        $readingSettings = Setting::where('module', 'reading')->pluck('value', 'setting_key');
+        $homepageDisplay = $readingSettings['homepage_display'] ?? 'latest_posts';
+
+        // Static page homepage
+        if ($homepageDisplay === 'static_page') {
+            $pageId = intval($readingSettings['homepage_page_id'] ?? 0);
+            if ($pageId > 0) {
+                $content = Content::where('id', $pageId)->where('status', 'published')
+                    ->with(['featuredImage'])
+                    ->first();
+                if ($content) {
+                    $translation = $content->translations()
+                        ->where('language_id', $lang?->id)
+                        ->first();
+                    if ($translation) {
+                        return view('theme::page', compact('translation', 'content', 'site', 'lang'));
+                    }
+                }
+            }
+            // Fallback to latest posts if the configured page can't be found
+        }
+
+        $perPage  = max(1, intval($readingSettings['posts_per_page'] ?? 6));
         $postType = ContentType::where('name', 'post')->first();
         $posts    = $postType
             ? Content::where('content_type_id', $postType->id)
                 ->where('status', 'published')
                 ->with(['translations' => fn ($q) => $q->where('language_id', $lang?->id), 'featuredImage'])
                 ->latest('published_at')
-                ->limit(6)
+                ->limit($perPage)
                 ->get()
             : collect();
 
@@ -81,12 +104,16 @@ class FrontendController extends Controller
         $site     = $this->siteConfig();
         $postType = ContentType::where('name', 'post')->first();
 
+        $perPage = max(1, intval(
+            Setting::where('module', 'reading')->where('setting_key', 'posts_per_page')->value('value') ?? 12
+        ));
+
         $posts = $postType
             ? Content::where('content_type_id', $postType->id)
                 ->where('status', 'published')
                 ->with(['translations' => fn ($q) => $q->where('language_id', $lang?->id), 'author', 'featuredImage'])
                 ->latest('published_at')
-                ->paginate(12)
+                ->paginate($perPage)
             : collect();
 
         return view('theme::archive', compact('posts', 'site', 'lang'));
@@ -114,6 +141,20 @@ class FrontendController extends Controller
         $content = $translation->content;
         $site    = $this->siteConfig();
 
+        // Custom field groups attached to the post type, with their saved values
+        $fieldGroups = $postType->fieldGroups()
+            ->with(['fields', 'fields.translations'])
+            ->orderBy('field_group_attachments.position')
+            ->get();
+
+        $fieldValues = [];
+        foreach ($content->fieldValues()->get(['field_id', 'language_id', 'value']) as $row) {
+            $key = $row->language_id
+                ? $row->field_id . ':' . $row->language_id
+                : $row->field_id . ':_';
+            $fieldValues[$key] = $row->value;
+        }
+
         $commentsEnabled = (bool) Setting::where('module', 'comments')
             ->where('setting_key', 'comments_enabled')
             ->value('value');
@@ -131,7 +172,7 @@ class FrontendController extends Controller
                 ->get()
             : collect();
 
-        return view('theme::post', compact('translation', 'content', 'site', 'lang', 'comments', 'commentsEnabled'));
+        return view('theme::post', compact('translation', 'content', 'site', 'lang', 'comments', 'commentsEnabled', 'fieldGroups', 'fieldValues'));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -106,6 +106,27 @@ class MediaController extends Controller
             ->with('success', 'File deleted.');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ])['ids'];
+
+        $items = Media::with('variants')->whereIn('id', $ids)->get();
+
+        foreach ($items as $media) {
+            foreach ($media->variants as $variant) {
+                Storage::disk($media->disk)->delete($variant->path);
+            }
+            Storage::disk($media->disk)->delete($media->file_path);
+            $media->delete();
+        }
+
+        return redirect()->route('contensio.account.media.index')
+            ->with('success', count($items) . ' ' . Str::plural('file', count($items)) . ' deleted.');
+    }
+
     /**
      * JSON endpoint for the Media Library picker modal.
      * Returns paginated media items with optional MIME filter + search.

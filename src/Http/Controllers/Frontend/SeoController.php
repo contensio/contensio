@@ -21,6 +21,7 @@ use Contensio\Models\ContentTranslation;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
 use Contensio\Models\Setting;
+use Contensio\Models\Taxonomy;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 
@@ -100,6 +101,33 @@ class SeoController extends Controller
                         'changefreq' => 'weekly',
                         'priority'   => '0.6',
                     ];
+                }
+            }
+
+            // Taxonomy term archive pages
+            if ($defaultLang) {
+                $taxonomies = Taxonomy::with([
+                    'translations' => fn ($q) => $q->where('language_id', $defaultLang->id),
+                    'terms.translations' => fn ($q) => $q->where('language_id', $defaultLang->id),
+                ])->get();
+
+                foreach ($taxonomies as $taxonomy) {
+                    $taxTrans = $taxonomy->translations->first();
+                    if (! $taxTrans?->slug) {
+                        continue;
+                    }
+                    foreach ($taxonomy->terms as $term) {
+                        $termTrans = $term->translations->first();
+                        if (! $termTrans?->slug) {
+                            continue;
+                        }
+                        $urls[] = [
+                            'loc'        => route('contensio.taxonomy.term', [$taxTrans->slug, $termTrans->slug]),
+                            'lastmod'    => $now,
+                            'changefreq' => 'weekly',
+                            'priority'   => '0.5',
+                        ];
+                    }
                 }
             }
         }

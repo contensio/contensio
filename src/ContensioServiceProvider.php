@@ -29,7 +29,9 @@
 namespace Contensio;
 
 use Contensio\Console\Commands\InstallCommand;
+use Contensio\Console\Commands\PublishScheduledContent;
 use Contensio\Console\Commands\SeedBlockTypesCommand;
+use Illuminate\Console\Scheduling\Schedule;
 use Contensio\Http\Middleware\AdminAuthenticate;
 use Contensio\Http\Middleware\HandleRedirects;
 use Contensio\Http\Middleware\RequireAdminRole;
@@ -181,9 +183,15 @@ class ContensioServiceProvider extends ServiceProvider
             });
         }
 
+        // Auto-publish scheduled content every minute.
+        $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
+            $schedule->command('contensio:publish-scheduled')->everyMinute()->withoutOverlapping();
+        });
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 InstallCommand::class,
+                PublishScheduledContent::class,
                 SeedBlockTypesCommand::class,
             ]);
 
