@@ -34,6 +34,7 @@ use Contensio\Http\Middleware\AdminAuthenticate;
 use Contensio\Http\Middleware\HandleRedirects;
 use Contensio\Http\Middleware\RequireAdminRole;
 use Contensio\Http\Middleware\RequirePermission;
+use Contensio\Http\Middleware\TrackUserActivity;
 use Contensio\Models\ContentType;
 use Contensio\Services\Install\EnvWriter;
 use Contensio\Services\Install\Installer;
@@ -78,6 +79,7 @@ class ContensioServiceProvider extends ServiceProvider
         $this->app['router']->aliasMiddleware('contensio.auth', AdminAuthenticate::class);
         $this->app['router']->aliasMiddleware('contensio.admin', RequireAdminRole::class);
         $this->app['router']->aliasMiddleware('contensio.permission', RequirePermission::class);
+        $this->app['router']->pushMiddlewareToGroup('web', TrackUserActivity::class);
 
         // Global: serve admin-configured URL redirects on every public request.
         // Prepended so it runs before route resolution — an existing page with

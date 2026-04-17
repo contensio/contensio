@@ -67,6 +67,7 @@
                 <h2 class="mt-4 text-lg font-bold text-gray-900">{{ $user->name }}</h2>
                 <p class="text-sm text-gray-500">{{ $user->email }}</p>
 
+                @if($canUploadAvatar)
                 <div class="mt-5 flex flex-col gap-2 items-center">
                     <button type="button" @click="openPicker()"
                             class="inline-flex items-center justify-center gap-2 bg-ember-500 hover:bg-ember-600 text-white font-medium text-sm px-4 py-2 rounded-lg transition-colors">
@@ -95,6 +96,7 @@
                     </form>
                     @endif
                 </div>
+                @endif
 
                 <input type="file" x-ref="file" class="hidden" accept="image/jpeg,image/png,image/webp"
                        @change="fileChosen($event)">
@@ -172,10 +174,52 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        @if($canChangeEmail)
                         <input type="email" name="email" value="{{ old('email', $user->email) }}" required
                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
+                        @else
+                        <div class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+                            {{ $user->email }}
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Email changes are disabled by the administrator.</p>
+                        @endif
                     </div>
                 </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    @if($canChangeUsername)
+                    <div class="flex rounded-lg border border-gray-300 overflow-hidden focus-within:ring-2 focus-within:ring-ember-500 focus-within:border-transparent">
+                        <span class="inline-flex items-center px-3 bg-gray-50 border-r border-gray-300 text-gray-400 text-sm select-none">@</span>
+                        <input type="text" name="username" value="{{ old('username', $user->username ?? '') }}" required
+                               pattern="[a-z0-9_]+" title="Only lowercase letters, numbers, and underscores"
+                               class="flex-1 px-3 py-2 text-sm outline-none bg-white">
+                    </div>
+                    <p class="mt-1 text-xs text-gray-400">Lowercase letters, numbers, and underscores only.</p>
+                    @error('username')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                    @else
+                    <div class="flex rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+                        <span class="inline-flex items-center px-3 border-r border-gray-200 text-gray-400 text-sm select-none">@</span>
+                        <span class="flex-1 px-3 py-2 text-sm text-gray-500">{{ $user->username ?? '' }}</span>
+                    </div>
+                    @if($usernameCooldownEnd)
+                    <p class="mt-1 text-xs text-amber-600">You can change your username again on {{ $usernameCooldownEnd->format('M j, Y') }}.</p>
+                    @else
+                    <p class="mt-1 text-xs text-gray-400">Username changes are disabled by the administrator.</p>
+                    @endif
+                    @endif
+                </div>
+
+                @if($canEditBio)
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                    <textarea name="bio" rows="4" placeholder="A short description about yourself…"
+                              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent resize-none">{{ old('bio', $user->bio ?? '') }}</textarea>
+                    <p class="mt-1 text-xs text-gray-400">Shown on your public author profile.</p>
+                </div>
+                @endif
 
                 <div class="flex justify-end pt-1">
                     <button type="submit"
@@ -332,6 +376,53 @@
 
         {{-- Plugins can add cards here (linked accounts, API tokens, preferences, etc.) --}}
         {!! \Contensio\Support\Hook::render('profile.sections', $user) !!}
+
+        @if($canDeleteAccount)
+        {{-- Delete account --}}
+        <div class="bg-white rounded-xl border border-red-200 p-6 space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-gray-900">Delete account</h2>
+                    <p class="text-sm text-gray-500 mt-0.5">Permanently remove your account and all associated data. This action cannot be undone.</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('contensio.account.profile.destroy') }}"
+                  id="delete-account-form" class="border-t border-red-100 pt-4 space-y-4">
+                @csrf @method('DELETE')
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm your password</label>
+                    <input type="password" name="current_password" required autocomplete="current-password"
+                           class="w-full sm:max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                    @error('current_password')
+                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <button type="submit"
+                        @click.prevent="$dispatch('cms:confirm', {
+                            title: 'Delete your account?',
+                            description: 'This will permanently delete your account and all your data. You cannot undo this.',
+                            confirmLabel: 'Delete account',
+                            formId: 'delete-account-form'
+                        })"
+                        class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete my account
+                </button>
+            </form>
+        </div>
+        @endif
 
     </section>
 

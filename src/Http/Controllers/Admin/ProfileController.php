@@ -2,12 +2,7 @@
 
 /**
  * Contensio - The open content platform for Laravel.
- * A flexible content foundation for blogs, shops, communities,
- * and any content-driven app.
  * https://contensio.com
- *
- * Copyright (c) 2026 Iosif Gabriel Chimilevschi
- * Contensio is operated by Host Server SRL.
  *
  * @copyright   Copyright (c) 2026 Iosif Gabriel Chimilevschi
  * @license     https://www.gnu.org/licenses/agpl-3.0.txt  AGPL-3.0-or-later
@@ -16,8 +11,11 @@
 
 namespace Contensio\Http\Controllers\Admin;
 
+use Contensio\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -27,87 +25,122 @@ use Intervention\Image\Laravel\Facades\Image;
 
 class ProfileController extends Controller
 {
+    /** Resolve all user-settings flags in one query and return as an array. */
+    private function userSettings(): array
+    {
+        return Setting::where('module', 'users')->pluck('value', 'setting_key')->toArray();
+    }
+
     /** Profile page — name/email, password change, two-factor management. */
     public function index()
     {
-        $user = auth()->user();
+        $user     = auth()->user();
+        $settings = $this->userSettings();
+        $isAdmin  = $user->isSuperAdmin();
 
-        // Compute the three 2FA UI states directly from the user columns so
-        // the view doesn't have to know about Fortify internals.
         $twoFactor = [
-            'enabled'   => ! is_null($user->two_factor_secret) && ! is_null($user->two_factor_confirmed_at),
-            'pending'   => ! is_null($user->two_factor_secret) && is_null($user->two_factor_confirmed_at),
-            'disabled'  => is_null($user->two_factor_secret),
+            'enabled'  => ! is_null($user->two_factor_secret) && ! is_null($user->two_factor_confirmed_at),
+            'pending'  => ! is_null($user->two_factor_secret) && is_null($user->two_factor_confirmed_at),
+            'disabled' => is_null($user->two_factor_secret),
         ];
 
-        // If 2FA is pending confirmation, fetch the QR code SVG + recovery codes
-        // directly from the User model (the TwoFactorAuthenticatable trait
-        // provides these accessors). This avoids round-tripping through the
-        // Fortify REST endpoints just to render the page.
-        $qrCode        = null;
+        $qrCode = null;
         $recoveryCodes = [];
         if ($twoFactor['pending'] || $twoFactor['enabled']) {
             try {
                 $qrCode        = $user->twoFactorQrCodeSvg();
                 $recoveryCodes = json_decode(decrypt($user->two_factor_recovery_codes), true) ?: [];
-            } catch (\Throwable) {
-                // Columns may not be populated yet — skip silently
-            }
+            } catch (\Throwable) {}
         }
 
-        return view('contensio::admin.profile.index', compact('user', 'twoFactor', 'qrCode', 'recoveryCodes'));
+        [$canChangeUsername, $usernameCooldownEnd] = $this->resolveUsernameCooldown($user, $settings, $isAdmin);
+
+        $canChangeEmail   = $isAdmin || ($settings['allow_email_change']   ?? '1') === '1';
+        $canEditBio       = $isAdmin || ($settings['allow_bio']            ?? '1') === '1';
+        $canUploadAvatar  = $isAdmin || ($settings['allow_avatar']         ?? '1') === '1';
+        $canDeleteAccount = ! $isAdmin && ($settings['allow_account_deletion'] ?? '') === '1';
+
+        return view('contensio::admin.profile.index', compact(
+            'user', 'twoFactor', 'qrCode', 'recoveryCodes',
+            'canChangeUsername', 'usernameCooldownEnd',
+            'canChangeEmail', 'canEditBio', 'canUploadAvatar', 'canDeleteAccount'
+        ));
     }
 
-    /** Update the user's own name / email. */
+    /** Update the user's own name / email / username / bio. */
     public function update(Request $request)
     {
-        $user = auth()->user();
+        $user     = auth()->user();
+        $settings = $this->userSettings();
+        $isAdmin  = $user->isSuperAdmin();
 
-        $data = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-        ]);
+        [$canChangeUsername, $usernameCooldownEnd] = $this->resolveUsernameCooldown($user, $settings, $isAdmin);
+        $canChangeEmail = $isAdmin || ($settings['allow_email_change'] ?? '1') === '1';
+        $canEditBio     = $isAdmin || ($settings['allow_bio']          ?? '1') === '1';
 
-        $user->update($data);
+        $rules = ['name' => ['required', 'string', 'max:255']];
 
-        return redirect()
-            ->route('contensio.account.profile')
-            ->with('success', 'Profile updated.');
+        if ($canChangeEmail) {
+            $rules['email'] = ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)];
+        }
+        if ($canEditBio) {
+            $rules['bio'] = ['nullable', 'string', 'max:1000'];
+        }
+        if ($canChangeUsername) {
+            $rules['username'] = ['required', 'string', 'min:3', 'max:40', 'regex:/^[a-z0-9_]+$/', Rule::unique('users', 'username')->ignore($user->id)];
+        }
+
+        $data = $request->validate($rules);
+
+        $user->name = $data['name'];
+
+        if ($canChangeEmail && isset($data['email'])) {
+            $user->email = $data['email'];
+        }
+        if ($canEditBio) {
+            $user->bio = $data['bio'] ?? null;
+        }
+        if ($canChangeUsername && isset($data['username']) && $data['username'] !== $user->username) {
+            $user->username             = $data['username'];
+            $user->username_changed_at  = now();
+        }
+
+        $user->save();
+
+        return redirect()->route('contensio.account.profile')->with('success', 'Profile updated.');
     }
 
     /** Change the current user's own password (requires current password). */
     public function updatePassword(Request $request)
     {
-        $user = auth()->user();
-
         $data = $request->validate([
             'current_password' => ['required', 'current_password'],
             'password'         => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user->update(['password' => Hash::make($data['password'])]);
+        auth()->user()->update(['password' => Hash::make($data['password'])]);
 
-        return redirect()
-            ->route('contensio.account.profile')
-            ->with('success', 'Password updated.');
+        return redirect()->route('contensio.account.profile')->with('success', 'Password updated.');
     }
 
     /**
-     * Accept a cropped avatar JPEG (multipart), store it under storage/app/public/avatars/,
+     * Accept a cropped avatar JPEG (multipart), store under storage/app/public/avatars/,
      * delete the old one, update the user record, return the new URL.
-     *
-     * The file is produced client-side by Cropper.js (canvas → blob → FormData),
-     * so we validate size + MIME on the server too.
      */
     public function updateAvatar(Request $request)
     {
+        $user         = auth()->user();
+        $settings     = $this->userSettings();
+        $canUpload    = $user->isSuperAdmin() || ($settings['allow_avatar'] ?? '1') === '1';
+
+        if (! $canUpload) {
+            return back()->with('error', 'Avatar uploads are disabled by the administrator.');
+        }
+
         $request->validate([
             'avatar' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
-        $user = auth()->user();
-
-        // Remove previous files if present
         if ($user->avatar_path) {
             Storage::disk('public')->delete($user->avatar_path);
             Storage::disk('public')->delete($this->thumbPath($user->avatar_path));
@@ -116,23 +149,17 @@ class ProfileController extends Controller
         $suffix   = Str::random(12);
         $filename = "avatars/{$suffix}.jpg";
         $thumb    = $this->thumbPath($filename);
+        $src      = $request->file('avatar')->getRealPath();
 
-        $sourcePath = $request->file('avatar')->getRealPath();
-
-        // Full avatar (512×512)
         Storage::disk('public')->put(
             $filename,
-            (string) Image::decode($sourcePath)->cover(512, 512)->encode(new JpegEncoder(quality: 85))
+            (string) Image::decode($src)->cover(512, 512)->encode(new JpegEncoder(quality: 85))
         );
-
-        // Thumbnail (64×64)
         Storage::disk('public')->put(
             $thumb,
-            (string) Image::decode($sourcePath)->cover(64, 64)->encode(new JpegEncoder(quality: 85))
+            (string) Image::decode($src)->cover(64, 64)->encode(new JpegEncoder(quality: 85))
         );
 
-        // Direct assignment bypasses $fillable so the package does not need to
-        // control the host app's User model.
         $user->avatar_path = $filename;
         $user->save();
 
@@ -153,7 +180,6 @@ class ProfileController extends Controller
         if ($user->avatar_path) {
             Storage::disk('public')->delete($user->avatar_path);
             Storage::disk('public')->delete($this->thumbPath($user->avatar_path));
-
             $user->avatar_path = null;
             $user->save();
         }
@@ -161,10 +187,74 @@ class ProfileController extends Controller
         return back()->with('success', 'Avatar removed.');
     }
 
+    /** Permanently delete the authenticated user's own account. */
+    public function destroy(Request $request)
+    {
+        $user     = auth()->user();
+        $settings = $this->userSettings();
+
+        if ($user->isSuperAdmin()) {
+            return back()->with('error', 'Administrator accounts cannot be self-deleted.');
+        }
+
+        if (($settings['allow_account_deletion'] ?? '') !== '1') {
+            return back()->with('error', 'Account deletion is not available.');
+        }
+
+        $request->validate(['current_password' => ['required', 'current_password']]);
+
+        $sessionId = $request->session()->getId();
+
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        try {
+            DB::table('user_sessions')->where('session_id', $sessionId)->delete();
+        } catch (\Throwable) {}
+
+        // Delete avatar files
+        if ($user->avatar_path) {
+            Storage::disk('public')->delete($user->avatar_path);
+            Storage::disk('public')->delete($this->thumbPath($user->avatar_path));
+        }
+
+        $user->delete();
+
+        return redirect()->route('contensio.home')
+            ->with('status', 'Your account has been permanently deleted.');
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
     /**
-     * Derive the 64×64 thumbnail path from the full avatar path.
-     * e.g. avatars/5-abc123.jpg → avatars/thumb_5-abc123.jpg
+     * Resolve whether the user can currently change their username, accounting
+     * for the cooldown. Returns [$canChange, $cooldownEndsAt|null].
      */
+    private function resolveUsernameCooldown($user, array $settings, bool $isAdmin): array
+    {
+        $globallyAllowed = $isAdmin || ($settings['users_can_change_username'] ?? '') === '1';
+
+        if (! $globallyAllowed) {
+            return [false, null];
+        }
+
+        if ($isAdmin) {
+            return [true, null]; // admins bypass cooldown
+        }
+
+        $cooldownDays = intval($settings['username_cooldown_days'] ?? 0);
+
+        if ($cooldownDays > 0 && $user->username_changed_at) {
+            $cooldownEnd = $user->username_changed_at->addDays($cooldownDays);
+            if ($cooldownEnd->isFuture()) {
+                return [false, $cooldownEnd];
+            }
+        }
+
+        return [true, null];
+    }
+
     private function thumbPath(string $avatarPath): string
     {
         return dirname($avatarPath) . '/thumb_' . basename($avatarPath);

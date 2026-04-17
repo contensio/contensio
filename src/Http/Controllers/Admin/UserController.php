@@ -25,6 +25,7 @@ use Contensio\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
@@ -58,10 +59,17 @@ class UserController extends Controller
 
         $createdId = null;
         DB::transaction(function () use ($data, &$createdId) {
+            // Generate a unique numeric username as placeholder — admin can update it later
+            do {
+                $username = (string) random_int(1_000_000_000_000_000, 9_999_999_999_999_999);
+            } while (\App\Models\User::where('username', $username)->exists());
+
             $user = User::create([
                 'name'     => $data['name'],
+                'username' => $username,
                 'email'    => $data['email'],
                 'password' => Hash::make($data['password']),
+                'code'     => Str::random(16),
             ]);
 
             $user->roles()->sync($data['roles'] ?? []);

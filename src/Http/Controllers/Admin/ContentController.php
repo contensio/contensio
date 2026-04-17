@@ -607,6 +607,12 @@ class ContentController extends Controller
             $content->save();
         }
 
+        // Allow comments toggle (only when the form includes the field)
+        if ($request->has('allow_comments')) {
+            $content->allow_comments = $request->boolean('allow_comments');
+            $content->save();
+        }
+
         // Collect term IDs from hierarchical checkboxes
         $allTermIds = array_map('intval', $request->input('term_ids', []));
 

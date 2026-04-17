@@ -1,6 +1,9 @@
 <?php
 
 use Contensio\Http\Controllers\Admin\ActivityLogController;
+use Contensio\Http\Controllers\Admin\CommentController;
+use Contensio\Http\Controllers\Frontend\CommentSubmitController;
+use Contensio\Http\Controllers\Frontend\UserProfileController;
 use Contensio\Http\Controllers\Admin\BlockController;
 use Contensio\Http\Controllers\Admin\ContentController;
 use Contensio\Http\Controllers\Admin\ContentTypeController;
@@ -21,6 +24,7 @@ use Contensio\Http\Controllers\Admin\ThemeController;
 use Contensio\Http\Controllers\Admin\Tools\ImportExportController;
 use Contensio\Http\Controllers\Admin\UserController;
 use Contensio\Http\Controllers\Auth\LoginController;
+use Contensio\Http\Controllers\Auth\RegisterController;
 use Contensio\Http\Controllers\Frontend\FrontendController;
 use Contensio\Http\Controllers\Frontend\SeoController;
 use Illuminate\Support\Facades\Route;
@@ -34,13 +38,19 @@ Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('contensio.se
 // Declared BEFORE the frontend catch-all so /login + /logout win the match race
 // even when Laravel's router compiles in registration order.
 Route::middleware('web')->group(function () {
-    Route::get('/login',  [LoginController::class, 'showLogin'])->name('contensio.login');
-    Route::post('/login', [LoginController::class, 'login'])->name('contensio.login.store');
-    Route::post('/logout', [LoginController::class, 'logout'])->name('contensio.logout')->middleware('auth');
+    Route::get('/login',    [LoginController::class,  'showLogin'])->name('contensio.login');
+    Route::post('/login',   [LoginController::class,  'login'])->name('contensio.login.store');
+    Route::post('/logout',  [LoginController::class,  'logout'])->name('contensio.logout')->middleware('auth');
+    Route::get('/register', [RegisterController::class, 'showRegister'])->name('contensio.register');
+    Route::post('/register',[RegisterController::class, 'register'])->name('contensio.register.store');
 });
 
 // ─── Frontend ──────────────────────────────────────────────────────────────
 Route::middleware('web')->group(function () {
+    // Comments (public POST endpoint — no auth required)
+    Route::post('/comments',         [CommentSubmitController::class, 'store'])->name('contensio.comments.store');
+    Route::get('/author/{code}',     [UserProfileController::class, 'show'])->name('contensio.author');
+
     Route::get('/',              [FrontendController::class, 'home'])->name('contensio.home');
     Route::get('/blog',          [FrontendController::class, 'archive'])->name('contensio.blog');
     Route::get('/blog/{slug}',   [FrontendController::class, 'post'])->name('contensio.post');
@@ -70,6 +80,7 @@ Route::prefix(config('contensio.route_prefix'))
         Route::put('/profile/password',     [ProfileController::class, 'updatePassword'])->name('profile.password');
         Route::post('/profile/avatar',      [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
         Route::delete('/profile/avatar',    [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+        Route::delete('/profile',           [ProfileController::class, 'destroy'])->name('profile.destroy');
 
         // Pages
         Route::get('/pages',             [ContentController::class, 'pages'])->name('pages.index');
@@ -206,6 +217,23 @@ Route::prefix(config('contensio.route_prefix'))
         Route::put('/languages/{id}',          [LanguageController::class, 'update'])->name('languages.update');
         Route::delete('/languages/{id}',       [LanguageController::class, 'destroy'])->name('languages.destroy');
         Route::post('/languages/{id}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
+
+        // Comments moderation
+        Route::get('/comments',                  [CommentController::class, 'index'])->middleware('contensio.permission:comments.manage')->name('comments.index');
+        Route::post('/comments/bulk',            [CommentController::class, 'bulk'])->middleware('contensio.permission:comments.manage')->name('comments.bulk');
+        Route::post('/comments/{id}/approve',    [CommentController::class, 'approve'])->middleware('contensio.permission:comments.manage')->name('comments.approve');
+        Route::post('/comments/{id}/spam',       [CommentController::class, 'spam'])->middleware('contensio.permission:comments.manage')->name('comments.spam');
+        Route::post('/comments/{id}/trash',      [CommentController::class, 'trash'])->middleware('contensio.permission:comments.manage')->name('comments.trash');
+        Route::post('/comments/{id}/restore',    [CommentController::class, 'restore'])->middleware('contensio.permission:comments.manage')->name('comments.restore');
+        Route::delete('/comments/{id}',          [CommentController::class, 'destroy'])->middleware('contensio.permission:comments.manage')->name('comments.destroy');
+
+        // Comments settings
+        Route::get('/settings/comments',         [SettingController::class, 'comments'])->name('settings.comments');
+        Route::post('/settings/comments',        [SettingController::class, 'saveComments'])->name('settings.comments.save');
+
+        // Users & registration settings
+        Route::get('/settings/users',            [SettingController::class, 'users'])->name('settings.users');
+        Route::post('/settings/users',           [SettingController::class, 'saveUsers'])->name('settings.users.save');
 
         // Activity log (read-only audit trail)
         Route::get('/activity-log', [ActivityLogController::class, 'index'])

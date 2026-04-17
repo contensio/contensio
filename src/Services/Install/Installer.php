@@ -287,6 +287,7 @@ class Installer
             ['module' => 'users',   'name' => 'users.create_admins'],
             ['module' => 'users',   'name' => 'users.manage_roles'],
             ['module' => 'users',   'name' => 'users.delete'],
+            ['module' => 'comments','name' => 'comments.manage'],
             ['module' => 'system',  'name' => 'system.plugins'],
             ['module' => 'system',  'name' => 'system.themes'],
             ['module' => 'system',  'name' => 'system.settings'],
@@ -315,6 +316,7 @@ class Installer
             'taxonomy.manage', 'menu.manage',
             'seo.edit_content', 'seo.manage_settings', 'seo.manage_redirects',
             'users.view', 'users.create_editors', 'users.delete',
+            'comments.manage',
         ];
         foreach ($adminPermissions as $perm) {
             DB::table('role_permissions')->insertOrIgnore([

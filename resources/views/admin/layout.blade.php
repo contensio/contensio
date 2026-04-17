@@ -83,11 +83,19 @@
             // Collapsible "Tools" children — Import/Export is built-in;
             // plugins stack beneath via placement=tools.
             $toolsChildren = array_merge(
-                [[
-                    'label' => 'Import / Export',
-                    'icon'  => 'bi-arrow-left-right',
-                    'route' => 'contensio.account.tools.import-export',
-                ]],
+                [
+                    [
+                        'label' => 'Import / Export',
+                        'icon'  => 'bi-arrow-left-right',
+                        'route' => 'contensio.account.tools.import-export',
+                    ],
+                    [
+                        'label'      => 'Activity log',
+                        'icon'       => 'bi-clock-history',
+                        'route'      => 'contensio.account.activity-log.index',
+                        'permission' => 'activity_log.view',
+                    ],
+                ],
                 \Contensio\Support\AdminNavigation::toolsItems()
             );
 
@@ -171,6 +179,26 @@
                 {{ $ctPlural }}
             </a>
             @endforeach
+
+            @if(auth()->user()?->hasPermission('comments.manage'))
+            @php $pendingComments = \Contensio\Models\Comment::where('status', 'pending')->count(); @endphp
+            <a href="{{ route('contensio.account.comments.index') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      {{ request()->routeIs('contensio.account.comments*')
+                          ? 'bg-slate-700 text-white'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <span class="flex-1">Comments</span>
+                @if($pendingComments > 0)
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs font-semibold bg-amber-500 text-white">
+                    {{ $pendingComments }}
+                </span>
+                @endif
+            </a>
+            @endif
 
             <a href="{{ route('contensio.account.media.index') }}"
                class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors

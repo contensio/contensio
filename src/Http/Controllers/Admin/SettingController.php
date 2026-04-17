@@ -31,9 +31,11 @@ namespace Contensio\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
+use Contensio\Models\Role;
 use Contensio\Models\Setting;
 use Contensio\Support\EmailConfig;
 
@@ -163,6 +165,94 @@ class SettingController extends Controller
         EmailConfig::apply();
 
         return redirect()->route('contensio.account.settings.email')->with('success', 'Email settings saved.');
+    }
+
+    /** Comments settings. */
+    public function comments()
+    {
+        $settings = Setting::where('module', 'comments')
+            ->pluck('value', 'setting_key');
+
+        return view('contensio::admin.settings.comments', compact('settings'));
+    }
+
+    public function saveComments(Request $request)
+    {
+        $data = $request->validate([
+            'comments_enabled'         => 'nullable',
+            'comments_require_approval'=> 'nullable',
+            'comments_allow_guests'    => 'nullable',
+            'comments_close_after_days'=> 'nullable|integer|min:0|max:3650',
+        ]);
+
+        $map = [
+            'comments_enabled'          => $request->boolean('comments_enabled')          ? '1' : '',
+            'comments_require_approval' => $request->boolean('comments_require_approval') ? '1' : '',
+            'comments_allow_guests'     => $request->boolean('comments_allow_guests')     ? '1' : '',
+            'comments_close_after_days' => (string) intval($data['comments_close_after_days'] ?? 0),
+        ];
+
+        foreach ($map as $key => $value) {
+            Setting::updateOrCreate(
+                ['module' => 'comments', 'setting_key' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        return redirect()->route('contensio.account.settings.comments')->with('success', 'Comment settings saved.');
+    }
+
+    /** Users & registration settings. */
+    public function users()
+    {
+        $settings = Setting::where('module', 'users')->pluck('value', 'setting_key');
+        $roles    = Role::with('translations')->orderBy('position')->orderBy('name')->get();
+
+        return view('contensio::admin.settings.users', compact('settings', 'roles'));
+    }
+
+    public function saveUsers(Request $request)
+    {
+        $request->validate([
+            'default_registration_role_id' => ['nullable', 'integer', 'exists:roles,id'],
+            'username_cooldown_days'        => ['nullable', 'integer', 'min:0', 'max:3650'],
+            'inactivity_logout_days'        => ['nullable', 'integer', 'min:0', 'max:3650'],
+            'max_sessions'                  => ['nullable', 'integer', 'min:0', 'max:100'],
+        ]);
+
+        $map = [
+            // Registration
+            'registration_disabled'        => $request->boolean('registration_disabled')        ? '1' : '',
+            'require_approval'             => $request->boolean('require_approval')             ? '1' : '',
+            'default_registration_role_id' => (string) intval($request->input('default_registration_role_id')),
+            'email_verification_disabled'  => $request->boolean('email_verification_disabled')  ? '1' : '',
+            // Accounts
+            'allow_email_change'           => $request->boolean('allow_email_change')           ? '1' : '',
+            'allow_account_deletion'       => $request->boolean('allow_account_deletion')       ? '1' : '',
+            // Profile
+            'allow_bio'                    => $request->boolean('allow_bio')                    ? '1' : '',
+            'allow_avatar'                 => $request->boolean('allow_avatar')                 ? '1' : '',
+            // Usernames
+            'users_can_change_username'    => $request->boolean('users_can_change_username')    ? '1' : '',
+            'username_cooldown_days'       => (string) intval($request->input('username_cooldown_days', 0)),
+            // Security
+            'inactivity_logout_days'       => (string) intval($request->input('inactivity_logout_days', 0)),
+            'max_sessions'                 => (string) intval($request->input('max_sessions', 0)),
+        ];
+
+        foreach ($map as $key => $value) {
+            Setting::updateOrCreate(
+                ['module' => 'users', 'setting_key' => $key],
+                ['value' => $value, 'updated_at' => now()]
+            );
+        }
+
+        // When email verification is disabled, immediately verify all unverified users
+        if ($map['email_verification_disabled'] === '1') {
+            DB::table('users')->whereNull('email_verified_at')->update(['email_verified_at' => now()]);
+        }
+
+        return redirect()->route('contensio.account.settings.users')->with('success', 'Settings saved.');
     }
 
     public function sendTestEmail(Request $request)

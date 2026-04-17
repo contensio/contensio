@@ -669,6 +669,46 @@
             </div>
         </div>
 
+        {{-- Comments --}}
+        @if(! $isNew && $type->has_comments && auth()->user()?->hasPermission('comments.manage'))
+        @php
+            $commentApprovedCount = \Contensio\Models\Comment::where('content_id', $content->id)
+                ->where('status', 'approved')->count();
+            $commentPendingCount  = \Contensio\Models\Comment::where('content_id', $content->id)
+                ->where('status', 'pending')->count();
+        @endphp
+        <div class="bg-white rounded-md border border-gray-200 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-base font-bold text-gray-800">Comments</h3>
+                @if($commentPendingCount > 0)
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                    {{ $commentPendingCount }}
+                </span>
+                @endif
+            </div>
+
+            <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
+                <span>{{ $commentApprovedCount }} approved</span>
+                @if($commentPendingCount > 0)
+                <span class="text-amber-600 font-medium">{{ $commentPendingCount }} pending</span>
+                @endif
+            </div>
+
+            <label class="flex items-center gap-2.5 cursor-pointer mb-3">
+                <input type="hidden" name="allow_comments" value="0">
+                <input type="checkbox" name="allow_comments" value="1"
+                       {{ $content->allow_comments ? 'checked' : '' }}
+                       class="w-4 h-4 rounded border-gray-300 text-ember-500 focus:ring-ember-500">
+                <span class="text-sm text-gray-700">Allow comments</span>
+            </label>
+
+            <a href="{{ route('contensio.account.comments.index', ['content_id' => $content->id, 'status' => 'all']) }}"
+               class="block text-center text-xs font-medium text-gray-500 hover:text-blue-600 border border-gray-200 hover:border-blue-300 rounded px-2.5 py-1.5 transition-colors">
+                View all comments
+            </a>
+        </div>
+        @endif
+
         {{-- Info --}}
         @if (! $isNew)
         <div class="bg-white rounded-md border border-gray-200 p-4 text-sm text-gray-500 space-y-1.5">

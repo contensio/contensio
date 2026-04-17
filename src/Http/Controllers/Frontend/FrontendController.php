@@ -29,6 +29,7 @@
 namespace Contensio\Http\Controllers\Frontend;
 
 use Illuminate\Routing\Controller;
+use Contensio\Models\Comment;
 use Contensio\Models\Content;
 use Contensio\Models\ContentTranslation;
 use Contensio\Models\ContentType;
@@ -113,7 +114,24 @@ class FrontendController extends Controller
         $content = $translation->content;
         $site    = $this->siteConfig();
 
-        return view('theme::post', compact('translation', 'content', 'site', 'lang'));
+        $commentsEnabled = (bool) Setting::where('module', 'comments')
+            ->where('setting_key', 'comments_enabled')
+            ->value('value');
+
+        $comments = $commentsEnabled && $content->allow_comments
+            ? Comment::where('content_id', $content->id)
+                ->where('status', Comment::STATUS_APPROVED)
+                ->whereNull('parent_id')
+                ->with([
+                    'author',
+                    'replies' => fn ($q) => $q->where('status', Comment::STATUS_APPROVED)->oldest(),
+                    'replies.author',
+                ])
+                ->oldest()
+                ->get()
+            : collect();
+
+        return view('theme::post', compact('translation', 'content', 'site', 'lang', 'comments', 'commentsEnabled'));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

@@ -28,10 +28,12 @@
 
 namespace Contensio\Http\Controllers\Auth;
 
+use Contensio\Models\Setting;
 use Contensio\Support\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
@@ -63,9 +65,17 @@ class LoginController extends Controller
         $user = \App\Models\User::where('email', $credentials['email'])->first();
 
         if (! $user->is_active) {
-            return back()->withErrors([
-                'email' => 'Your account has been disabled.',
-            ])->onlyInput('email');
+            $message = 'Your account has been disabled.';
+            try {
+                $pendingApproval = Setting::where('module', 'users')
+                    ->where('setting_key', 'require_approval')
+                    ->value('value') === '1';
+                if ($pendingApproval) {
+                    $message = 'Your account is pending admin approval.';
+                }
+            } catch (\Throwable) {}
+
+            return back()->withErrors(['email' => $message])->onlyInput('email');
         }
 
         // If 2FA is enabled + confirmed, stash the user ID in the session and
@@ -94,10 +104,17 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        $user = Auth::user();
+        $user      = Auth::user();
+        $sessionId = $request->session()->getId();
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Clean up session tracking record
+        try {
+            DB::table('user_sessions')->where('session_id', $sessionId)->delete();
+        } catch (\Throwable) {}
 
         if ($user) {
             Activity::record('logout', 'user', $user->id, "User: {$user->email}");

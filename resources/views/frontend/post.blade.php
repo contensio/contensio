@@ -70,4 +70,10 @@
 
 </article>
 
+@include('contensio::frontend.partials.comments', [
+    'content'         => $content,
+    'comments'        => $comments,
+    'commentsEnabled' => $commentsEnabled,
+])
+
 @endsection

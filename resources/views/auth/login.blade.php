@@ -74,4 +74,11 @@
     {{-- Plugins (e.g. contensio/social-connect) can inject "Continue with X" buttons here --}}
     {!! \Contensio\Support\Hook::render('login.after_form') !!}
 
+    @if(\Contensio\Models\Setting::where('module', 'users')->where('setting_key', 'registration_disabled')->value('value') !== '1')
+    <p class="mt-5 text-center text-sm text-gray-500">
+        Don't have an account?
+        <a href="{{ route('contensio.register') }}" class="font-medium text-[#d04a1f] hover:text-[#b23e18]">Create one</a>
+    </p>
+    @endif
+
 @endsection
