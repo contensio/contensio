@@ -1,14 +1,19 @@
 @extends('theme::layout')
 
 @section('title', ($translation->meta_title ?: $translation->title) . ' — ' . $site['name'])
+@section('meta_title', $translation->meta_title ?: $translation->title)
 
 @if($translation->meta_description)
 @section('meta_description', $translation->meta_description)
 @endif
 
+@if($content->featuredImage)
+@section('og_image', Storage::disk($content->featuredImage->disk)->url($content->featuredImage->file_path))
+@endif
+
 @section('content')
 
-<article class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+<article class="theme-container px-4 sm:px-6 py-12">
 
     {{-- Featured image --}}
     @if($content->featuredImage)

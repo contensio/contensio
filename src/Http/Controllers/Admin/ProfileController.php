@@ -107,6 +107,8 @@ class ProfileController extends Controller
 
         $user->save();
 
+        do_action('contensio/user/updated', $user);
+
         return redirect()->route('contensio.account.profile')->with('success', 'Profile updated.');
     }
 
@@ -219,6 +221,7 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($this->thumbPath($user->avatar_path));
         }
 
+        do_action('contensio/user/deleted', $user->id);
         $user->delete();
 
         return redirect()->route('contensio.home')

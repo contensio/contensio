@@ -28,6 +28,7 @@
 
 namespace Contensio\Http\Controllers\Frontend;
 
+use Contensio\Support\ThemeTemplateResolver;
 use Illuminate\Routing\Controller;
 use Contensio\Models\Comment;
 use Contensio\Models\Content;
@@ -35,6 +36,7 @@ use Contensio\Models\ContentTranslation;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
 use Contensio\Models\Setting;
+use Contensio\Support\SiteConfig;
 
 class FrontendController extends Controller
 {
@@ -58,7 +60,7 @@ class FrontendController extends Controller
                         ->where('language_id', $lang?->id)
                         ->first();
                     if ($translation) {
-                        return view('theme::page', compact('translation', 'content', 'site', 'lang'));
+                        return view(ThemeTemplateResolver::home(true), compact('translation', 'content', 'site', 'lang'));
                     }
                 }
             }
@@ -76,7 +78,7 @@ class FrontendController extends Controller
                 ->get()
             : collect();
 
-        return view('theme::home', compact('site', 'posts', 'lang'));
+        return view(ThemeTemplateResolver::home(false), compact('site', 'posts', 'lang'));
     }
 
     public function page(string $slug)
@@ -95,7 +97,7 @@ class FrontendController extends Controller
         $content = $translation->content;
         $site    = $this->siteConfig();
 
-        return view('theme::page', compact('translation', 'content', 'site', 'lang'));
+        return view(ThemeTemplateResolver::page($slug), compact('translation', 'content', 'site', 'lang'));
     }
 
     public function archive()
@@ -116,7 +118,7 @@ class FrontendController extends Controller
                 ->paginate($perPage)
             : collect();
 
-        return view('theme::archive', compact('posts', 'site', 'lang'));
+        return view(ThemeTemplateResolver::archive($postType?->name ?? 'post'), compact('posts', 'site', 'lang'));
     }
 
     public function post(string $slug)
@@ -172,21 +174,14 @@ class FrontendController extends Controller
                 ->get()
             : collect();
 
-        return view('theme::post', compact('translation', 'content', 'site', 'lang', 'comments', 'commentsEnabled', 'fieldGroups', 'fieldValues'));
+        return view(ThemeTemplateResolver::single('post', $slug), compact('translation', 'content', 'site', 'lang', 'comments', 'commentsEnabled', 'fieldGroups', 'fieldValues'));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function siteConfig(): array
     {
-        $settings = Setting::where('module', 'core')
-            ->whereIn('setting_key', ['site_name', 'site_tagline'])
-            ->pluck('value', 'setting_key');
-
-        return [
-            'name'    => $settings['site_name']    ?? config('app.name'),
-            'tagline' => $settings['site_tagline'] ?? '',
-        ];
+        return SiteConfig::all();
     }
 
     private function defaultLang(): ?Language

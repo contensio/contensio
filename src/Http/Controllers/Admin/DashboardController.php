@@ -21,6 +21,7 @@ use Contensio\Models\Content;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
 use Contensio\Models\Media;
+use Contensio\Services\VersionChecker;
 use Illuminate\Routing\Controller;
 
 class DashboardController extends Controller
@@ -70,12 +71,15 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
+        $updateInfo = VersionChecker::updateInfo();
+
         return view('contensio::admin.dashboard', compact(
             'stats',
             'recentPublished',
             'recentDrafts',
             'recentActivity',
             'defaultLangId',
+            'updateInfo',
         ));
     }
 }

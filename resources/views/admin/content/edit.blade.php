@@ -80,7 +80,7 @@
 
 @php $hasCustomFields = isset($fieldGroups) && $fieldGroups->isNotEmpty(); @endphp
 
-<div class="flex items-start gap-6" x-data="{ activeLang: {{ $defaultLangId }}, activeTab: 'general' }">
+<div class="flex items-start gap-6" x-data="{ activeLang: {{ $defaultLangId }}, activeTab: 'general', statusVal: '{{ old('status', $content?->status ?? 'draft') }}' }">
 
     {{-- ── Main column ──────────────────────────────────────────────────── --}}
     <div class="flex-1 min-w-0">
@@ -338,6 +338,8 @@
             @endif
         </div>
 
+    {!! \Contensio\Support\Hook::render('contensio/admin/content-edit-after-body', $content ?? null) !!}
+
     </div>{{-- /general tab --}}
 
     {{-- ── Custom Fields tab ───────────────────────────────────────────────── --}}
@@ -425,11 +427,29 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Status</label>
                 <select name="status"
+                        x-model="statusVal"
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white
                                focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
-                    <option value="draft"     {{ old('status', $content?->status ?? 'draft') === 'draft'     ? 'selected' : '' }}>Draft</option>
-                    <option value="published" {{ old('status', $content?->status ?? 'draft') === 'published' ? 'selected' : '' }}>Published</option>
+                    <option value="draft"      {{ old('status', $content?->status ?? 'draft') === 'draft'      ? 'selected' : '' }}>Draft</option>
+                    <option value="scheduled"  {{ old('status', $content?->status ?? 'draft') === 'scheduled'  ? 'selected' : '' }}>Scheduled</option>
+                    <option value="published"  {{ old('status', $content?->status ?? 'draft') === 'published'  ? 'selected' : '' }}>Published</option>
                 </select>
+            </div>
+
+            {{-- Publish datetime — only visible when "Scheduled" is selected --}}
+            <div x-show="statusVal === 'scheduled'" x-cloak class="mb-4">
+                <label class="block text-sm font-medium text-gray-600 mb-1.5">Publish on</label>
+                @php
+                    $scheduledVal = old('publish_at',
+                        $content?->status === 'scheduled' ? $content->published_at?->format('Y-m-d\TH:i') : null
+                    );
+                @endphp
+                <input type="datetime-local"
+                       name="publish_at"
+                       value="{{ $scheduledVal }}"
+                       class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white
+                              focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent">
+                <p class="text-xs text-gray-400 mt-1">Will publish automatically at this time.</p>
             </div>
 
             {{-- Preview button(s) — only for content types with public URLs --}}
@@ -510,6 +530,17 @@
                 </button>
 
                 @if (! $isNew)
+                <button type="button"
+                        @click="$dispatch('cms:confirm', {
+                            title: 'Duplicate {{ $typeLabel }}',
+                            description: 'A draft copy will be created with all content and fields.',
+                            confirmLabel: 'Duplicate',
+                            formId: 'clone-content-{{ $content->id }}'
+                        })"
+                        class="w-full border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm font-medium
+                               px-4 py-2 rounded-md transition-colors">
+                    Duplicate {{ $typeLabel }}
+                </button>
                 <button type="button"
                         @click="$dispatch('cms:confirm', {
                             title: 'Delete {{ $typeLabel }}',
@@ -728,6 +759,8 @@
         </div>
         @endif
 
+        {!! \Contensio\Support\Hook::render('contensio/admin/content-edit-sidebar', $content ?? null) !!}
+
         {{-- Info --}}
         @if (! $isNew)
         <div class="bg-white rounded-md border border-gray-200 p-4 text-sm text-gray-500 space-y-1.5">
@@ -758,7 +791,7 @@
 
 </form>
 
-{{-- Delete forms live OUTSIDE the main form to avoid invalid nested-form HTML --}}
+{{-- Delete & clone forms live OUTSIDE the main form to avoid invalid nested-form HTML --}}
 @if(! $isNew)
 @php
     $deleteAction = match($typeName) {
@@ -766,9 +799,17 @@
         'post'  => route('contensio.account.posts.destroy', $content->id),
         default => route('contensio.account.content.destroy', [$typeName, $content->id]),
     };
+    $cloneAction = match($typeName) {
+        'page'  => route('contensio.account.pages.clone', $content->id),
+        'post'  => route('contensio.account.posts.clone', $content->id),
+        default => route('contensio.account.content.clone', [$typeName, $content->id]),
+    };
 @endphp
 <form id="delete-content-{{ $content->id }}" method="POST" action="{{ $deleteAction }}" class="hidden">
     @csrf @method('DELETE')
+</form>
+<form id="clone-content-{{ $content->id }}" method="POST" action="{{ $cloneAction }}" class="hidden">
+    @csrf
 </form>
 @foreach($blocks as $block)
 @php $bId = $block['id'] ?? ''; @endphp

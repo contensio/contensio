@@ -11,10 +11,12 @@
 
 namespace Contensio\Http\Controllers\Frontend;
 
+use Contensio\Support\SiteConfig;
+use Contensio\Support\ThemeTemplateResolver;
 use App\Models\User;
 use Contensio\Models\Content;
 use Contensio\Models\ContentType;
-use Contensio\Models\Setting;
+use Contensio\Models\Language;
 use Illuminate\Routing\Controller;
 
 class UserProfileController extends Controller
@@ -35,11 +37,10 @@ class UserProfileController extends Controller
                 ->get()
             : collect();
 
-        $site = [
-            'name'    => Setting::where('module', 'core')->where('setting_key', 'site_name')->value('value') ?? config('contensio.name', 'Contensio'),
-            'tagline' => Setting::where('module', 'core')->where('setting_key', 'site_tagline')->value('value') ?? '',
-        ];
+        $site = SiteConfig::all();
+        $lang = Language::where('is_default', true)->first()
+            ?? Language::where('status', '!=', 'disabled')->orderBy('position')->first();
 
-        return view('contensio::frontend.author', compact('user', 'posts', 'site'));
+        return view(ThemeTemplateResolver::author(), compact('user', 'posts', 'site', 'lang'));
     }
 }

@@ -35,6 +35,7 @@ use Contensio\Models\Autosave;
 use Contensio\Models\BlockType;
 use Contensio\Support\Activity;
 use Contensio\Models\Content;
+use Contensio\Models\ContentFieldValue;
 use Contensio\Models\ContentTranslation;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
@@ -85,7 +86,7 @@ class ContentController extends Controller
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
-            'status'                           => 'required|in:draft,published',
+            'status'                           => 'required|in:draft,published,scheduled',
         ]);
 
         $content = Content::create([
@@ -94,10 +95,12 @@ class ContentController extends Controller
             'author_id'       => auth()->id(),
             'status'          => $request->status,
             'blocks'          => [],
-            'published_at'    => $request->status === 'published' ? now() : null,
+            'published_at'    => $this->resolvePublishedAt($request, null),
         ]);
 
         $this->syncContent($request, $content, $languages);
+
+        do_action('contensio/content/created', $content);
 
         Activity::record(
             $request->status === 'published' ? 'published' : 'created',
@@ -154,21 +157,29 @@ class ContentController extends Controller
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
-            'status'                           => 'required|in:draft,published',
+            'status'                           => 'required|in:draft,published,scheduled',
         ]);
 
         $prevStatus = $content->status;
 
         $content->update([
             'status'       => $request->status,
-            'published_at' => $request->status === 'published' && ! $content->published_at
-                ? now() : $content->published_at,
+            'published_at' => $this->resolvePublishedAt($request, $content),
         ]);
 
         $this->syncContent($request, $content, $languages);
         $this->clearAutosave($content);
 
-        $verb = ($prevStatus !== 'published' && $request->status === 'published') ? 'published' : 'updated';
+        do_action('contensio/content/updated', $content);
+        if ($prevStatus !== $request->status) {
+            do_action('contensio/content/status-changed', $content, $prevStatus, $request->status);
+        }
+
+        $verb = match(true) {
+            $prevStatus !== 'published'  && $request->status === 'published'  => 'published',
+            $prevStatus !== 'scheduled'  && $request->status === 'scheduled'  => 'scheduled',
+            default => 'updated',
+        };
         Activity::record($verb, 'content', $content->id,
             'Page: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'page', 'status' => $content->status]);
@@ -186,7 +197,9 @@ class ContentController extends Controller
         }
 
         $title = $content->translations()->value('title');
+        do_action('contensio/content/deleting', $content);
         $content->delete();
+        do_action('contensio/content/deleted', $id, 'page');
 
         Activity::record('deleted', 'content', $id, "Page: {$title}")
             ->withProperties(['type' => 'page']);
@@ -236,7 +249,7 @@ class ContentController extends Controller
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
-            'status'                           => 'required|in:draft,published',
+            'status'                           => 'required|in:draft,published,scheduled',
         ]);
 
         $content = Content::create([
@@ -245,10 +258,12 @@ class ContentController extends Controller
             'author_id'       => auth()->id(),
             'status'          => $request->status,
             'blocks'          => [],
-            'published_at'    => $request->status === 'published' ? now() : null,
+            'published_at'    => $this->resolvePublishedAt($request, null),
         ]);
 
         $this->syncContent($request, $content, $languages);
+
+        do_action('contensio/content/created', $content);
 
         Activity::record(
             $request->status === 'published' ? 'published' : 'created',
@@ -305,21 +320,29 @@ class ContentController extends Controller
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
-            'status'                           => 'required|in:draft,published',
+            'status'                           => 'required|in:draft,published,scheduled',
         ]);
 
         $prevStatus = $content->status;
 
         $content->update([
             'status'       => $request->status,
-            'published_at' => $request->status === 'published' && ! $content->published_at
-                ? now() : $content->published_at,
+            'published_at' => $this->resolvePublishedAt($request, $content),
         ]);
 
         $this->syncContent($request, $content, $languages);
         $this->clearAutosave($content);
 
-        $verb = ($prevStatus !== 'published' && $request->status === 'published') ? 'published' : 'updated';
+        do_action('contensio/content/updated', $content);
+        if ($prevStatus !== $request->status) {
+            do_action('contensio/content/status-changed', $content, $prevStatus, $request->status);
+        }
+
+        $verb = match(true) {
+            $prevStatus !== 'published'  && $request->status === 'published'  => 'published',
+            $prevStatus !== 'scheduled'  && $request->status === 'scheduled'  => 'scheduled',
+            default => 'updated',
+        };
         Activity::record($verb, 'content', $content->id,
             'Post: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'post', 'status' => $content->status]);
@@ -337,7 +360,9 @@ class ContentController extends Controller
         }
 
         $title = $content->translations()->value('title');
+        do_action('contensio/content/deleting', $content);
         $content->delete();
+        do_action('contensio/content/deleted', $id, 'post');
 
         Activity::record('deleted', 'content', $id, "Post: {$title}")
             ->withProperties(['type' => 'post']);
@@ -391,7 +416,7 @@ class ContentController extends Controller
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
-            'status'                           => 'required|in:draft,published',
+            'status'                           => 'required|in:draft,published,scheduled',
         ]);
 
         $content = Content::create([
@@ -400,10 +425,12 @@ class ContentController extends Controller
             'author_id'       => auth()->id(),
             'status'          => $request->status,
             'blocks'          => [],
-            'published_at'    => $request->status === 'published' ? now() : null,
+            'published_at'    => $this->resolvePublishedAt($request, null),
         ]);
 
         $this->syncContent($request, $content, $languages);
+
+        do_action('contensio/content/created', $content);
 
         return redirect()->route('contensio.account.content.edit', [$type, $content->id])
             ->with('success', 'Entry created.');
@@ -453,17 +480,23 @@ class ContentController extends Controller
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
-            'status'                           => 'required|in:draft,published',
+            'status'                           => 'required|in:draft,published,scheduled',
         ]);
+
+        $prevStatus = $content->status;
 
         $content->update([
             'status'       => $request->status,
-            'published_at' => $request->status === 'published' && ! $content->published_at
-                ? now() : $content->published_at,
+            'published_at' => $this->resolvePublishedAt($request, $content),
         ]);
 
         $this->syncContent($request, $content, $languages);
         $this->clearAutosave($content);
+
+        do_action('contensio/content/updated', $content);
+        if ($prevStatus !== $request->status) {
+            do_action('contensio/content/status-changed', $content, $prevStatus, $request->status);
+        }
 
         return redirect()->route('contensio.account.content.edit', [$type, $id])->with('success', 'Entry saved.');
     }
@@ -474,10 +507,187 @@ class ContentController extends Controller
         $content     = Content::where('content_type_id', $contentType->id)->find($id);
 
         if ($content) {
+            do_action('contensio/content/deleting', $content);
             $content->delete();
+            do_action('contensio/content/deleted', $id, $type);
         }
 
         return redirect()->route('contensio.account.content.index', $type)->with('success', 'Entry deleted.');
+    }
+
+    // ─── Clone ───────────────────────────────────────────────────────────────
+
+    public function clonePage(int $id)
+    {
+        $type    = ContentType::where('name', 'page')->firstOrFail();
+        $content = Content::where('content_type_id', $type->id)
+            ->with(['translations', 'fieldValues', 'terms'])
+            ->find($id);
+
+        if (! $content) {
+            return redirect()->route('contensio.account.pages.index')->with('error', 'Page not found.');
+        }
+
+        $clone = $this->performClone($content);
+
+        return redirect()->route('contensio.account.pages.edit', $clone->id)
+            ->with('success', 'Page duplicated. You are now editing the copy.');
+    }
+
+    public function clonePost(int $id)
+    {
+        $type    = ContentType::where('name', 'post')->firstOrFail();
+        $content = Content::where('content_type_id', $type->id)
+            ->with(['translations', 'fieldValues', 'terms'])
+            ->find($id);
+
+        if (! $content) {
+            return redirect()->route('contensio.account.posts.index')->with('error', 'Post not found.');
+        }
+
+        $clone = $this->performClone($content);
+
+        return redirect()->route('contensio.account.posts.edit', $clone->id)
+            ->with('success', 'Post duplicated. You are now editing the copy.');
+    }
+
+    public function cloneContent(string $type, int $id)
+    {
+        $contentType = ContentType::where('name', $type)->where('is_system', false)->firstOrFail();
+        $content     = Content::where('content_type_id', $contentType->id)
+            ->with(['translations', 'fieldValues', 'terms'])
+            ->find($id);
+
+        if (! $content) {
+            return redirect()->route('contensio.account.content.index', $type)->with('error', 'Entry not found.');
+        }
+
+        $clone = $this->performClone($content);
+
+        return redirect()->route('contensio.account.content.edit', [$type, $clone->id])
+            ->with('success', 'Entry duplicated. You are now editing the copy.');
+    }
+
+    private function performClone(Content $content): Content
+    {
+        $clone = Content::create([
+            'code'              => Str::random(16),
+            'content_type_id'   => $content->content_type_id,
+            'author_id'         => auth()->id(),
+            'status'            => 'draft',
+            'blocks'            => $content->blocks,
+            'featured_image_id' => $content->featured_image_id,
+            'parent_id'         => $content->parent_id,
+            'allow_comments'    => $content->allow_comments,
+            'published_at'      => null,
+        ]);
+
+        foreach ($content->translations as $trans) {
+            ContentTranslation::create([
+                'content_id'       => $clone->id,
+                'language_id'      => $trans->language_id,
+                'title'            => $trans->title . ' (Copy)',
+                'slug'             => $trans->slug . '-copy-' . Str::lower(Str::random(4)),
+                'excerpt'          => $trans->excerpt,
+                'meta_title'       => $trans->meta_title,
+                'meta_description' => $trans->meta_description,
+            ]);
+        }
+
+        foreach ($content->fieldValues as $fv) {
+            ContentFieldValue::create([
+                'content_id'  => $clone->id,
+                'field_id'    => $fv->field_id,
+                'language_id' => $fv->language_id,
+                'value'       => $fv->value,
+                'position'    => $fv->position,
+            ]);
+        }
+
+        $clone->terms()->sync($content->terms->pluck('id'));
+
+        do_action('contensio/content/created', $clone);
+
+        return $clone;
+    }
+
+    // ─── Bulk actions ────────────────────────────────────────────────────────
+
+    public function bulkPages(Request $request)
+    {
+        $type = ContentType::where('name', 'page')->firstOrFail();
+        $this->performBulk(
+            array_filter(array_map('intval', $request->input('ids', []))),
+            (string) $request->input('action'),
+            $type->id
+        );
+        return redirect()->route('contensio.account.pages.index')
+            ->with('success', $this->bulkLabel($request->input('action'), 'pages'));
+    }
+
+    public function bulkPosts(Request $request)
+    {
+        $type = ContentType::where('name', 'post')->firstOrFail();
+        $this->performBulk(
+            array_filter(array_map('intval', $request->input('ids', []))),
+            (string) $request->input('action'),
+            $type->id
+        );
+        return redirect()->route('contensio.account.posts.index')
+            ->with('success', $this->bulkLabel($request->input('action'), 'posts'));
+    }
+
+    public function bulkContent(Request $request, string $type)
+    {
+        $contentType = ContentType::where('name', $type)->where('is_system', false)->firstOrFail();
+        $this->performBulk(
+            array_filter(array_map('intval', $request->input('ids', []))),
+            (string) $request->input('action'),
+            $contentType->id
+        );
+        return redirect()->route('contensio.account.content.index', $type)
+            ->with('success', $this->bulkLabel($request->input('action'), 'entries'));
+    }
+
+    private function performBulk(array $ids, string $action, int $typeId): void
+    {
+        if (empty($ids)) {
+            return;
+        }
+
+        $items = Content::whereIn('id', $ids)->where('content_type_id', $typeId)->get();
+
+        foreach ($items as $content) {
+            $prevStatus = $content->status;
+
+            match($action) {
+                'publish' => $content->update(['status' => 'published', 'published_at' => $content->published_at ?? now()]),
+                'draft'   => $content->update(['status' => 'draft']),
+                'delete'  => null,
+                default   => null,
+            };
+
+            if ($action === 'delete') {
+                do_action('contensio/content/deleting', $content);
+                $content->delete();
+                do_action('contensio/content/deleted', $content->id, $content->contentType?->name ?? '');
+            } else {
+                do_action('contensio/content/updated', $content);
+                if ($prevStatus !== $content->status) {
+                    do_action('contensio/content/status-changed', $content, $prevStatus, $content->status);
+                }
+            }
+        }
+    }
+
+    private function bulkLabel(string $action, string $noun): string
+    {
+        return match($action) {
+            'publish' => ucfirst($noun) . ' published.',
+            'draft'   => ucfirst($noun) . ' set to draft.',
+            'delete'  => ucfirst($noun) . ' deleted.',
+            default   => 'Done.',
+        };
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -753,6 +963,25 @@ class ContentController extends Controller
                 );
             }
         }
+    }
+
+    /**
+     * Resolve the published_at timestamp from the request.
+     * - published  → keep existing date if already published, otherwise now()
+     * - scheduled  → use the submitted publish_at datetime
+     * - draft      → null
+     */
+    private function resolvePublishedAt(Request $request, ?Content $existing): mixed
+    {
+        return match($request->status) {
+            'published' => ($existing?->status === 'published' && $existing->published_at)
+                ? $existing->published_at
+                : now(),
+            'scheduled' => $request->filled('publish_at')
+                ? $request->input('publish_at')
+                : now()->addHour()->toDateTimeString(),
+            default => null,
+        };
     }
 
     private function defaultLangId($languages): int

@@ -378,7 +378,7 @@ class Installer
             ]);
         } else {
             $userId = DB::table('users')->insertGetId([
-                'code'              => Str::random(16),
+                'code'              => (string) random_int(100000000000, 999999999999),
                 'name'              => $name,
                 'email'             => $email,
                 'password'          => Hash::make($password),

@@ -98,6 +98,7 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         Activity::record('login', 'user', $user->id, "User: {$user->email}");
+        do_action('contensio/user/login', $user);
 
         return $this->redirectAfterLogin($user);
     }
@@ -106,6 +107,10 @@ class LoginController extends Controller
     {
         $user      = Auth::user();
         $sessionId = $request->session()->getId();
+
+        if ($user) {
+            do_action('contensio/user/logout', $user);
+        }
 
         Auth::logout();
         $request->session()->invalidate();

@@ -37,11 +37,23 @@ use Contensio\Models\Media;
 
 class MediaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $items = Media::latest()->paginate(48);
+        $folder = $request->input('folder'); // null = all, '' = unfiled
 
-        return view('contensio::admin.media.index', compact('items'));
+        $items = Media::query()
+            ->when($folder !== null, fn ($q) => $q->where('folder', $folder ?: null))
+            ->latest()
+            ->paginate(48)
+            ->withQueryString();
+
+        // Distinct folders for the sidebar, derived from stored folder values
+        $folders = Media::whereNotNull('folder')
+            ->distinct()
+            ->orderBy('folder', 'desc')
+            ->pluck('folder');
+
+        return view('contensio::admin.media.index', compact('items', 'folders', 'folder'));
     }
 
     public function upload(Request $request)
@@ -74,6 +86,7 @@ class MediaController extends Controller
                 'user_id'   => auth()->id(),
                 'file_name' => $original,
                 'file_path' => $path,
+                'folder'    => $folder,
                 'disk'      => 'public',
                 'mime_type' => $file->getMimeType(),
                 'file_size' => $file->getSize(),
@@ -84,6 +97,8 @@ class MediaController extends Controller
             if ($media->isImage()) {
                 ProcessMediaVariants::dispatch($media);
             }
+
+            do_action('contensio/media/uploaded', $media);
         }
 
         return redirect()->route('contensio.account.media.index')
@@ -99,8 +114,10 @@ class MediaController extends Controller
             Storage::disk($media->disk)->delete($variant->path);
         }
 
+        do_action('contensio/media/deleting', $media);
         Storage::disk($media->disk)->delete($media->file_path);
         $media->delete(); // variants cascade via FK
+        do_action('contensio/media/deleted', $id);
 
         return redirect()->route('contensio.account.media.index')
             ->with('success', 'File deleted.');
@@ -119,8 +136,10 @@ class MediaController extends Controller
             foreach ($media->variants as $variant) {
                 Storage::disk($media->disk)->delete($variant->path);
             }
+            do_action('contensio/media/deleting', $media);
             Storage::disk($media->disk)->delete($media->file_path);
             $media->delete();
+            do_action('contensio/media/deleted', $media->id);
         }
 
         return redirect()->route('contensio.account.media.index')
@@ -184,6 +203,7 @@ class MediaController extends Controller
             'user_id'   => auth()->id(),
             'file_name' => $original,
             'file_path' => $path,
+            'folder'    => $folder,
             'disk'      => 'public',
             'mime_type' => $file->getMimeType(),
             'file_size' => $file->getSize(),

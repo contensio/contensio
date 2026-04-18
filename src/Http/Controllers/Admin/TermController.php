@@ -138,6 +138,7 @@ class TermController extends Controller
             'taxonomy_id' => $taxonomyId,
             'parent_id'   => $taxonomy->is_hierarchical ? ($request->input('parent_id') ?: null) : null,
             'position'    => (Term::where('taxonomy_id', $taxonomyId)->max('position') ?? 0) + 1,
+            'image_id'    => $request->filled('image_id') ? (int) $request->input('image_id') : null,
         ]);
 
         foreach ($languages as $lang) {
@@ -166,7 +167,7 @@ class TermController extends Controller
     public function edit(int $taxonomyId, int $id)
     {
         $taxonomy = Taxonomy::with('translations')->find($taxonomyId);
-        $term     = Term::with('translations')->find($id);
+        $term     = Term::with(['translations', 'image'])->find($id);
 
         if (! $taxonomy || ! $term || $term->taxonomy_id !== $taxonomyId) {
             return redirect()->route('contensio.account.content-types.index')
@@ -241,6 +242,7 @@ class TermController extends Controller
 
         $term->update([
             'parent_id' => $taxonomy->is_hierarchical ? ($request->input('parent_id') ?: null) : null,
+            'image_id'  => $request->filled('image_id') ? (int) $request->input('image_id') : null,
         ]);
 
         foreach ($languages as $lang) {

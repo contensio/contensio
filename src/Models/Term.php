@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Contensio\Models\Media;
 
 class Term extends Model
 {
@@ -44,6 +45,11 @@ class Term extends Model
     public function taxonomy(): BelongsTo
     {
         return $this->belongsTo(Taxonomy::class);
+    }
+
+    public function image(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'image_id');
     }
 
     public function parent(): BelongsTo

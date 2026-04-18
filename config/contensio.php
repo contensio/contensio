@@ -63,6 +63,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Version Checking
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the admin dashboard checks GitHub for a newer release and
+    | shows a notice if one is available. Results are cached for 12 hours so
+    | the GitHub API is never called on every page load.
+    |
+    | Set to false to disable entirely (e.g. air-gapped or offline servers).
+    |
+    */
+    'version_check' => env('CONTENSIO_VERSION_CHECK', true),
+
+    /*
+    | GitHub repository used for release checks. Override this if you fork
+    | Contensio and publish your own releases.
+    */
+    'github_repo' => env('CONTENSIO_GITHUB_REPO', 'contensio/contensio'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Image Size Presets
     |--------------------------------------------------------------------------
     |

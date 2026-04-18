@@ -55,20 +55,24 @@ class RegisterController extends Controller
         $verificationDisabled    = ($userSettings['email_verification_disabled']  ?? '') === '1';
         $defaultRoleId           = intval($userSettings['default_registration_role_id'] ?? 0);
 
-        $user = User::create([
+        $userData = apply_filters('contensio/user/register-data', [
             'name'              => $data['name'],
             'username'          => $data['username'],
             'email'             => $data['email'],
             'password'          => Hash::make($data['password']),
-            'code'              => Str::random(16),
+            'code'              => (string) random_int(100000000000, 999999999999),
             'is_active'         => ! $requireApproval,
             'email_verified_at' => ($verificationDisabled && ! $requireApproval) ? now() : null,
         ]);
+
+        $user = User::create($userData);
 
         // Assign default role if configured
         if ($defaultRoleId > 0) {
             $user->roles()->sync([$defaultRoleId]);
         }
+
+        do_action('contensio/user/registered', $user);
 
         // Send email verification if needed
         if (! $verificationDisabled && ! $requireApproval && $user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail) {

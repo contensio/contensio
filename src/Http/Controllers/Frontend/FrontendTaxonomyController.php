@@ -11,9 +11,10 @@
 
 namespace Contensio\Http\Controllers\Frontend;
 
+use Contensio\Support\ThemeTemplateResolver;
 use Contensio\Models\Content;
 use Contensio\Models\Language;
-use Contensio\Models\Setting;
+use Contensio\Support\SiteConfig;
 use Contensio\Models\TaxonomyTranslation;
 use Contensio\Models\TermTranslation;
 use Illuminate\Routing\Controller;
@@ -69,7 +70,7 @@ class FrontendTaxonomyController extends Controller
 
         $site = $this->siteConfig();
 
-        return view('theme::taxonomy', compact(
+        return view(ThemeTemplateResolver::taxonomy($taxonomySlug, $taxonomy->is_hierarchical), compact(
             'taxonomy', 'taxTrans', 'term', 'termTrans', 'posts', 'site', 'lang'
         ));
     }
@@ -78,14 +79,7 @@ class FrontendTaxonomyController extends Controller
 
     private function siteConfig(): array
     {
-        $settings = Setting::where('module', 'core')
-            ->whereIn('setting_key', ['site_name', 'site_tagline'])
-            ->pluck('value', 'setting_key');
-
-        return [
-            'name'    => $settings['site_name']    ?? config('app.name'),
-            'tagline' => $settings['site_tagline'] ?? '',
-        ];
+        return SiteConfig::all();
     }
 
     private function defaultLang(): ?Language

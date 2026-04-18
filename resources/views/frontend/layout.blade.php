@@ -18,6 +18,7 @@
     @hasSection('meta_title')
     <meta property="og:title" content="@yield('meta_title')">
     @endif
+    <link rel="icon" href="{{ site_favicon() ?: asset('vendor/contensio/img/favicon128x128.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .prose { max-width: none; }
@@ -37,16 +38,24 @@
         .prose img { max-width: 100%; border-radius: 0.5rem; margin: 1.5rem 0; }
         .prose hr { border: 0; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
     </style>
+    @php do_action('contensio/frontend/head') @endphp
     @stack('head')
 </head>
 <body class="bg-white text-gray-900 antialiased">
+@php do_action('contensio/frontend/body-open') @endphp
 
     {{-- Header --}}
     <header class="border-b border-gray-100">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-            <a href="{{ route('contensio.home') }}"
-               class="font-bold text-gray-900 text-lg hover:text-blue-600 transition-colors">
-                {{ $site['name'] }}
+            <a href="{{ route('contensio.home') }}" class="shrink-0">
+                @if(site_logo())
+                <img src="{{ site_logo() }}" alt="{{ site_name() }}"
+                     class="h-8 w-auto max-w-[180px] object-contain">
+                @else
+                <span class="font-bold text-gray-900 text-lg hover:text-blue-600 transition-colors">
+                    {{ site_name() }}
+                </span>
+                @endif
             </a>
             <nav class="flex items-center gap-6 text-sm text-gray-500">
                 <a href="{{ route('contensio.home') }}" class="hover:text-gray-900 transition-colors">Home</a>
@@ -73,5 +82,6 @@
     </footer>
 
     @stack('scripts')
+    @php do_action('contensio/frontend/footer') @endphp
 </body>
 </html>

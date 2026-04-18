@@ -26,10 +26,165 @@
  * update. For custom changes, use themes and plugins.
  */
 
+use Contensio\Support\Hook;
 use Contensio\Support\MenuRenderer;
 use Contensio\Support\PluginOptions;
+use Contensio\Support\SiteConfig;
 use Contensio\Support\ThemeOptions;
 use Contensio\Support\ThemeRegistry;
+
+// ── Hook helpers ─────────────────────────────────────────────────────────────
+
+if (! function_exists('add_action')) {
+    /**
+     * Register an action callback on a hook.
+     * The callback is called when do_action() fires the hook.
+     * Return values are discarded — use add_filter() if you need to modify data.
+     */
+    function add_action(string $hook, callable $callback, int $priority = 10): void
+    {
+        Hook::addAction($hook, $callback, $priority);
+    }
+}
+
+if (! function_exists('do_action')) {
+    /**
+     * Fire all callbacks registered for a hook, passing the given arguments.
+     * Called by core at well-defined points in the lifecycle.
+     */
+    function do_action(string $hook, mixed ...$args): void
+    {
+        Hook::doAction($hook, ...$args);
+    }
+}
+
+if (! function_exists('remove_action')) {
+    /**
+     * Remove a previously registered action callback.
+     * You must pass the same callable reference that was used in add_action().
+     */
+    function remove_action(string $hook, callable $callback, int $priority = 10): void
+    {
+        Hook::removeAction($hook, $callback, $priority);
+    }
+}
+
+if (! function_exists('has_action')) {
+    /**
+     * True if at least one callback is registered for the given action hook.
+     */
+    function has_action(string $hook): bool
+    {
+        return Hook::hasAction($hook);
+    }
+}
+
+if (! function_exists('add_filter')) {
+    /**
+     * Register a filter callback on a hook.
+     * The callback receives the current value as its first argument,
+     * must return the (optionally modified) value.
+     */
+    function add_filter(string $hook, callable $callback, int $priority = 10): void
+    {
+        Hook::addFilter($hook, $callback, $priority);
+    }
+}
+
+if (! function_exists('apply_filters')) {
+    /**
+     * Pass a value through all filter callbacks registered for a hook.
+     * Returns the final filtered value.
+     * Called by core wherever plugins should be able to modify data.
+     */
+    function apply_filters(string $hook, mixed $value, mixed ...$args): mixed
+    {
+        return Hook::applyFilters($hook, $value, ...$args);
+    }
+}
+
+if (! function_exists('remove_filter')) {
+    /**
+     * Remove a previously registered filter callback.
+     */
+    function remove_filter(string $hook, callable $callback, int $priority = 10): void
+    {
+        Hook::removeFilter($hook, $callback, $priority);
+    }
+}
+
+if (! function_exists('has_filter')) {
+    /**
+     * True if at least one callback is registered for the given filter hook.
+     */
+    function has_filter(string $hook): bool
+    {
+        return Hook::hasFilter($hook);
+    }
+}
+
+// ── Site identity helpers ─────────────────────────────────────────────────────
+
+if (! function_exists('site_name')) {
+    /**
+     * The site name from Settings → General.
+     * Falls back to the app.name config value.
+     *
+     * Usage in theme templates:
+     *   <title>{{ site_name() }}</title>
+     */
+    function site_name(): string
+    {
+        return (string) SiteConfig::get('name', config('app.name'));
+    }
+}
+
+if (! function_exists('site_tagline')) {
+    /**
+     * The site tagline from Settings → General, or an empty string.
+     *
+     * Usage in theme templates:
+     *   @if(site_tagline()) <p>{{ site_tagline() }}</p> @endif
+     */
+    function site_tagline(): string
+    {
+        return (string) SiteConfig::get('tagline', '');
+    }
+}
+
+if (! function_exists('site_logo')) {
+    /**
+     * The site logo URL from Settings → General, or an empty string if not set.
+     * A theme should fall back to the site name text when this is empty.
+     *
+     * Usage in theme templates:
+     *   @if(site_logo())
+     *       <img src="{{ site_logo() }}" alt="{{ site_name() }}" class="h-8 w-auto">
+     *   @else
+     *       <span>{{ site_name() }}</span>
+     *   @endif
+     */
+    function site_logo(): string
+    {
+        return (string) SiteConfig::get('logo', '');
+    }
+}
+
+if (! function_exists('site_favicon')) {
+    /**
+     * The site favicon URL from Settings → General, or an empty string if not set.
+     * Falls back to the bundled Contensio icon when empty.
+     *
+     * Usage in theme templates:
+     *   <link rel="icon" href="{{ site_favicon() ?: asset('vendor/contensio/img/favicon128x128.png') }}">
+     */
+    function site_favicon(): string
+    {
+        return (string) SiteConfig::get('favicon', '');
+    }
+}
+
+// ── Theme / plugin helpers ────────────────────────────────────────────────────
 
 if (! function_exists('theme_asset')) {
     /**

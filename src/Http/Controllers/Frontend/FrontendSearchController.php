@@ -11,10 +11,11 @@
 
 namespace Contensio\Http\Controllers\Frontend;
 
+use Contensio\Support\ThemeTemplateResolver;
 use Contensio\Models\ContentTranslation;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
-use Contensio\Models\Setting;
+use Contensio\Support\SiteConfig;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
@@ -58,21 +59,14 @@ class FrontendSearchController extends Controller
             }
         }
 
-        return view('theme::search', compact('results', 'query', 'searched', 'site', 'lang'));
+        return view(ThemeTemplateResolver::search(), compact('results', 'query', 'searched', 'site', 'lang'));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private function siteConfig(): array
     {
-        $settings = Setting::where('module', 'core')
-            ->whereIn('setting_key', ['site_name', 'site_tagline'])
-            ->pluck('value', 'setting_key');
-
-        return [
-            'name'    => $settings['site_name']    ?? config('app.name'),
-            'tagline' => $settings['site_tagline'] ?? '',
-        ];
+        return SiteConfig::all();
     }
 
     private function defaultLang(): ?Language

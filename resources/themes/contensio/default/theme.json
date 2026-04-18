@@ -8,5 +8,210 @@
     "requires": {
         "cms": "^1.0"
     },
-    "removable": false
+    "removable": false,
+    "menu_locations": {
+        "header": "Header Navigation",
+        "footer": "Footer Links"
+    },
+    "settings": {
+        "sections": [
+            {
+                "key": "identity",
+                "label": "Site Identity",
+                "icon": "bi-house-heart",
+                "fields": [
+                    {
+                        "key": "logo_text",
+                        "type": "text",
+                        "label": "Logo text",
+                        "help": "Shown in the header. Leave empty to fall back to the Site Name from General Settings.",
+                        "default": ""
+                    },
+                    {
+                        "key": "footer_text",
+                        "type": "text",
+                        "label": "Footer copyright text",
+                        "help": "The \"{year}\" placeholder is replaced with the current year.",
+                        "default": "© {year} {site_name}"
+                    }
+                ]
+            },
+            {
+                "key": "colors",
+                "label": "Colors",
+                "icon": "bi-palette",
+                "fields": [
+                    {
+                        "key": "primary_color",
+                        "type": "color",
+                        "label": "Primary color",
+                        "help": "Used for links and button backgrounds.",
+                        "default": "#2563eb"
+                    },
+                    {
+                        "key": "primary_hover",
+                        "type": "color",
+                        "label": "Primary hover color",
+                        "default": "#1d4ed8"
+                    },
+                    {
+                        "key": "text_color",
+                        "type": "color",
+                        "label": "Body text color",
+                        "default": "#111827"
+                    },
+                    {
+                        "key": "muted_color",
+                        "type": "color",
+                        "label": "Muted text color",
+                        "default": "#6b7280"
+                    },
+                    {
+                        "key": "bg_color",
+                        "type": "color",
+                        "label": "Page background",
+                        "default": "#ffffff"
+                    },
+                    {
+                        "key": "btn_primary_bg",
+                        "type": "color",
+                        "label": "Primary button background",
+                        "default": "#111827"
+                    },
+                    {
+                        "key": "btn_primary_hover",
+                        "type": "color",
+                        "label": "Primary button hover",
+                        "default": "#374151"
+                    },
+                    {
+                        "key": "btn_primary_text",
+                        "type": "color",
+                        "label": "Primary button text",
+                        "default": "#ffffff"
+                    },
+                    {
+                        "key": "btn_secondary_bg",
+                        "type": "color",
+                        "label": "Secondary button background",
+                        "default": "#f3f4f6"
+                    },
+                    {
+                        "key": "btn_secondary_hover",
+                        "type": "color",
+                        "label": "Secondary button hover",
+                        "default": "#e5e7eb"
+                    },
+                    {
+                        "key": "btn_secondary_text",
+                        "type": "color",
+                        "label": "Secondary button text",
+                        "default": "#111827"
+                    }
+                ]
+            },
+            {
+                "key": "typography",
+                "label": "Typography",
+                "icon": "bi-fonts",
+                "fields": [
+                    {
+                        "key": "heading_font",
+                        "type": "select",
+                        "label": "Heading font",
+                        "options": {
+                            "inter": "Inter (Sans-serif)",
+                            "playfair": "Playfair Display (Serif)",
+                            "merriweather": "Merriweather (Serif)",
+                            "poppins": "Poppins (Sans-serif)",
+                            "jetbrains": "JetBrains Mono (Monospace)"
+                        },
+                        "default": "inter"
+                    },
+                    {
+                        "key": "body_font",
+                        "type": "select",
+                        "label": "Body font",
+                        "options": {
+                            "inter": "Inter",
+                            "system": "System UI",
+                            "merriweather": "Merriweather (Serif)",
+                            "poppins": "Poppins",
+                            "georgia": "Georgia (Serif)"
+                        },
+                        "default": "inter"
+                    },
+                    {
+                        "key": "base_font_size",
+                        "type": "range",
+                        "label": "Base font size",
+                        "help": "In pixels.",
+                        "min": 14,
+                        "max": 20,
+                        "step": 1,
+                        "default": 16
+                    }
+                ]
+            },
+            {
+                "key": "layout",
+                "label": "Layout",
+                "icon": "bi-layout-text-window",
+                "fields": [
+                    {
+                        "key": "container_width",
+                        "type": "range",
+                        "label": "Content max width",
+                        "help": "In pixels. Affects page/post content width.",
+                        "min": 640,
+                        "max": 1280,
+                        "step": 16,
+                        "default": 768
+                    },
+                    {
+                        "key": "header_style",
+                        "type": "radio",
+                        "label": "Header style",
+                        "options": {
+                            "minimal": "Minimal (text logo + nav)",
+                            "centered": "Centered (logo above nav)",
+                            "sticky": "Minimal, sticky"
+                        },
+                        "default": "minimal"
+                    },
+                    {
+                        "key": "show_footer_tagline",
+                        "type": "checkbox",
+                        "label": "Show site tagline in footer",
+                        "default": true
+                    }
+                ]
+            },
+            {
+                "key": "advanced",
+                "label": "Advanced",
+                "icon": "bi-code-slash",
+                "fields": [
+                    {
+                        "key": "custom_css",
+                        "type": "textarea",
+                        "label": "Custom CSS",
+                        "help": "Injected on every page inside a <style> tag in the <head>. Use with care.",
+                        "rows": 10,
+                        "monospace": true,
+                        "default": ""
+                    },
+                    {
+                        "key": "head_snippet",
+                        "type": "textarea",
+                        "label": "Head code",
+                        "help": "Inserted just before </head>. For analytics, meta tags, etc.",
+                        "rows": 6,
+                        "monospace": true,
+                        "default": ""
+                    }
+                ]
+            }
+        ]
+    }
 }

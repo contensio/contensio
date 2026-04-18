@@ -3,7 +3,7 @@
 @section('content')
 
 {{-- Hero --}}
-<section class="max-w-4xl mx-auto px-4 sm:px-6 pt-16 pb-12 text-center">
+<section class="theme-container px-4 sm:px-6 pt-16 pb-12 text-center">
     <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight">
         {{ $site['name'] }}
     </h1>
@@ -14,7 +14,7 @@
 
 {{-- Recent posts --}}
 @if($posts->isNotEmpty())
-<section class="max-w-4xl mx-auto px-4 sm:px-6 pb-16">
+<section class="theme-container px-4 sm:px-6 pb-16">
     <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Latest Posts</h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -58,7 +58,7 @@
     </div>
 </section>
 @else
-<section class="max-w-4xl mx-auto px-4 sm:px-6 pb-16 text-center">
+<section class="theme-container px-4 sm:px-6 pb-16 text-center">
     <p class="text-gray-400 text-sm">No posts yet.</p>
 </section>
 @endif

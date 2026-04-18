@@ -69,7 +69,7 @@ class UserController extends Controller
                 'username' => $username,
                 'email'    => $data['email'],
                 'password' => Hash::make($data['password']),
-                'code'     => Str::random(16),
+                'code'     => (string) random_int(100000000000, 999999999999),
             ]);
 
             $user->roles()->sync($data['roles'] ?? []);
@@ -78,6 +78,11 @@ class UserController extends Controller
 
         Activity::record('created', 'user', $createdId, "User: {$data['email']}")
             ->withProperties(['name' => $data['name'], 'email' => $data['email']]);
+
+        $createdUser = User::find($createdId);
+        if ($createdUser) {
+            do_action('contensio/user/registered', $createdUser);
+        }
 
         return redirect()
             ->route('contensio.account.users.index')
@@ -130,6 +135,8 @@ class UserController extends Controller
                 'password_changed'  => ! empty($data['password']),
             ]);
 
+        do_action('contensio/user/updated', $user->fresh());
+
         return redirect()
             ->route('contensio.account.users.edit', $user->id)
             ->with('success', 'User updated.');
@@ -146,6 +153,7 @@ class UserController extends Controller
         $this->guardLastAdministrator($user, []);
 
         $email = $user->email;
+        do_action('contensio/user/deleted', $id);
         $user->roles()->detach();
         $user->delete();
 

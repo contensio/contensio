@@ -29,6 +29,35 @@
 </div>
 @endif
 
+<div x-data="{
+        selected: [],
+        bulkAction: 'publish',
+        toggleAll() {
+            const all = [{{ $items->pluck('id')->join(',') }}];
+            this.selected = this.selected.length === all.length ? [] : [...all];
+        },
+        submitBulk() {
+            if (this.bulkAction === 'delete') {
+                $dispatch('cms:confirm', {
+                    title: 'Delete selected entries?',
+                    description: selected.length + ' entries will be permanently deleted.',
+                    confirmLabel: 'Delete',
+                    formId: 'bulk-form'
+                });
+            } else {
+                document.getElementById('bulk-form').submit();
+            }
+        }
+    }">
+
+<form id="bulk-form" method="POST" action="{{ route('contensio.account.content.bulk', $type) }}" class="hidden">
+    @csrf
+    <input type="hidden" name="action" :value="bulkAction">
+    <template x-for="id in selected" :key="id">
+        <input type="hidden" name="ids[]" :value="id">
+    </template>
+</form>
+
 <div class="flex items-center justify-between mb-5">
     <div>
         <h1 class="text-xl font-bold text-gray-900">{{ $plural }}</h1>
@@ -42,6 +71,28 @@
         </svg>
         Add {{ $singular }}
     </a>
+</div>
+
+{{-- Bulk action bar --}}
+<div x-show="selected.length > 0" x-cloak
+     class="flex items-center gap-3 mb-3 bg-blue-50 border border-blue-200 rounded-md px-4 py-2.5">
+    <span class="text-sm font-medium text-blue-800" x-text="selected.length + ' selected'"></span>
+    <div class="flex items-center gap-2 ml-auto">
+        <select x-model="bulkAction"
+                class="text-sm border border-gray-300 rounded px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-ember-500">
+            <option value="publish">Publish</option>
+            <option value="draft">Set as Draft</option>
+            <option value="delete">Delete</option>
+        </select>
+        <button type="button" @click="submitBulk()"
+                class="bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-3 py-1.5 rounded-md transition-colors">
+            Apply
+        </button>
+        <button type="button" @click="selected = []"
+                class="text-sm text-gray-500 hover:text-gray-700 px-2 py-1.5">
+            Clear
+        </button>
+    </div>
 </div>
 
 @if($items->isEmpty())
@@ -74,6 +125,12 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="border-b-2 border-gray-100">
+                <th class="px-4 py-2.5 w-8">
+                    <input type="checkbox"
+                           :checked="selected.length === {{ $items->count() }}"
+                           @change="toggleAll()"
+                           class="w-4 h-4 rounded border-gray-300 text-ember-500 focus:ring-ember-500">
+                </th>
                 <th class="text-left px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-widest">Title</th>
                 <th class="text-left px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:table-cell">Author</th>
                 <th class="text-left px-4 py-2.5 text-xs font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell">Date</th>
@@ -83,7 +140,14 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
             @foreach($items as $item)
-            <tr class="hover:bg-blue-50/40 transition-colors group">
+            <tr class="transition-colors group"
+                :class="selected.includes({{ $item->id }}) ? 'bg-blue-50/60' : 'hover:bg-blue-50/40'">
+                <td class="px-4 py-3.5">
+                    <input type="checkbox"
+                           :checked="selected.includes({{ $item->id }})"
+                           @change="$event.target.checked ? selected.push({{ $item->id }}) : selected = selected.filter(i => i !== {{ $item->id }})"
+                           class="w-4 h-4 rounded border-gray-300 text-ember-500 focus:ring-ember-500">
+                </td>
                 <td class="px-4 py-3.5">
                     <a href="{{ route('contensio.account.content.edit', [$type, $item->id]) }}"
                        class="font-semibold text-gray-900 hover:text-blue-600 transition-colors">
@@ -94,13 +158,11 @@
                 <td class="px-4 py-3.5 text-gray-400 hidden md:table-cell">{{ $item->created_at->format('M d, Y') }}</td>
                 <td class="px-4 py-3.5">
                     @if($item->status === 'published')
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                        Published
-                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">Published</span>
+                    @elseif($item->status === 'scheduled')
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">Scheduled</span>
                     @else
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                        Draft
-                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Draft</span>
                     @endif
                 </td>
                 <td class="px-4 py-3.5 text-right">
@@ -138,5 +200,7 @@
 </div>
 
 @endif
+
+</div>{{-- /x-data --}}
 
 @endsection

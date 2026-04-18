@@ -18,6 +18,46 @@
 
 @section('content')
 
+{{-- Update available notice --}}
+@if(!empty($updateInfo))
+<div class="mb-6 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-5 py-4"
+     x-data="{ open: true }" x-show="open">
+    <div class="shrink-0 mt-0.5 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+        <i class="bi bi-arrow-up-circle text-blue-600 text-base"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-blue-900">
+            {{ __('contensio::admin.update.title', ['version' => $updateInfo['version']]) }}
+        </p>
+        <p class="text-sm text-blue-700 mt-0.5">
+            {{ __('contensio::admin.update.subtitle') }}
+        </p>
+        <div class="mt-3 bg-blue-100/70 rounded-lg px-4 py-3 font-mono text-xs text-blue-900 space-y-1 select-all">
+            <div>composer update contensio/contensio</div>
+            <div>php artisan migrate</div>
+        </div>
+        <div class="flex items-center gap-3 mt-3">
+            <a href="{{ $updateInfo['url'] }}" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-900 transition-colors">
+                <i class="bi bi-journal-text text-sm"></i>
+                {{ __('contensio::admin.update.release_notes') }}
+                <i class="bi bi-arrow-up-right text-xs"></i>
+            </a>
+            <a href="{{ url('/docs/users-guide/getting-started/upgrading') }}" target="_blank" rel="noopener"
+               class="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 transition-colors">
+                {{ __('contensio::admin.update.upgrade_guide') }}
+            </a>
+        </div>
+    </div>
+    <button type="button" @click="open = false"
+            class="shrink-0 p-1 text-blue-400 hover:text-blue-600 rounded transition-colors" aria-label="Dismiss">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </button>
+</div>
+@endif
+
 @php
     // Resolve edit route for a content item (handles page/post/custom types)
     $editRouteFor = function ($item) {
@@ -65,6 +105,7 @@
             </svg>
             Upload media
         </a>
+        {!! \Contensio\Support\Hook::render('contensio/admin/dashboard-quick-actions') !!}
     </div>
 </div>
 
@@ -141,6 +182,8 @@
     </div>
 
 </div>
+
+{!! \Contensio\Support\Hook::render('contensio/admin/dashboard-stats') !!}
 
 {{-- Main widget grid --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
@@ -230,6 +273,8 @@
 
 </div>
 
+{!! \Contensio\Support\Hook::render('contensio/admin/dashboard-widgets') !!}
+
 {{-- Activity log — full width --}}
 <div class="bg-white rounded-xl border border-gray-200">
     <div class="px-5 py-4 border-b border-gray-100">
@@ -267,5 +312,7 @@
     </div>
     @endif
 </div>
+
+{!! \Contensio\Support\Hook::render('contensio/admin/dashboard-after') !!}
 
 @endsection

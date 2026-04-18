@@ -21,10 +21,18 @@ class PublishScheduledContent extends Command
 
     public function handle(): int
     {
-        $count = Content::where('status', 'scheduled')
+        $items = Content::where('status', 'scheduled')
             ->where('published_at', '<=', now())
-            ->update(['status' => 'published']);
+            ->get();
 
+        foreach ($items as $content) {
+            $content->update(['status' => 'published']);
+            do_action('contensio/content/published', $content);
+            do_action('contensio/content/updated', $content);
+            do_action('contensio/content/status-changed', $content, 'scheduled', 'published');
+        }
+
+        $count = $items->count();
         if ($count > 0) {
             $this->info("Published {$count} scheduled item(s).");
         }

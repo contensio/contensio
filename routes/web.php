@@ -2,13 +2,18 @@
 
 use Contensio\Http\Controllers\Admin\ActivityLogController;
 use Contensio\Http\Controllers\Admin\CommentController;
+use Contensio\Http\Controllers\Admin\ContactController;
+use Contensio\Http\Controllers\Admin\ContactLabelController;
+use Contensio\Http\Controllers\Admin\ContactMessageController;
 use Contensio\Http\Controllers\Frontend\CommentSubmitController;
+use Contensio\Http\Controllers\Frontend\ContactPageController;
 use Contensio\Http\Controllers\Frontend\UserProfileController;
 use Contensio\Http\Controllers\Admin\BlockController;
 use Contensio\Http\Controllers\Admin\ContentController;
 use Contensio\Http\Controllers\Admin\ContentTypeController;
 use Contensio\Http\Controllers\Admin\FieldController;
 use Contensio\Http\Controllers\Admin\FieldGroupController;
+use Contensio\Http\Controllers\Admin\SearchController;
 use Contensio\Http\Controllers\Admin\TaxonomyController;
 use Contensio\Http\Controllers\Admin\TermController;
 use Contensio\Http\Controllers\Admin\DashboardController;
@@ -21,8 +26,10 @@ use Contensio\Http\Controllers\Admin\RedirectController;
 use Contensio\Http\Controllers\Admin\RoleController;
 use Contensio\Http\Controllers\Admin\SettingController;
 use Contensio\Http\Controllers\Admin\ThemeController;
+use Contensio\Http\Controllers\Admin\Tools\BackupController;
 use Contensio\Http\Controllers\Admin\Tools\ImportExportController;
 use Contensio\Http\Controllers\Admin\UserController;
+use Contensio\Http\Controllers\Api\ContentApiController;
 use Contensio\Http\Controllers\Auth\LoginController;
 use Contensio\Http\Controllers\Auth\RegisterController;
 use Contensio\Http\Controllers\Frontend\FeedController;
@@ -38,6 +45,14 @@ Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('contensio.s
 Route::get('/robots.txt',  [SeoController::class, 'robots'])->name('contensio.seo.robots');
 Route::get('/feed',        [FeedController::class, 'index'])->name('contensio.feed');
 
+// ─── Public JSON API (read-only, no auth) ──────────────────────────────────
+// /api/v1/content/{type}         — paginated list of published entries
+// /api/v1/content/{type}/{slug}  — single entry by slug
+Route::middleware('web')->prefix('api/v1')->name('contensio.api.')->group(function () {
+    Route::get('/content/{type}',        [ContentApiController::class, 'index'])->name('content.index');
+    Route::get('/content/{type}/{slug}', [ContentApiController::class, 'show'])->name('content.show');
+});
+
 // ─── Auth ──────────────────────────────────────────────────────────────────
 // Declared BEFORE the frontend catch-all so /login + /logout win the match race
 // even when Laravel's router compiles in registration order.
@@ -47,6 +62,31 @@ Route::middleware('web')->group(function () {
     Route::post('/logout',  [LoginController::class,  'logout'])->name('contensio.logout')->middleware('auth');
     Route::get('/register', [RegisterController::class, 'showRegister'])->name('contensio.register');
     Route::post('/register',[RegisterController::class, 'register'])->name('contensio.register.store');
+});
+
+// ─── Contact page (dynamic slug from settings — registered BEFORE the page catch-all) ──
+// Slugs are loaded from the database; the try/catch makes it safe during install
+// when the DB may not yet exist.
+Route::middleware('web')->group(function () {
+    try {
+        $contactSlugs = \Contensio\Models\Setting::where('module', 'contact')
+            ->where('setting_key', 'slugs')
+            ->value('value');
+        $slugs = json_decode($contactSlugs ?? '{}', true) ?? [];
+
+        foreach (array_unique(array_values(array_filter($slugs))) as $slug) {
+            Route::get('/' . $slug,  [ContactPageController::class, 'show'])->name('contensio.contact');
+            Route::post('/' . $slug, [ContactPageController::class, 'submit'])->name('contensio.contact.submit');
+        }
+
+        // Fallback slug if none configured
+        if (empty($slugs)) {
+            Route::get('/contact',  [ContactPageController::class, 'show'])->name('contensio.contact');
+            Route::post('/contact', [ContactPageController::class, 'submit'])->name('contensio.contact.submit');
+        }
+    } catch (\Throwable) {
+        // DB not ready yet (fresh install) — skip contact routes
+    }
 });
 
 // ─── Frontend ──────────────────────────────────────────────────────────────
@@ -62,9 +102,12 @@ Route::middleware('web')->group(function () {
 
     // Taxonomy term archives: /{taxonomy-slug}/{term-slug}
     // Registered before the page catch-all so two-segment taxonomy URLs take priority.
+    // The taxonomySlug constraint must exclude the admin route prefix and other
+    // reserved first-path segments so that e.g. /account/pages is not swallowed
+    // by this route before the admin group can match it.
     Route::get('/{taxonomySlug}/{termSlug}', [FrontendTaxonomyController::class, 'term'])
-        ->where('taxonomySlug', '[a-z][a-z0-9-]*')
-        ->where('termSlug',     '[a-z][a-z0-9-]*')
+        ->where('taxonomySlug', '^(?!login(?:/|$)|logout(?:/|$)|' . config('contensio.route_prefix', 'account') . '(?:/|$)|api(?:/|$)|livewire(?:/|$))[a-z][a-z0-9-]+$')
+        ->where('termSlug',     '[a-z][a-z0-9-]+')
         ->name('contensio.taxonomy.term');
 
     // Catch-all for pages by slug. Constrained to keep framework/admin/auth
@@ -94,29 +137,38 @@ Route::prefix(config('contensio.route_prefix'))
         Route::delete('/profile/avatar',    [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
         Route::delete('/profile',           [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+        // Global admin search
+        Route::get('/search', [SearchController::class, 'index'])->name('search');
+
         // Pages
         Route::get('/pages',             [ContentController::class, 'pages'])->name('pages.index');
         Route::get('/pages/create',      [ContentController::class, 'createPage'])->name('pages.create');
+        Route::post('/pages/bulk',       [ContentController::class, 'bulkPages'])->name('pages.bulk');
         Route::post('/pages',            [ContentController::class, 'storePage'])->name('pages.store');
         Route::get('/pages/{id}/edit',   [ContentController::class, 'editPage'])->name('pages.edit');
         Route::put('/pages/{id}',        [ContentController::class, 'updatePage'])->name('pages.update');
         Route::delete('/pages/{id}',     [ContentController::class, 'destroyPage'])->name('pages.destroy');
+        Route::post('/pages/{id}/clone', [ContentController::class, 'clonePage'])->name('pages.clone');
 
         // Posts
         Route::get('/posts',             [ContentController::class, 'posts'])->name('posts.index');
         Route::get('/posts/create',      [ContentController::class, 'createPost'])->name('posts.create');
+        Route::post('/posts/bulk',       [ContentController::class, 'bulkPosts'])->name('posts.bulk');
         Route::post('/posts',            [ContentController::class, 'storePost'])->name('posts.store');
         Route::get('/posts/{id}/edit',   [ContentController::class, 'editPost'])->name('posts.edit');
         Route::put('/posts/{id}',        [ContentController::class, 'updatePost'])->name('posts.update');
         Route::delete('/posts/{id}',     [ContentController::class, 'destroyPost'])->name('posts.destroy');
+        Route::post('/posts/{id}/clone', [ContentController::class, 'clonePost'])->name('posts.clone');
 
         // Custom content types (non-system) — type must start with a letter
-        Route::get('/content/{type}',            [ContentController::class, 'indexContent'])->name('content.index')->where('type', '[a-z][a-z0-9_-]*');
-        Route::get('/content/{type}/create',     [ContentController::class, 'createContent'])->name('content.create')->where('type', '[a-z][a-z0-9_-]*');
-        Route::post('/content/{type}',           [ContentController::class, 'storeContent'])->name('content.store')->where('type', '[a-z][a-z0-9_-]*');
-        Route::get('/content/{type}/{id}/edit',  [ContentController::class, 'editContent'])->name('content.edit')->where('type', '[a-z][a-z0-9_-]*');
-        Route::put('/content/{type}/{id}',       [ContentController::class, 'updateContent'])->name('content.update')->where('type', '[a-z][a-z0-9_-]*');
-        Route::delete('/content/{type}/{id}',    [ContentController::class, 'destroyContent'])->name('content.destroy')->where('type', '[a-z][a-z0-9_-]*');
+        Route::get('/content/{type}',                  [ContentController::class, 'indexContent'])->name('content.index')->where('type', '[a-z][a-z0-9_-]*');
+        Route::get('/content/{type}/create',           [ContentController::class, 'createContent'])->name('content.create')->where('type', '[a-z][a-z0-9_-]*');
+        Route::post('/content/{type}/bulk',            [ContentController::class, 'bulkContent'])->name('content.bulk')->where('type', '[a-z][a-z0-9_-]*');
+        Route::post('/content/{type}',                 [ContentController::class, 'storeContent'])->name('content.store')->where('type', '[a-z][a-z0-9_-]*');
+        Route::get('/content/{type}/{id}/edit',        [ContentController::class, 'editContent'])->name('content.edit')->where('type', '[a-z][a-z0-9_-]*');
+        Route::put('/content/{type}/{id}',             [ContentController::class, 'updateContent'])->name('content.update')->where('type', '[a-z][a-z0-9_-]*');
+        Route::delete('/content/{type}/{id}',          [ContentController::class, 'destroyContent'])->name('content.destroy')->where('type', '[a-z][a-z0-9_-]*');
+        Route::post('/content/{type}/{id}/clone',      [ContentController::class, 'cloneContent'])->name('content.clone')->where('type', '[a-z][a-z0-9_-]*');
 
         // Autosave (shared by pages, posts, and custom content types)
         Route::post('/content/{id}/autosave',   [ContentController::class, 'autosave'])->name('content.autosave');
@@ -231,6 +283,34 @@ Route::prefix(config('contensio.route_prefix'))
         Route::delete('/languages/{id}',       [LanguageController::class, 'destroy'])->name('languages.destroy');
         Route::post('/languages/{id}/default', [LanguageController::class, 'setDefault'])->name('languages.default');
 
+        // Contact page — settings + field builder
+        Route::get('/contact',                    [ContactController::class, 'index'])->name('contact.index');
+        Route::post('/contact/builder',           [ContactController::class, 'saveBuilder'])->name('contact.builder');
+        Route::post('/contact/appearance',        [ContactController::class, 'saveAppearance'])->name('contact.appearance');
+        Route::post('/contact/settings',          [ContactController::class, 'saveSettings'])->name('contact.settings');
+        Route::post('/contact/fields',            [ContactController::class, 'storeField'])->name('contact.fields.store');
+        Route::put('/contact/fields/{id}',        [ContactController::class, 'updateField'])->name('contact.fields.update');
+        Route::delete('/contact/fields/{id}',     [ContactController::class, 'destroyField'])->name('contact.fields.destroy');
+        Route::post('/contact/fields/reorder',    [ContactController::class, 'reorderFields'])->name('contact.fields.reorder');
+
+        // Contact messages inbox
+        Route::get('/contact/messages',                [ContactMessageController::class, 'index'])->name('contact.messages.index');
+        Route::get('/contact/messages/export',         [ContactMessageController::class, 'export'])->name('contact.messages.export');
+        Route::get('/contact/messages/{id}',           [ContactMessageController::class, 'show'])->name('contact.messages.show');
+        Route::delete('/contact/messages/{id}',        [ContactMessageController::class, 'destroy'])->name('contact.messages.destroy');
+        Route::post('/contact/messages/bulk',          [ContactMessageController::class, 'bulk'])->name('contact.messages.bulk');
+
+        // Contact labels management
+        Route::get('/contact/labels',                  [ContactLabelController::class, 'index'])->name('contact.labels.index');
+        Route::post('/contact/labels',                 [ContactLabelController::class, 'store'])->name('contact.labels.store');
+        Route::put('/contact/labels/{id}',             [ContactLabelController::class, 'update'])->name('contact.labels.update');
+        Route::delete('/contact/labels/{id}',          [ContactLabelController::class, 'destroy'])->name('contact.labels.destroy');
+        Route::post('/contact/labels/bulk-assign',     [ContactLabelController::class, 'bulkAssign'])->name('contact.labels.bulk-assign');
+
+        // Assign / remove labels on a single message (AJAX)
+        Route::post('/contact/messages/{id}/labels',              [ContactLabelController::class, 'attachToMessage'])->name('contact.messages.labels.attach');
+        Route::delete('/contact/messages/{id}/labels/{labelId}',  [ContactLabelController::class, 'detachFromMessage'])->name('contact.messages.labels.detach');
+
         // Comments moderation
         Route::get('/comments',                  [CommentController::class, 'index'])->middleware('contensio.permission:comments.manage')->name('comments.index');
         Route::post('/comments/bulk',            [CommentController::class, 'bulk'])->middleware('contensio.permission:comments.manage')->name('comments.bulk');
@@ -267,6 +347,15 @@ Route::prefix(config('contensio.route_prefix'))
         Route::get('/tools/import-export',  [ImportExportController::class, 'index'])->name('tools.import-export');
         Route::post('/tools/export',        [ImportExportController::class, 'export'])->name('tools.export');
         Route::post('/tools/import',        [ImportExportController::class, 'import'])->name('tools.import');
+
+        // Tools — Backups
+        Route::get('/tools/backups',                   [BackupController::class, 'index'])->name('tools.backups');
+        Route::post('/tools/backups',                  [BackupController::class, 'store'])->name('tools.backups.store');
+        Route::get('/tools/backups/{filename}/download',[BackupController::class, 'download'])->name('tools.backups.download');
+        Route::delete('/tools/backups/{filename}',     [BackupController::class, 'destroy'])->name('tools.backups.destroy');
+        Route::post('/tools/backups/restore/upload',   [BackupController::class, 'restoreUpload'])->name('tools.backups.restore-upload');
+        Route::get('/tools/backups/restore/confirm',   [BackupController::class, 'restoreConfirm'])->name('tools.backups.restore-confirm');
+        Route::post('/tools/backups/restore/execute',  [BackupController::class, 'restoreExecute'])->name('tools.backups.restore-execute');
 
         // Plugins
         Route::get('/plugins',                  [PluginController::class, 'index'])->name('plugins.index');

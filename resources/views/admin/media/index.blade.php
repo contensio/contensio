@@ -41,7 +41,7 @@
 }">
 
     {{-- Header --}}
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-5">
         <div>
             <h1 class="text-xl font-bold text-gray-900">Media Library</h1>
             <p class="text-sm text-gray-500 mt-0.5">{{ $items->total() }} {{ Str::plural('file', $items->total()) }}</p>
@@ -56,6 +56,33 @@
             Upload Files
         </button>
     </div>
+
+    {{-- Folder filter --}}
+    @if($folders->isNotEmpty())
+    <div class="flex items-center gap-2 flex-wrap mb-5">
+        <a href="{{ route('contensio.account.media.index') }}"
+           class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors
+                  {{ $folder === null ? 'bg-ink-900 text-white border-ink-900' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400' }}">
+            All files
+        </a>
+        @foreach($folders as $f)
+        @php
+            $parts = explode('/', $f); // e.g. ['uploads','2026','04']
+            $label = count($parts) >= 3
+                ? \Carbon\Carbon::createFromFormat('Y/m', $parts[1].'/'.$parts[2])->format('F Y')
+                : $f;
+        @endphp
+        <a href="{{ route('contensio.account.media.index', ['folder' => $f]) }}"
+           class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors
+                  {{ $folder === $f ? 'bg-ink-900 text-white border-ink-900' : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400' }}">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+            </svg>
+            {{ $label }}
+        </a>
+        @endforeach
+    </div>
+    @endif
 
     {{-- Bulk action bar --}}
     <div x-show="selected.length > 0"

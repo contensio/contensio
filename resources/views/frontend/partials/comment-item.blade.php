@@ -27,10 +27,10 @@
         @if($authorAvatar)
         <img src="{{ asset('storage/' . $authorAvatar) }}"
              alt="{{ $authorName }}"
-             class="w-9 h-9 rounded-full object-cover">
+             class="w-10 h-10 rounded-full object-cover">
         @else
-        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-400 to-slate-600
-                    flex items-center justify-center text-white text-sm font-bold">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-400 to-slate-600
+                    flex items-center justify-center text-white font-bold">
             {{ $initial }}
         </div>
         @endif
@@ -41,41 +41,41 @@
 
     {{-- Body --}}
     <div class="flex-1 min-w-0">
-        <div class="flex items-baseline gap-2 mb-1">
+        <div class="flex items-baseline gap-3 mb-2">
             @if($authorCode)
             <a href="{{ route('contensio.author', $authorCode) }}"
-               class="font-semibold text-gray-900 text-sm hover:text-blue-600 transition-colors">{{ $authorName }}</a>
+               class="font-semibold text-gray-900 hover:text-blue-600 transition-colors">{{ $authorName }}</a>
             @else
-            <span class="font-semibold text-gray-900 text-sm">{{ $authorName }}</span>
+            <span class="font-semibold text-gray-900">{{ $authorName }}</span>
             @endif
-            <time class="text-xs text-gray-400" datetime="{{ $comment->created_at->toDateString() }}">
+            <time class="text-gray-400" datetime="{{ $comment->created_at->toDateString() }}">
                 {{ $comment->created_at->diffForHumans() }}
             </time>
         </div>
-        <div class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{{ $comment->body }}</div>
+        <div class="text-gray-700 leading-relaxed whitespace-pre-line">{{ $comment->body }}</div>
 
         {{-- Reply link (only one level deep) --}}
         @if($depth === 0 && $commentsEnabled && $content->allow_comments)
-        <div x-data="{ open: false }" class="mt-2">
+        <div x-data="{ open: false }" class="mt-3">
             <button type="button" @click="open = !open"
-                    class="text-xs font-medium text-gray-400 hover:text-gray-700 transition-colors">
+                    class="font-medium text-gray-400 hover:text-gray-700 transition-colors">
                 Reply
             </button>
 
-            <div x-show="open" x-cloak class="mt-3">
+            <div x-show="open" x-cloak class="mt-4">
                 <form method="POST" action="{{ route('contensio.comments.store') }}" class="space-y-3">
                     @csrf
                     <input type="hidden" name="content_id" value="{{ $content->id }}">
                     <input type="hidden" name="parent_id"  value="{{ $comment->id }}">
 
                     @auth
-                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <div class="flex items-center gap-2 text-gray-500">
                         @if(auth()->user()->avatar_path)
                         <img src="{{ asset('storage/' . auth()->user()->avatar_path) }}"
-                             class="w-5 h-5 rounded-full object-cover shrink-0" alt="">
+                             class="w-6 h-6 rounded-full object-cover shrink-0" alt="">
                         @else
-                        <div class="w-5 h-5 rounded-full bg-gradient-to-br from-slate-400 to-slate-600
-                                    flex items-center justify-center text-white text-xs font-bold shrink-0">
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-slate-400 to-slate-600
+                                    flex items-center justify-center text-white font-bold shrink-0">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                         </div>
                         @endif
@@ -84,23 +84,23 @@
                     @else
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <input type="text" name="author_name" placeholder="Your name *" required
-                               class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                               class="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent">
                         <input type="email" name="author_email" placeholder="Your email *" required
-                               class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent">
+                               class="rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent">
                     </div>
                     @endauth
 
                     <textarea name="body" rows="3" required placeholder="Write a reply…"
-                              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none
+                              class="w-full rounded-lg border border-gray-300 px-3 py-2 resize-none
                                      focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent"></textarea>
                     <div class="flex items-center gap-3">
                         <button type="submit"
                                 class="inline-flex items-center bg-gray-900 hover:bg-gray-700 text-white
-                                       font-semibold text-xs px-4 py-2 rounded-lg transition-colors">
+                                       font-semibold px-5 py-2 rounded-lg transition-colors">
                             Post Reply
                         </button>
                         <button type="button" @click="open = false"
-                                class="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+                                class="text-gray-400 hover:text-gray-600 transition-colors">
                             Cancel
                         </button>
                     </div>

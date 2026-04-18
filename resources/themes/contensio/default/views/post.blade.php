@@ -17,7 +17,7 @@
 
 @section('content')
 
-<article class="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+<article class="theme-container px-4 sm:px-6 py-12">
 
     {{-- Back to blog --}}
     <a href="{{ route('contensio.blog') }}"

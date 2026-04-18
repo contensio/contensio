@@ -79,6 +79,8 @@ class CommentSubmitController extends Controller
 
         $status = $requireApproval ? Comment::STATUS_PENDING : Comment::STATUS_APPROVED;
 
+        $body = apply_filters('contensio/comment/body', $request->body);
+
         $comment = Comment::create([
             'code'         => Str::random(16),
             'content_id'   => $content->id,
@@ -86,9 +88,11 @@ class CommentSubmitController extends Controller
             'author_id'    => auth()->id(),
             'author_name'  => auth()->check() ? null : $request->author_name,
             'author_email' => auth()->check() ? null : $request->author_email,
-            'body'         => $request->body,
+            'body'         => $body,
             'status'       => $status,
         ]);
+
+        do_action('contensio/comment/submitted', $comment);
 
         // Notify admin when a comment needs moderation
         if ($status === Comment::STATUS_PENDING) {

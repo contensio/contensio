@@ -90,6 +90,11 @@
                         'route' => 'contensio.account.tools.import-export',
                     ],
                     [
+                        'label' => 'Backups',
+                        'icon'  => 'bi-archive',
+                        'route' => 'contensio.account.tools.backups',
+                    ],
+                    [
                         'label'      => 'Activity log',
                         'icon'       => 'bi-clock-history',
                         'route'      => 'contensio.account.activity-log.index',
@@ -179,6 +184,24 @@
                 {{ $ctPlural }}
             </a>
             @endforeach
+
+            {{-- Contact --}}
+            @php $contactUnread = 0;
+                try { $contactUnread = \Contensio\Models\ContactMessage::where('status', \Contensio\Models\ContactMessage::STATUS_NEW)->count(); } catch (\Throwable) {}
+            @endphp
+            <a href="{{ route('contensio.account.contact.messages.index') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      {{ request()->routeIs('contensio.account.contact*')
+                          ? 'bg-slate-700 text-white'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                <i class="bi bi-envelope w-4 shrink-0 text-center text-base leading-none"></i>
+                <span class="flex-1">Contact</span>
+                @if($contactUnread > 0)
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs font-semibold bg-ember-500 text-white">
+                    {{ $contactUnread }}
+                </span>
+                @endif
+            </a>
 
             @if(auth()->user()?->hasPermission('comments.manage'))
             @php $pendingComments = \Contensio\Models\Comment::where('status', 'pending')->count(); @endphp
@@ -395,6 +418,24 @@
                 @yield('breadcrumb')
             </div>
 
+            {{-- Global search --}}
+            <form method="GET" action="{{ route('contensio.account.search') }}"
+                  class="hidden md:flex items-center">
+                <div class="relative">
+                    <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" name="q"
+                           placeholder="Search…"
+                           value="{{ request()->routeIs('contensio.account.search') ? request('q') : '' }}"
+                           class="pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-gray-50
+                                  focus:outline-none focus:ring-2 focus:ring-ember-500 focus:border-transparent
+                                  w-40 focus:w-56 transition-all duration-150">
+                </div>
+            </form>
+
             {{-- View site --}}
             <a href="{{ url('/') }}" target="_blank"
                class="hidden sm:flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-100">
@@ -462,9 +503,20 @@
         </main>
 
         {{-- Footer --}}
+        @php $footerUpdate = \Contensio\Services\VersionChecker::updateInfo(); @endphp
         <footer class="px-6 py-3 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
             <span>{{ config('contensio.name', 'Contensio') }}</span>
-            <span>{{ __('contensio::admin.footer.version', ['version' => '1.0.0']) }}</span>
+            <span class="flex items-center gap-2">
+                <span>{{ __('contensio::admin.footer.version', ['version' => \Contensio\ContensioServiceProvider::version()]) }}</span>
+                @if($footerUpdate)
+                <a href="{{ route('contensio.account.dashboard') }}"
+                   class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                   title="{{ __('contensio::admin.update.title', ['version' => $footerUpdate['version']]) }}">
+                    <i class="bi bi-arrow-up-circle text-xs"></i>
+                    {{ $footerUpdate['version'] }} {{ __('contensio::admin.update.available') }}
+                </a>
+                @endif
+            </span>
         </footer>
 
     </div>

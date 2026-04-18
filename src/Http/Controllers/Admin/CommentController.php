@@ -64,7 +64,9 @@ class CommentController extends Controller
 
     public function approve(int $id)
     {
-        Comment::findOrFail($id)->update(['status' => Comment::STATUS_APPROVED]);
+        $comment = Comment::findOrFail($id);
+        $comment->update(['status' => Comment::STATUS_APPROVED]);
+        do_action('contensio/comment/approved', $comment->fresh());
         return back()->with('success', 'Comment approved.');
     }
 
@@ -89,6 +91,7 @@ class CommentController extends Controller
     public function destroy(int $id)
     {
         Comment::findOrFail($id)->delete();
+        do_action('contensio/comment/deleted', $id);
         return back()->with('success', 'Comment deleted.');
     }
 
@@ -102,11 +105,21 @@ class CommentController extends Controller
         }
 
         match ($action) {
-            'approve' => Comment::whereIn('id', $ids)->update(['status' => Comment::STATUS_APPROVED]),
             'spam'    => Comment::whereIn('id', $ids)->update(['status' => Comment::STATUS_SPAM]),
             'trash'   => Comment::whereIn('id', $ids)->update(['status' => Comment::STATUS_TRASHED]),
             'restore' => Comment::whereIn('id', $ids)->update(['status' => Comment::STATUS_PENDING]),
-            'delete'  => Comment::whereIn('id', $ids)->delete(),
+            'approve' => (function () use ($ids) {
+                foreach (Comment::whereIn('id', $ids)->get() as $comment) {
+                    $comment->update(['status' => Comment::STATUS_APPROVED]);
+                    do_action('contensio/comment/approved', $comment);
+                }
+            })(),
+            'delete'  => (function () use ($ids) {
+                foreach ($ids as $id) {
+                    Comment::find($id)?->delete();
+                    do_action('contensio/comment/deleted', $id);
+                }
+            })(),
             default   => null,
         };
 

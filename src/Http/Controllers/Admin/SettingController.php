@@ -39,6 +39,7 @@ use Contensio\Models\Language;
 use Contensio\Models\Role;
 use Contensio\Models\Setting;
 use Contensio\Support\EmailConfig;
+use Contensio\Support\SiteConfig;
 
 class SettingController extends Controller
 {
@@ -64,6 +65,8 @@ class SettingController extends Controller
         $request->validate([
             'site_name'    => 'required|string|max:200',
             'site_tagline' => 'nullable|string|max:500',
+            'site_logo'    => 'nullable|string|max:500',
+            'site_favicon' => 'nullable|string|max:500',
             'timezone'     => 'required|string|max:100',
             'date_format'  => 'nullable|string|max:50',
         ]);
@@ -71,6 +74,8 @@ class SettingController extends Controller
         $map = [
             'site_name'    => $request->site_name,
             'site_tagline' => $request->site_tagline ?? '',
+            'site_logo'    => trim((string) ($request->site_logo ?? '')),
+            'site_favicon' => trim((string) ($request->site_favicon ?? '')),
             'timezone'     => $request->timezone,
             'date_format'  => $request->date_format ?? 'M d, Y',
         ];
@@ -81,6 +86,8 @@ class SettingController extends Controller
                 ['value' => $value, 'updated_at' => now()]
             );
         }
+
+        SiteConfig::flush();
 
         return redirect()->route('contensio.account.settings.general')->with('success', 'Settings saved.');
     }

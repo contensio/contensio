@@ -54,8 +54,35 @@ class ThemeRegistry
     {
         static::$themes = [];
 
+        // ── Built-in default theme — always loaded from core package ────────
+        // The default theme ships inside the CMS core and is always available.
+        // It is never overridable via packages/themes/ — that directory is for
+        // third-party / user-installed themes only.
+        $builtInPath = dirname(__DIR__, 2) . '/resources/themes/contensio/default';
+        if (is_dir($builtInPath)) {
+            $builtInManifest = $builtInPath . '/theme.json';
+            $builtInMeta     = file_exists($builtInManifest)
+                ? (json_decode(file_get_contents($builtInManifest), true) ?? [])
+                : [];
+
+            static::$themes['contensio/default'] = [
+                'source'   => 'builtin',
+                'path'     => $builtInPath,
+                'viewPath' => $builtInPath . '/views',
+                'assetUrl' => 'vendor/contensio/contensio/themes/default',
+                'meta'     => array_merge([
+                    'name'        => 'contensio/default',
+                    'label'       => 'Default',
+                    'description' => 'The default theme that ships with Contensio.',
+                    'author'      => 'Contensio',
+                    'version'     => '1.0.0',
+                    'removable'   => false,
+                ], $builtInMeta),
+            ];
+        }
+
         // ── Themes installed in packages/themes/{vendor}/{name}/ ──────────
-        // This is where ALL themes live — both the default and user-installed ones.
+        // For third-party and user-installed themes only.
         // packages_path is configured in config/cms.php (default: base_path('packages')).
         $themesRoot = rtrim(config('contensio.packages_path', base_path('packages')), '/') . '/themes';
 
@@ -65,6 +92,11 @@ class ThemeRegistry
                 if (empty($meta['name'])) {
                     continue;
                 }
+                // The built-in default theme is always loaded from core — never overridden
+                // by a copy in packages/themes/. This ensures core updates always apply.
+                if ($meta['name'] === 'contensio/default') {
+                    continue;
+                }
                 $dir = dirname($manifest);
                 static::$themes[$meta['name']] = [
                     'source'   => 'local',
@@ -72,29 +104,6 @@ class ThemeRegistry
                     'viewPath' => "{$dir}/views",
                     'assetUrl' => 'packages/themes/' . $meta['name'],
                     'meta'     => array_merge(['removable' => true], $meta),
-                ];
-            }
-        }
-
-        // ── Fallback: built-in default shipped inside the CMS core package ─
-        // Used only when packages/themes/contensio/default/ does not exist yet
-        // (e.g. fresh install before the theme has been copied to packages/).
-        if (! isset(static::$themes['contensio/default'])) {
-            $builtInPath = dirname(__DIR__, 2) . '/resources/themes/contensio/default';
-            if (is_dir($builtInPath)) {
-                static::$themes['contensio/default'] = [
-                    'source'   => 'builtin',
-                    'path'     => $builtInPath,
-                    'viewPath' => $builtInPath . '/views',
-                    'assetUrl' => 'vendor/contensio/contensio/themes/default',
-                    'meta'     => [
-                        'name'        => 'contensio/default',
-                        'label'       => 'Default',
-                        'description' => 'The default theme that ships with Contensio.',
-                        'author'      => 'Contensio',
-                        'version'     => '1.0.0',
-                        'removable'   => false,
-                    ],
                 ];
             }
         }

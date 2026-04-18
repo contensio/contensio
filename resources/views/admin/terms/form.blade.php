@@ -161,6 +161,48 @@
             </div>
         </div>
 
+        {{-- Image --}}
+        <div class="bg-white border border-gray-200 rounded-md overflow-hidden mb-4"
+             x-data="{ imgUrl: @js($term?->image?->url() ?? null) }"
+             x-on:cms:media-selected.window="if ($event.detail.inputName === 'image_id' && $event.detail.items[0]) imgUrl = $event.detail.items[0].url">
+
+            <div class="px-5 py-4 border-b border-gray-100">
+                <h2 class="text-base font-bold text-gray-800">Image <span class="text-gray-400 font-normal text-sm">(optional)</span></h2>
+            </div>
+
+            <div class="px-5 py-5 space-y-3">
+                <input type="hidden" name="image_id"
+                       value="{{ old('image_id', $term?->image_id ?? '') }}">
+
+                <div x-show="imgUrl" x-cloak
+                     class="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-video">
+                    <img :src="imgUrl" alt="Term image" class="w-full h-full object-cover">
+                    <button type="button"
+                            @click="imgUrl = null; $el.closest('.bg-white').querySelector('[name=image_id]').value = ''"
+                            class="absolute top-2 right-2 w-7 h-7 rounded-full bg-gray-900/60 hover:bg-red-500 text-white flex items-center justify-center transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div x-show="!imgUrl"
+                     class="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 py-8 text-center">
+                    <svg class="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="text-xs text-gray-400">No image selected</p>
+                </div>
+
+                <button type="button"
+                        @click="$dispatch('cms:media-pick', { inputName: 'image_id', accept: 'image/', multiple: false })"
+                        class="w-full text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
+                        x-text="imgUrl ? 'Change Image' : 'Set Image'">
+                </button>
+            </div>
+        </div>
+
         {{-- Parent (hierarchical only) --}}
         @if($taxonomy->is_hierarchical && ! empty($parentOptions))
         <div class="bg-white border border-gray-200 rounded-md overflow-hidden mb-4">

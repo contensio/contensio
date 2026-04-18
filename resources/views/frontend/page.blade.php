@@ -10,7 +10,7 @@
 
 @extends('contensio::frontend.layout')
 
-@section('title', ($translation->meta_title ?: $translation->title) . ' — ' . $site['name'])
+@section('title', apply_filters('contensio/frontend/page-title', ($translation->meta_title ?: $translation->title) . ' — ' . $site['name'], $content))
 
 @if($translation->meta_description)
 @section('meta_description', $translation->meta_description)
@@ -35,11 +35,14 @@
     </h1>
 
     {{-- Blocks --}}
+    @php ob_start(); @endphp
     <div class="space-y-6">
         @foreach($content->blocks ?? [] as $block)
             @include('contensio::frontend.partials.block', ['block' => $block, 'langId' => $lang?->id])
         @endforeach
     </div>
+    @php $__body = ob_get_clean(); @endphp
+    {!! apply_filters('contensio/frontend/content-body', $__body, $content) !!}
 
 </article>
 

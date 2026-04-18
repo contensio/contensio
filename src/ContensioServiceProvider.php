@@ -28,8 +28,10 @@
 
 namespace Contensio;
 
+use Contensio\Console\Commands\BackupCommand;
 use Contensio\Console\Commands\InstallCommand;
 use Contensio\Console\Commands\PublishScheduledContent;
+use Contensio\Console\Commands\RestoreCommand;
 use Contensio\Console\Commands\SeedBlockTypesCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Contensio\Http\Middleware\AdminAuthenticate;
@@ -45,14 +47,37 @@ use Contensio\Support\AccessControl;
 use Contensio\Support\AdminNavigation;
 use Contensio\Support\EmailConfig;
 use Contensio\Support\FortifyIntegration;
+use Contensio\Models\Language;
 use Contensio\Support\PluginRegistry;
+use Contensio\Support\SiteConfig;
 use Contensio\Support\ThemeRegistry;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ContensioServiceProvider extends ServiceProvider
 {
+    /** Canonical version — updated on every release. */
+    const VERSION = '2.0.0';
+
+    /**
+     * Returns the installed version of the core package.
+     * Reads from Composer's runtime API; falls back to the VERSION constant
+     * in dev/git installs where no Composer version tag is recorded.
+     */
+    public static function version(): string
+    {
+        try {
+            $v = \Composer\InstalledVersions::getPrettyVersion('contensio/contensio');
+            if ($v && $v !== 'dev-main' && $v !== 'dev-master') {
+                return ltrim($v, 'v');
+            }
+        } catch (\Throwable) {}
+
+        return self::VERSION;
+    }
+
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/contensio.php', 'contensio');
@@ -135,11 +160,23 @@ class ContensioServiceProvider extends ServiceProvider
                 $this->app->register($active['provider']);
             }
 
-            // Register the theme:: view namespace once all providers have booted
+            // Register the theme:: view namespace once all providers have booted.
+            // The active theme's path is registered first (highest priority).
+            // The built-in default theme is always added as a fallback so that
+            // views shipped with core (e.g. contact.blade.php) are available even
+            // when the active theme hasn't overridden them. Laravel's addNamespace
+            // merges hint paths, so the first registered path wins on conflict.
             $this->app->booted(function () {
-                $active = ThemeRegistry::active();
+                $active      = ThemeRegistry::active();
+                $builtInPath = dirname(__DIR__) . '/resources/themes/contensio/default/views';
+
                 if ($active && is_dir($active['viewPath'])) {
                     view()->addNamespace('theme', $active['viewPath']);
+                }
+
+                // Add built-in views as fallback (skipped if it IS the active theme)
+                if (is_dir($builtInPath) && ($active['viewPath'] ?? '') !== $builtInPath) {
+                    view()->addNamespace('theme', $builtInPath);
                 }
             });
 
@@ -183,6 +220,27 @@ class ContensioServiceProvider extends ServiceProvider
             });
         }
 
+        // Render themed 404 pages for frontend routes (not admin, not API, not JSON).
+        // Use $this->booted() so the exception handler is fully configured before we attach.
+        $this->booted(function () {
+            app(\Illuminate\Contracts\Debug\ExceptionHandler::class)
+                ->renderable(function (NotFoundHttpException $e, $request) {
+                    if ($request->expectsJson() || $request->is('account/*', 'api/*', 'install/*')) {
+                        return null;
+                    }
+
+                    try {
+                        $site = SiteConfig::all();
+                        $lang = Language::where('is_default', true)->first()
+                            ?? Language::where('status', '!=', 'disabled')->orderBy('position')->first();
+
+                        return response()->view('contensio::errors.404', compact('site', 'lang'), 404);
+                    } catch (\Throwable) {
+                        return null; // DB not ready (install phase) — fall back to default
+                    }
+                });
+        });
+
         // Auto-publish scheduled content every minute.
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('contensio:publish-scheduled')->everyMinute()->withoutOverlapping();
@@ -190,8 +248,10 @@ class ContensioServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                BackupCommand::class,
                 InstallCommand::class,
                 PublishScheduledContent::class,
+                RestoreCommand::class,
                 SeedBlockTypesCommand::class,
             ]);
 

@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+<div class="theme-container px-4 sm:px-6 py-12">
 
     <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mb-10">Blog</h1>
 

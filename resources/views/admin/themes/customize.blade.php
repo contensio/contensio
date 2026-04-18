@@ -24,7 +24,7 @@
     $firstSectionKey = $sections[0]['key'] ?? null;
 @endphp
 
-<div class="max-w-6xl mx-auto" x-data="{ activeSection: @js($firstSectionKey), previewOpen: false }">
+<div x-data="{ activeSection: @js($firstSectionKey), previewOpen: false }">
 
     {{-- Header --}}
     <div class="flex items-center justify-between mb-6">
