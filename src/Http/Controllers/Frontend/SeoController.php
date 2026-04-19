@@ -49,12 +49,14 @@ class SeoController extends Controller
             // Home + Blog roots
             if ($defaultLang) {
                 $urls[] = [
+                    'type'       => 'homepage',
                     'loc'        => route('contensio.home'),
                     'lastmod'    => $now,
                     'changefreq' => 'daily',
                     'priority'   => '1.0',
                 ];
                 $urls[] = [
+                    'type'       => 'blog_index',
                     'loc'        => route('contensio.blog'),
                     'lastmod'    => $now,
                     'changefreq' => 'daily',
@@ -77,6 +79,7 @@ class SeoController extends Controller
                     ->get();
                 foreach ($pages as $row) {
                     $urls[] = [
+                        'type'       => 'page',
                         'loc'        => route('contensio.page', $row->slug),
                         'lastmod'    => optional($row->updated_at)->toAtomString() ?? $now,
                         'changefreq' => 'weekly',
@@ -96,6 +99,7 @@ class SeoController extends Controller
                     ->get();
                 foreach ($posts as $row) {
                     $urls[] = [
+                        'type'       => 'post',
                         'loc'        => route('contensio.post', $row->slug),
                         'lastmod'    => optional($row->updated_at ?? $row->published_at)->toAtomString() ?? $now,
                         'changefreq' => 'weekly',
@@ -122,6 +126,7 @@ class SeoController extends Controller
                             continue;
                         }
                         $urls[] = [
+                            'type'       => 'taxonomy_term',
                             'loc'        => route('contensio.taxonomy.term', [$taxTrans->slug, $termTrans->slug]),
                             'lastmod'    => $now,
                             'changefreq' => 'weekly',
@@ -132,6 +137,10 @@ class SeoController extends Controller
             }
         }
 
+        // Allow plugins (e.g. Sitemap Generator) to add, remove, or modify entries.
+        // Signature: fn(array $urls): array
+        $urls = \Contensio\Support\Hook::applyFilters('contensio/seo/sitemap-urls', $urls);
+
         $xml  = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
         foreach ($urls as $url) {
@@ -140,7 +149,7 @@ class SeoController extends Controller
             $xml .= '    <lastmod>' . $url['lastmod'] . "</lastmod>\n";
             $xml .= '    <changefreq>' . $url['changefreq'] . "</changefreq>\n";
             $xml .= '    <priority>' . $url['priority'] . "</priority>\n";
-            $xml .= "  </url>\n";
+            $xml .= "  </url>\n"; // Note: 'type' key is internal metadata only — not written to XML
         }
         $xml .= '</urlset>';
 

@@ -28,6 +28,7 @@
 
 namespace Contensio\Http\Controllers\Admin;
 
+use Contensio\Services\PluginUpdateChecker;
 use Contensio\Support\AccessControl;
 use Contensio\Support\Activity;
 use Contensio\Support\PluginOptions;
@@ -36,6 +37,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use ZipArchive;
 
 class PluginController extends Controller
@@ -45,8 +48,9 @@ class PluginController extends Controller
     {
         $plugins     = PluginRegistry::all();
         $enabledList = PluginRegistry::enabledNames();
+        $updateInfo  = PluginUpdateChecker::all();
 
-        return view('contensio::admin.plugins.index', compact('plugins', 'enabledList'));
+        return view('contensio::admin.plugins.index', compact('plugins', 'enabledList', 'updateInfo'));
     }
 
     /** Enable a plugin. Also runs its migrations (if any) to spare admins a CLI step. */
@@ -71,8 +75,8 @@ class PluginController extends Controller
             $message .= ' ' . $migrationWarning;
         }
 
-        Activity::record('plugin_enabled', 'plugin', null, "Plugin: {$plugin['name']}")
-            ->withProperties(['name' => $plugin['name'], 'version' => $plugin['meta']['version'] ?? null]);
+        Activity::record('plugin_enabled', 'plugin', null, "Plugin: {$data['plugin']}")
+            ->withProperties(['name' => $data['plugin'], 'version' => $plugin['meta']['version'] ?? null]);
 
         return back()->with('success', $message);
     }
@@ -275,6 +279,114 @@ class PluginController extends Controller
         return redirect()
             ->route('contensio.account.plugins.settings', ['plugin' => $data['plugin']])
             ->with('success', 'Plugin settings reset to defaults.');
+    }
+
+    /**
+     * Update a plugin to its latest available version.
+     *
+     * Downloads the ZIP from the cached update info, extracts it over the
+     * existing plugin directory, then re-runs migrations.
+     */
+    public function update(Request $request)
+    {
+        $data = $request->validate(['plugin' => 'required|string']);
+        $name = $data['plugin'];
+
+        $plugin = PluginRegistry::get($name);
+        if (! $plugin) {
+            return back()->withErrors(['plugin' => 'Plugin not found.']);
+        }
+
+        $updateInfo = PluginUpdateChecker::forPlugin($name);
+        if (! $updateInfo) {
+            return back()->withErrors(['plugin' => 'No update available for this plugin.']);
+        }
+
+        $downloadUrl = $updateInfo['download_url'] ?? null;
+        if (! $downloadUrl || ! str_starts_with($downloadUrl, 'https://')) {
+            return back()->withErrors(['plugin' => 'Invalid download URL.']);
+        }
+
+        // Download the ZIP
+        try {
+            $response = Http::timeout(60)->get($downloadUrl);
+            if (! $response->successful()) {
+                return back()->withErrors(['plugin' => 'Could not download the update ZIP. Try again later.']);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("[PluginUpdate] Download failed for {$name}: " . $e->getMessage());
+            return back()->withErrors(['plugin' => 'Download failed: ' . $e->getMessage()]);
+        }
+
+        // Write to a temp file and run through the standard install flow
+        $tmpPath = sys_get_temp_dir() . '/' . 'contensio_update_' . md5($name) . '.zip';
+        file_put_contents($tmpPath, $response->body());
+
+        $zip = new ZipArchive;
+        if ($zip->open($tmpPath) !== true) {
+            @unlink($tmpPath);
+            return back()->withErrors(['plugin' => 'Could not open the downloaded ZIP.']);
+        }
+
+        // Validate plugin.json inside the ZIP
+        $manifestIndex = $zip->locateName('plugin.json');
+        if ($manifestIndex === false) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if (preg_match('#^[^/]+/plugin\.json$#', $entry)) {
+                    $manifestIndex = $i;
+                    break;
+                }
+            }
+        }
+
+        if ($manifestIndex === false) {
+            $zip->close();
+            @unlink($tmpPath);
+            return back()->withErrors(['plugin' => 'No plugin.json found in the update ZIP.']);
+        }
+
+        $meta = json_decode($zip->getFromIndex($manifestIndex), true);
+        if (($meta['name'] ?? '') !== $name) {
+            $zip->close();
+            @unlink($tmpPath);
+            return back()->withErrors(['plugin' => 'The downloaded ZIP does not match this plugin.']);
+        }
+
+        // Extract over existing files
+        $pluginsRoot = rtrim(config('contensio.packages_path', base_path('packages')), '/') . '/plugins';
+        $targetPath  = $pluginsRoot . '/' . $name;
+
+        File::deleteDirectory($targetPath);
+        File::ensureDirectoryExists($targetPath);
+        $zip->extractTo($targetPath);
+        $zip->close();
+        @unlink($tmpPath);
+
+        // Flatten single wrapper folder if present
+        $entries = array_diff(scandir($targetPath), ['.', '..']);
+        if (count($entries) === 1) {
+            $inner = $targetPath . '/' . reset($entries);
+            if (is_dir($inner)) {
+                foreach (scandir($inner) as $item) {
+                    if ($item === '.' || $item === '..') continue;
+                    rename("{$inner}/{$item}", "{$targetPath}/{$item}");
+                }
+                rmdir($inner);
+            }
+        }
+
+        // Re-run migrations for the updated plugin
+        $updatedPlugin = PluginRegistry::get($name) ?? $plugin;
+        $this->runPluginMigrations($updatedPlugin);
+
+        // Clear the update cache entry so the badge disappears
+        PluginUpdateChecker::clearCache();
+
+        $newVersion = $updateInfo['latest_version'];
+        Activity::record('plugin_updated', 'plugin', null, "Plugin: {$name} → v{$newVersion}");
+
+        return back()->with('success', "Plugin \"{$name}\" updated to v{$newVersion}.");
     }
 
     /** Uninstall a local plugin (Composer-installed plugins can't be removed via admin). */

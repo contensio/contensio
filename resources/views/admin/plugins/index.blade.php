@@ -81,15 +81,16 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         @foreach($plugins as $name => $plugin)
         @php
-            $meta      = $plugin['meta'];
-            $isEnabled = in_array($name, $enabledList, true);
-            $label     = $meta['label']       ?? ucwords(str_replace(['-', '_', '/'], ' ', $name));
-            $desc      = $meta['description'] ?? '';
-            $author    = $meta['author']      ?? '';
-            $version   = $meta['version']     ?? '';
-            $removable = $meta['removable']   ?? ($plugin['source'] === 'local');
-            $hasProvider = ! empty($meta['provider']);
-            $hasSettings = ! empty($meta['settings']['sections']);
+            $meta       = $plugin['meta'];
+            $isEnabled  = in_array($name, $enabledList, true);
+            $label      = $meta['label']       ?? ucwords(str_replace(['-', '_', '/'], ' ', $name));
+            $desc       = $meta['description'] ?? '';
+            $author     = $meta['author']      ?? '';
+            $version    = $meta['version']     ?? '';
+            $removable  = $meta['removable']   ?? ($plugin['source'] === 'local');
+            $hasProvider  = ! empty($meta['provider']);
+            $hasSettings  = ! empty($meta['settings']['sections']);
+            $pluginUpdate = $updateInfo[$name] ?? null;
         @endphp
 
         <div class="bg-white rounded-xl border-2 {{ $isEnabled ? 'border-green-500' : 'border-gray-200' }}
@@ -139,6 +140,19 @@
                         ⚠ This plugin has no service provider declared in <code>plugin.json</code>. It will install but can't be enabled.
                     </div>
                     @endif
+
+                    @if($pluginUpdate)
+                    <div class="mt-2 flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        <span>v{{ $pluginUpdate['latest_version'] }} available</span>
+                        @if(! empty($pluginUpdate['changelog_url']))
+                        <a href="{{ $pluginUpdate['changelog_url'] }}" target="_blank" rel="noopener"
+                           class="ml-auto underline hover:text-amber-900">What's new</a>
+                        @endif
+                    </div>
+                    @endif
                 </div>
 
                 {{-- Actions --}}
@@ -182,6 +196,23 @@
                                 Disable
                             </button>
                         </form>
+                    @endif
+
+                    {{-- Update (when update available, local plugin) --}}
+                    @if($pluginUpdate && ($plugin['source'] ?? '') === 'local')
+                    <form method="POST" action="{{ route('contensio.account.plugins.update') }}">
+                        @csrf
+                        <input type="hidden" name="plugin" value="{{ $name }}">
+                        <button type="submit"
+                                class="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white
+                                       text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
+                                title="Update to v{{ $pluginUpdate['latest_version'] }}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            Update
+                        </button>
+                    </form>
                     @endif
 
                     {{-- Remove (local, disabled plugins only) --}}

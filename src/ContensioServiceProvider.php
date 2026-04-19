@@ -29,6 +29,7 @@
 namespace Contensio;
 
 use Contensio\Console\Commands\BackupCommand;
+use Contensio\Console\Commands\CheckPluginUpdatesCommand;
 use Contensio\Console\Commands\InstallCommand;
 use Contensio\Console\Commands\PublishScheduledContent;
 use Contensio\Console\Commands\RestoreCommand;
@@ -267,11 +268,13 @@ class ContensioServiceProvider extends ServiceProvider
         // Auto-publish scheduled content every minute.
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule) {
             $schedule->command('contensio:publish-scheduled')->everyMinute()->withoutOverlapping();
+            $schedule->command('contensio:check-plugin-updates')->daily()->withoutOverlapping();
         });
 
         if ($this->app->runningInConsole()) {
             $this->commands([
                 BackupCommand::class,
+                CheckPluginUpdatesCommand::class,
                 InstallCommand::class,
                 PublishScheduledContent::class,
                 RestoreCommand::class,

@@ -211,6 +211,7 @@
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Draft</span>
                     @endif
                     @include('contensio::admin.reviews.partials.status-badge', ['status' => $item->review_status])
+                    {!! \Contensio\Support\Hook::render('contensio/admin/content-row-badges', $item) !!}
                     </div>
                 </td>
                 <td class="px-4 py-3.5 text-right">

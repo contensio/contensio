@@ -390,5 +390,6 @@ Route::prefix(config('contensio.route_prefix'))
         Route::get('/plugins/settings',         [PluginController::class, 'settings'])->name('plugins.settings');
         Route::post('/plugins/settings',        [PluginController::class, 'saveSettings'])->name('plugins.settings.save');
         Route::post('/plugins/settings/reset',  [PluginController::class, 'resetSettings'])->name('plugins.settings.reset');
+        Route::post('/plugins/update',          [PluginController::class, 'update'])->name('plugins.update');
 
     });
