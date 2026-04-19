@@ -46,12 +46,15 @@
         <time datetime="{{ $content->published_at?->toDateString() }}">
             {{ $content->published_at?->format('M d, Y') }}
         </time>
+        {!! \Contensio\Support\Hook::render('contensio/frontend/post-meta', $content, $translation) !!}
     </div>
 
     {{-- Title --}}
     <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
         {{ $translation->title }}
     </h1>
+
+    {!! \Contensio\Support\WidgetArea::render('post-after-title') !!}
 
     {{-- Excerpt --}}
     @if($translation->excerpt)
@@ -60,8 +63,10 @@
     </p>
     @endif
 
+    {!! \Contensio\Support\Hook::render('contensio/frontend/post-before-content', $content, $translation) !!}
+
     {{-- Blocks --}}
-    <div class="space-y-6">
+    <div class="space-y-6 contensio-post-body">
         @foreach($content->blocks ?? [] as $block)
             @include('theme::partials.block', ['block' => $block, 'langId' => $lang?->id])
         @endforeach
@@ -112,12 +117,18 @@
     @endforeach
     @endif
 
+    {!! \Contensio\Support\Hook::render('contensio/frontend/post-after-content', $content, $translation) !!}
+
 </article>
+
+{!! \Contensio\Support\WidgetArea::render('after-post') !!}
 
 @include('contensio::frontend.partials.comments', [
     'content'         => $content,
     'comments'        => $comments,
     'commentsEnabled' => $commentsEnabled,
 ])
+
+{!! \Contensio\Support\WidgetArea::render('after-comments') !!}
 
 @endsection

@@ -1,6 +1,7 @@
 <?php
 
 use Contensio\Http\Controllers\Admin\ActivityLogController;
+use Contensio\Http\Controllers\Admin\ReviewController;
 use Contensio\Http\Controllers\Admin\CommentController;
 use Contensio\Http\Controllers\Admin\ContactController;
 use Contensio\Http\Controllers\Admin\ContactLabelController;
@@ -25,8 +26,10 @@ use Contensio\Http\Controllers\Admin\ProfileController;
 use Contensio\Http\Controllers\Admin\RedirectController;
 use Contensio\Http\Controllers\Admin\RoleController;
 use Contensio\Http\Controllers\Admin\SettingController;
+use Contensio\Http\Controllers\Admin\WhitelabelController;
 use Contensio\Http\Controllers\Admin\ThemeController;
 use Contensio\Http\Controllers\Admin\Tools\BackupController;
+use Contensio\Http\Controllers\Admin\WidgetController;
 use Contensio\Http\Controllers\Admin\Tools\ImportExportController;
 use Contensio\Http\Controllers\Admin\UserController;
 use Contensio\Http\Controllers\Api\ContentApiController;
@@ -274,6 +277,13 @@ Route::prefix(config('contensio.route_prefix'))
         Route::post('/settings/email',       [SettingController::class, 'saveEmail'])->name('settings.email.save');
         Route::post('/settings/email/test',  [SettingController::class, 'sendTestEmail'])->name('settings.email.test');
 
+        // White-label
+        Route::get('/settings/whitelabel',                  [WhitelabelController::class, 'index'])->name('settings.whitelabel');
+        Route::post('/settings/whitelabel/license',         [WhitelabelController::class, 'saveLicense'])->name('settings.whitelabel.license');
+        Route::post('/settings/whitelabel/license/remove',  [WhitelabelController::class, 'removeLicense'])->name('settings.whitelabel.license.remove');
+        Route::post('/settings/whitelabel/branding',        [WhitelabelController::class, 'saveBranding'])->name('settings.whitelabel.branding');
+        Route::post('/settings/whitelabel/branding/reset',  [WhitelabelController::class, 'resetBranding'])->name('settings.whitelabel.branding.reset');
+
         // Languages
         Route::get('/languages',               [LanguageController::class, 'index'])->name('languages.index');
         Route::get('/languages/create',        [LanguageController::class, 'create'])->name('languages.create');
@@ -311,6 +321,11 @@ Route::prefix(config('contensio.route_prefix'))
         Route::post('/contact/messages/{id}/labels',              [ContactLabelController::class, 'attachToMessage'])->name('contact.messages.labels.attach');
         Route::delete('/contact/messages/{id}/labels/{labelId}',  [ContactLabelController::class, 'detachFromMessage'])->name('contact.messages.labels.detach');
 
+        // Content review queue (approval workflow)
+        Route::get('/reviews',              [ReviewController::class, 'index'])->name('reviews.index');
+        Route::post('/reviews/{id}/approve',[ReviewController::class, 'approve'])->name('reviews.approve');
+        Route::post('/reviews/{id}/reject', [ReviewController::class, 'reject'])->name('reviews.reject');
+
         // Comments moderation
         Route::get('/comments',                  [CommentController::class, 'index'])->middleware('contensio.permission:comments.manage')->name('comments.index');
         Route::post('/comments/bulk',            [CommentController::class, 'bulk'])->middleware('contensio.permission:comments.manage')->name('comments.bulk');
@@ -347,6 +362,15 @@ Route::prefix(config('contensio.route_prefix'))
         Route::get('/tools/import-export',  [ImportExportController::class, 'index'])->name('tools.import-export');
         Route::post('/tools/export',        [ImportExportController::class, 'export'])->name('tools.export');
         Route::post('/tools/import',        [ImportExportController::class, 'import'])->name('tools.import');
+
+        // Widgets
+        Route::get('/widgets',                          [WidgetController::class, 'index'])->name('contensio.widgets');
+        Route::post('/widgets',                         [WidgetController::class, 'store'])->name('contensio.widgets.store');
+        Route::patch('/widgets/{widget}',               [WidgetController::class, 'update'])->name('contensio.widgets.update');
+        Route::patch('/widgets/{widget}/toggle',        [WidgetController::class, 'toggle'])->name('contensio.widgets.toggle');
+        Route::patch('/widgets/{widget}/move-up',       [WidgetController::class, 'moveUp'])->name('contensio.widgets.moveUp');
+        Route::patch('/widgets/{widget}/move-down',     [WidgetController::class, 'moveDown'])->name('contensio.widgets.moveDown');
+        Route::delete('/widgets/{widget}',              [WidgetController::class, 'destroy'])->name('contensio.widgets.destroy');
 
         // Tools — Backups
         Route::get('/tools/backups',                   [BackupController::class, 'index'])->name('tools.backups');

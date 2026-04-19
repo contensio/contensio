@@ -152,6 +152,7 @@
                 <td class="px-4 py-3.5 text-gray-400 hidden sm:table-cell">{{ $item->author?->name ?? '—' }}</td>
                 <td class="px-4 py-3.5 text-gray-400 hidden md:table-cell">{{ $item->created_at->format('M d, Y') }}</td>
                 <td class="px-4 py-3.5">
+                    <div class="flex flex-wrap gap-1">
                     @if($item->status === 'published')
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">Published</span>
                     @elseif($item->status === 'scheduled')
@@ -159,6 +160,8 @@
                     @else
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">Draft</span>
                     @endif
+                    @include('contensio::admin.reviews.partials.status-badge', ['status' => $item->review_status])
+                    </div>
                 </td>
                 <td class="px-4 py-3.5 text-right">
                     <a href="{{ route('contensio.account.pages.edit', $item->id) }}"

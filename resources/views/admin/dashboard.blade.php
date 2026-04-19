@@ -185,6 +185,79 @@
 
 {!! \Contensio\Support\Hook::render('contensio/admin/dashboard-stats') !!}
 
+{{-- Pending Reviews widget — shown only when workflow is enabled and user can approve --}}
+@php
+    $showReviewWidget  = false;
+    $pendingReviewItems = collect();
+    try {
+        if (\Contensio\Services\WorkflowService::isEnabled()
+            && \Contensio\Services\WorkflowService::canApprove(auth()->user())) {
+            $showReviewWidget = true;
+            $pendingReviewItems = \Contensio\Models\Content::where('review_status', \Contensio\Models\Content::REVIEW_PENDING)
+                ->with(['translations', 'author', 'contentType'])
+                ->latest('review_requested_at')
+                ->limit(5)
+                ->get();
+        }
+    } catch (\Throwable) {}
+@endphp
+@if($showReviewWidget && $pendingReviewItems->isNotEmpty())
+<div class="bg-white rounded-xl border border-amber-200 mb-5">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-amber-100 bg-amber-50/50 rounded-t-xl">
+        <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center">
+                <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-base font-bold text-amber-900">Pending Review</h2>
+                <p class="text-xs text-amber-700 mt-0.5">{{ $pendingReviewItems->count() }} item{{ $pendingReviewItems->count() !== 1 ? 's' : '' }} awaiting your decision</p>
+            </div>
+        </div>
+        <a href="{{ route('contensio.account.reviews.index') }}"
+           class="text-sm font-medium text-amber-700 hover:text-amber-900 transition-colors">
+            View all →
+        </a>
+    </div>
+    <div class="divide-y divide-gray-100">
+        @foreach($pendingReviewItems as $item)
+        @php
+            $title  = $item->translations->first()?->title ?? 'Untitled';
+            $type   = $item->contentType?->name ?? 'content';
+            $editUrl = \Contensio\Http\Controllers\Admin\ReviewController::editUrl($item);
+        @endphp
+        <div class="flex items-center gap-3 px-5 py-3.5">
+            <div class="flex-1 min-w-0">
+                <a href="{{ $editUrl }}" class="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors truncate block">
+                    {{ $title }}
+                </a>
+                <p class="text-xs text-gray-400 mt-0.5 capitalize">
+                    {{ $type }}
+                    @if($item->author) · by {{ $item->author->name }} @endif
+                    @if($item->review_requested_at) · {{ $item->review_requested_at->diffForHumans() }} @endif
+                </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <form method="POST" action="{{ route('contensio.account.reviews.approve', $item->id) }}">
+                    @csrf
+                    <button type="submit"
+                            class="text-xs font-semibold text-green-700 border border-green-200 bg-green-50 hover:bg-green-100 px-2.5 py-1 rounded-md transition-colors">
+                        Approve
+                    </button>
+                </form>
+                <a href="{{ route('contensio.account.reviews.index') }}"
+                   class="text-xs font-medium text-gray-500 hover:text-gray-700 border border-gray-200 bg-white hover:bg-gray-50 px-2.5 py-1 rounded-md transition-colors">
+                    Review
+                </a>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 {{-- Main widget grid --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
 

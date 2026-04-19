@@ -41,6 +41,8 @@ use Contensio\Models\ContentType;
 use Contensio\Models\Language;
 use Contensio\Models\Term;
 use Contensio\Models\TermTranslation;
+use Contensio\Services\WorkflowService;
+use Contensio\Http\Controllers\Admin\ReviewController;
 
 class ContentController extends Controller
 {
@@ -154,6 +156,8 @@ class ContentController extends Controller
         $languages = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defLangId = $this->defaultLangId($languages);
 
+        $this->enforceWorkflowStatus($request);
+
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
@@ -183,6 +187,10 @@ class ContentController extends Controller
         Activity::record($verb, 'content', $content->id,
             'Page: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'page', 'status' => $content->status]);
+
+        if ($redirect = $this->handleSubmitForReview($request, $content, 'contensio.account.pages.edit', $id)) {
+            return $redirect;
+        }
 
         return redirect()->route('contensio.account.pages.edit', $id)->with('success', 'Page saved.');
     }
@@ -317,6 +325,8 @@ class ContentController extends Controller
         $languages = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defLangId = $this->defaultLangId($languages);
 
+        $this->enforceWorkflowStatus($request);
+
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
@@ -346,6 +356,10 @@ class ContentController extends Controller
         Activity::record($verb, 'content', $content->id,
             'Post: ' . $request->input("translations.{$defLangId}.title")
         )->withProperties(['type' => 'post', 'status' => $content->status]);
+
+        if ($redirect = $this->handleSubmitForReview($request, $content, 'contensio.account.posts.edit', $id)) {
+            return $redirect;
+        }
 
         return redirect()->route('contensio.account.posts.edit', $id)->with('success', 'Post saved.');
     }
@@ -477,6 +491,8 @@ class ContentController extends Controller
         $languages = Language::notDisabled()->orderBy('position')->orderBy('id')->get();
         $defLangId = $this->defaultLangId($languages);
 
+        $this->enforceWorkflowStatus($request);
+
         $request->validate([
             "translations.{$defLangId}.title" => 'required|string|max:500',
             "translations.{$defLangId}.slug"  => 'nullable|string|max:500',
@@ -496,6 +512,10 @@ class ContentController extends Controller
         do_action('contensio/content/updated', $content);
         if ($prevStatus !== $request->status) {
             do_action('contensio/content/status-changed', $content, $prevStatus, $request->status);
+        }
+
+        if ($redirect = $this->handleSubmitForReview($request, $content, 'contensio.account.content.edit', $type, $id)) {
+            return $redirect;
         }
 
         return redirect()->route('contensio.account.content.edit', [$type, $id])->with('success', 'Entry saved.');
@@ -747,16 +767,19 @@ class ContentController extends Controller
         }
 
         return [
-            'languages'       => $languages,
-            'defaultLanguage' => $defaultLanguage,
-            'defaultLangId'   => $defaultLangId,
-            'multiLang'       => $languages->count() > 1,
-            'taxonomies'      => $type->taxonomies,
-            'existing'        => $existing,
-            'selectedTermIds' => $selectedTermIds,
-            'autosave'        => $autosave,
-            'fieldGroups'     => $fieldGroups,
-            'fieldValues'     => $fieldValues,
+            'languages'         => $languages,
+            'defaultLanguage'   => $defaultLanguage,
+            'defaultLangId'     => $defaultLangId,
+            'multiLang'         => $languages->count() > 1,
+            'taxonomies'        => $type->taxonomies,
+            'existing'          => $existing,
+            'selectedTermIds'   => $selectedTermIds,
+            'autosave'          => $autosave,
+            'fieldGroups'       => $fieldGroups,
+            'fieldValues'       => $fieldValues,
+            'workflowEnabled'   => WorkflowService::isEnabled(),
+            'canApprove'        => WorkflowService::canApprove(auth()->user()),
+            'canBypassReview'   => WorkflowService::canBypassReview(auth()->user()),
         ];
     }
 
@@ -988,5 +1011,52 @@ class ContentController extends Controller
     {
         $default = Language::where('is_default', true)->first() ?? $languages->first();
         return $default?->id ?? 1;
+    }
+
+    /**
+     * When the approval workflow is active and the user cannot bypass review,
+     * force the content status to 'draft' regardless of what the form submitted.
+     * Returns true when the caller should restrict publish controls.
+     */
+    private function enforceWorkflowStatus(Request $request): bool
+    {
+        if (WorkflowService::isEnabled() && ! WorkflowService::canBypassReview(auth()->user())) {
+            $request->merge(['status' => 'draft']);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * After the regular content save, check if the author clicked
+     * "Submit for Review". If so, mark as pending and notify reviewers.
+     * Returns a redirect response when the submit action was handled, or null.
+     */
+    private function handleSubmitForReview(Request $request, Content $content, string $redirectRoute, ...$routeParams): ?\Illuminate\Http\RedirectResponse
+    {
+        if (! WorkflowService::isEnabled()) {
+            return null;
+        }
+        if (WorkflowService::canBypassReview(auth()->user())) {
+            return null;
+        }
+        if ($request->input('_review_action') !== 'submit_review') {
+            return null;
+        }
+        if (! $content->canBeSubmittedForReview()) {
+            return null;
+        }
+
+        $content->update([
+            'review_status'       => Content::REVIEW_PENDING,
+            'review_requested_at' => now(),
+        ]);
+
+        ReviewController::notifyReviewers(
+            $content->loadMissing(['translations', 'contentType', 'author'])
+        );
+
+        return redirect()->route($redirectRoute, $routeParams)
+            ->with('success', 'Submitted for review.');
     }
 }

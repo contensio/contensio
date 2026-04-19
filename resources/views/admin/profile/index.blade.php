@@ -375,7 +375,7 @@
         </div>
 
         {{-- Plugins can add cards here (linked accounts, API tokens, preferences, etc.) --}}
-        {!! \Contensio\Support\Hook::render('profile.sections', $user) !!}
+        {!! \Contensio\Support\Hook::render('contensio/admin/profile-sections', $user) !!}
 
         @if($canDeleteAccount)
         {{-- Delete account --}}

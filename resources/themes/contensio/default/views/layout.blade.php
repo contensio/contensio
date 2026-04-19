@@ -164,8 +164,11 @@
 
     @stack('head')
     {!! $headSnippet !!}
+    {!! \Contensio\Support\Hook::render('contensio/frontend/head') !!}
 </head>
 <body class="antialiased">
+
+    {!! \Contensio\Support\Hook::render('contensio/frontend/body-start') !!}
 
     @php
         $headerMenu = theme_menu('header', $lang?->id ?? null);
@@ -209,13 +212,25 @@
         @endif
     </header>
 
+    {!! \Contensio\Support\WidgetArea::render('header-below-nav') !!}
+
     {{-- Content --}}
     <main>
         @yield('content')
     </main>
 
+    {{-- Footer widgets --}}
+    @php $footerWidgets = \Contensio\Support\WidgetArea::render('footer-widgets'); @endphp
+    @if($footerWidgets)
+    <div class="border-t border-gray-100 mt-16">
+        <div class="theme-container px-4 sm:px-6 py-10">
+            <div class="widget-area widget-area--footer-widgets">{!! $footerWidgets !!}</div>
+        </div>
+    </div>
+    @endif
+
     {{-- Footer --}}
-    <footer class="border-t border-gray-100 mt-16">
+    <footer class="border-t border-gray-100 mt-0">
         <div class="theme-container px-4 sm:px-6 py-8 space-y-4">
             @if(! empty($footerMenu))
             <nav class="theme-nav flex justify-center" style="color: var(--theme-muted);">
@@ -238,5 +253,6 @@
     </footer>
 
     @stack('scripts')
+    {!! \Contensio\Support\Hook::render('contensio/frontend/body-end') !!}
 </body>
 </html>

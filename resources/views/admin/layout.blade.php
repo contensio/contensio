@@ -14,9 +14,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', __('contensio::admin.dashboard.title')) — {{ config('contensio.name', 'Contensio') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset(config('contensio.admin_favicon', 'vendor/contensio/img/favicon128x128.png')) }}">
+    <title>@yield('title', __('contensio::admin.dashboard.title')) — {{ \Contensio\Services\WhitelabelService::adminName() }}</title>
+    <link rel="icon" type="image/png" href="{{ \Contensio\Services\WhitelabelService::adminFaviconUrl() }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    @php
+        $wlAccent      = \Contensio\Services\WhitelabelService::accentColor();
+        $wlAccentDark  = \Contensio\Services\WhitelabelService::accentDarkColor();
+        $wlSidebar     = \Contensio\Services\WhitelabelService::sidebarColor();
+    @endphp
     <script>
         tailwind.config = {
             theme: {
@@ -25,9 +30,10 @@
                         'sm': ['0.9375rem', { lineHeight: '1.5rem' }],
                     },
                     colors: {
-                        'ember-500': '#d04a1f',
-                        'ember-600': '#b23e18',
-                        'ember-700': '#8f3112',
+                        'ember-500': '{{ $wlAccent }}',
+                        'ember-600': '{{ $wlAccentDark }}',
+                        'ember-700': '{{ $wlAccentDark }}',
+                        'slate': { '900': '{{ $wlSidebar }}' },
                     }
                 }
             }
@@ -63,7 +69,7 @@
         {{-- Logo --}}
         <div class="flex items-center px-4 h-16 border-b border-slate-700/50 shrink-0">
             <a href="{{ route('contensio.account.dashboard') }}" class="inline-flex items-center">
-                <img src="{{ asset(config('contensio.admin_logo_dark', 'vendor/contensio/img/logo-backend.png')) }}"
+                <img src="{{ \Contensio\Services\WhitelabelService::adminLogoDarkUrl() }}"
                      alt="{{ config('contensio.name', 'Contensio') }}">
             </a>
         </div>
@@ -74,8 +80,9 @@
             // plugins stack beneath via placement=appearance.
             $appearanceChildren = array_merge(
                 [
-                    ['label' => 'Themes', 'icon' => 'bi-palette',   'route' => 'contensio.account.themes.index'],
-                    ['label' => 'Menus',  'icon' => 'bi-list-task', 'route' => 'contensio.account.menus.index'],
+                    ['label' => 'Themes',  'icon' => 'bi-palette',         'route' => 'contensio.account.themes.index'],
+                    ['label' => 'Menus',   'icon' => 'bi-list-task',      'route' => 'contensio.account.menus.index'],
+                    ['label' => 'Widgets', 'icon' => 'bi-layout-sidebar', 'route' => 'contensio.widgets'],
                 ],
                 \Contensio\Support\AdminNavigation::appearanceItems()
             );
@@ -218,6 +225,37 @@
                 @if($pendingComments > 0)
                 <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs font-semibold bg-amber-500 text-white">
                     {{ $pendingComments }}
+                </span>
+                @endif
+            </a>
+            @endif
+
+            {{-- Reviews — shown only when workflow enabled and user can approve --}}
+            @php
+                $showReviews = false;
+                $pendingReviews = 0;
+                try {
+                    if (\Contensio\Services\WorkflowService::isEnabled()
+                        && \Contensio\Services\WorkflowService::canApprove(auth()->user())) {
+                        $showReviews    = true;
+                        $pendingReviews = \Contensio\Services\WorkflowService::pendingCount();
+                    }
+                } catch (\Throwable) {}
+            @endphp
+            @if($showReviews)
+            <a href="{{ route('contensio.account.reviews.index') }}"
+               class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                      {{ request()->routeIs('contensio.account.reviews*')
+                          ? 'bg-slate-700 text-white'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="flex-1">Reviews</span>
+                @if($pendingReviews > 0)
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full text-xs font-semibold bg-amber-500 text-white">
+                    {{ $pendingReviews }}
                 </span>
                 @endif
             </a>
@@ -503,9 +541,10 @@
         </main>
 
         {{-- Footer --}}
+        @if(! \Contensio\Services\WhitelabelService::hideAdminFooter())
         @php $footerUpdate = \Contensio\Services\VersionChecker::updateInfo(); @endphp
         <footer class="px-6 py-3 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
-            <span>{{ config('contensio.name', 'Contensio') }}</span>
+            <span>{{ \Contensio\Services\WhitelabelService::adminName() }}</span>
             <span class="flex items-center gap-2">
                 <span>{{ __('contensio::admin.footer.version', ['version' => \Contensio\ContensioServiceProvider::version()]) }}</span>
                 @if($footerUpdate)
@@ -518,6 +557,7 @@
                 @endif
             </span>
         </footer>
+        @endif
 
     </div>
 

@@ -45,6 +45,14 @@ use Contensio\Services\Install\Installer;
 use Contensio\Services\Install\RequirementsChecker;
 use Contensio\Support\AccessControl;
 use Contensio\Support\AdminNavigation;
+use Contensio\Support\WidgetArea;
+use Contensio\Support\WidgetRegistry;
+use Contensio\Widgets\CategoriesWidget;
+use Contensio\Widgets\CustomHtmlWidget;
+use Contensio\Widgets\LatestPostsWidget;
+use Contensio\Widgets\RecentCommentsWidget;
+use Contensio\Widgets\SearchBoxWidget;
+use Contensio\Widgets\TagCloudWidget;
 use Contensio\Support\EmailConfig;
 use Contensio\Support\FortifyIntegration;
 use Contensio\Models\Language;
@@ -151,6 +159,15 @@ class ContensioServiceProvider extends ServiceProvider
                 // Table may not exist yet during migrations — skip silently
             }
 
+            // Register core widget types.
+            // Plugins add their own types via WidgetRegistry::register() in their service providers.
+            WidgetRegistry::register('latest-posts',     LatestPostsWidget::class);
+            WidgetRegistry::register('categories',       CategoriesWidget::class);
+            WidgetRegistry::register('tag-cloud',        TagCloudWidget::class);
+            WidgetRegistry::register('search-box',       SearchBoxWidget::class);
+            WidgetRegistry::register('custom-html',      CustomHtmlWidget::class);
+            WidgetRegistry::register('recent-comments',  RecentCommentsWidget::class);
+
             // Discover all themes (built-in, local, Composer)
             ThemeRegistry::discover();
 
@@ -177,6 +194,12 @@ class ContensioServiceProvider extends ServiceProvider
                 // Add built-in views as fallback (skipped if it IS the active theme)
                 if (is_dir($builtInPath) && ($active['viewPath'] ?? '') !== $builtInPath) {
                     view()->addNamespace('theme', $builtInPath);
+                }
+
+                // Register widget areas declared in the active theme's theme.json.
+                // Done in booted() so ThemeRegistry::active() is settled.
+                if ($active && ! empty($active['meta']['widget_areas'])) {
+                    WidgetArea::registerMany($active['meta']['widget_areas']);
                 }
             });
 

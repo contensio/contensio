@@ -36,6 +36,7 @@ use Contensio\Models\ContentTranslation;
 use Contensio\Models\ContentType;
 use Contensio\Models\Language;
 use Contensio\Models\Setting;
+use Contensio\Support\Hook;
 use Contensio\Support\SiteConfig;
 
 class FrontendController extends Controller
@@ -97,6 +98,8 @@ class FrontendController extends Controller
         $content = $translation->content;
         $site    = $this->siteConfig();
 
+        Hook::doAction('contensio/content/viewed', $content);
+
         return view(ThemeTemplateResolver::page($slug), compact('translation', 'content', 'site', 'lang'));
     }
 
@@ -142,6 +145,8 @@ class FrontendController extends Controller
 
         $content = $translation->content;
         $site    = $this->siteConfig();
+
+        Hook::doAction('contensio/content/viewed', $content);
 
         // Custom field groups attached to the post type, with their saved values
         $fieldGroups = $postType->fieldGroups()

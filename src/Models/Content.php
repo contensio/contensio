@@ -28,6 +28,7 @@
 
 namespace Contensio\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -36,18 +37,27 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Content extends Model
 {
+    // ── Publish status ───────────────────────────────────────────────────────
     public const STATUS_DRAFT     = 'draft';
     public const STATUS_PUBLISHED = 'published';
     public const STATUS_SCHEDULED = 'scheduled';
     public const STATUS_TRASHED   = 'trashed';
 
+    // ── Review / approval workflow status ────────────────────────────────────
+    public const REVIEW_PENDING       = 'pending';
+    public const REVIEW_APPROVED      = 'approved';
+    public const REVIEW_SOFT_REJECTED = 'soft_rejected';  // author can revise & resubmit
+    public const REVIEW_HARD_REJECTED = 'hard_rejected';  // permanently rejected
+
     protected $guarded = [];
 
     protected $casts = [
-        'allow_comments' => 'boolean',
-        'position'       => 'integer',
-        'published_at'   => 'datetime',
-        'blocks'         => 'array',
+        'allow_comments'      => 'boolean',
+        'position'            => 'integer',
+        'published_at'        => 'datetime',
+        'blocks'              => 'array',
+        'review_requested_at' => 'datetime',
+        'reviewed_at'         => 'datetime',
     ];
 
     public function contentType(): BelongsTo
@@ -153,5 +163,52 @@ class Content extends Model
     public function autosave(): HasOne
     {
         return $this->hasOne(Autosave::class);
+    }
+
+    /**
+     * The user who last approved or rejected this content.
+     */
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'reviewed_by_id');
+    }
+
+    /**
+     * Full audit trail of review actions on this content item.
+     */
+    public function reviewLogs(): HasMany
+    {
+        return $this->hasMany(ContentReviewLog::class)->latest('created_at');
+    }
+
+    // ── Review status scopes ─────────────────────────────────────────────────
+
+    public function scopePendingReview(Builder $query): Builder
+    {
+        return $query->where('review_status', self::REVIEW_PENDING);
+    }
+
+    public function scopeNeedsRevision(Builder $query): Builder
+    {
+        return $query->where('review_status', self::REVIEW_SOFT_REJECTED);
+    }
+
+    public function scopeHardRejected(Builder $query): Builder
+    {
+        return $query->where('review_status', self::REVIEW_HARD_REJECTED);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Whether this content can be submitted (or re-submitted) for review.
+     * Hard-rejected content and already-pending content cannot be submitted.
+     */
+    public function canBeSubmittedForReview(): bool
+    {
+        return ! in_array($this->review_status, [
+            self::REVIEW_PENDING,
+            self::REVIEW_HARD_REJECTED,
+        ], true);
     }
 }

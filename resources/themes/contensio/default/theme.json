@@ -9,6 +9,15 @@
         "cms": "^1.0"
     },
     "removable": false,
+    "widget_areas": [
+        { "id": "header-below-nav",  "label": "Below Navigation" },
+        { "id": "archive-top",       "label": "Archive / Blog Top" },
+        { "id": "archive-bottom",    "label": "Archive / Blog Bottom" },
+        { "id": "post-after-title",  "label": "After Post Title" },
+        { "id": "after-post",        "label": "After Post Content" },
+        { "id": "after-comments",    "label": "After Comments" },
+        { "id": "footer-widgets",    "label": "Footer Widgets" }
+    ],
     "menu_locations": {
         "header": "Header Navigation",
         "footer": "Footer Links"

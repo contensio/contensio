@@ -30,6 +30,37 @@ namespace Contensio\Support;
  *
  * ## Core render hook points
  *
+ * ### Frontend (public pages)
+ * - `contensio/frontend/head`                — inside <head>, just before </head>; use for CSS, meta tags, scripts
+ * - `contensio/frontend/body-start`          — first thing inside <body>, before the header; use for top bars, announcement strips
+ * - `contensio/frontend/body-end`            — just before </body>; use for banners, overlays, tracking scripts
+ * - `contensio/frontend/post-before-content`  — inside the post <article>, just before the blocks wrapper.
+ *                                              Receives (Content $content, ContentTranslation $translation).
+ *                                              Use for table of contents, content warnings, paywalls.
+ * - `contensio/frontend/post-meta`            — inside the post meta row (author · date · …), after the publish date.
+ *                                              Receives (Content $content, ContentTranslation $translation).
+ *                                              Return a separator + value pair, e.g. '<span>&middot;</span><span>5 min read</span>'.
+ * - `contensio/frontend/post-after-content`  — inside the post <article>, after the body blocks and custom fields.
+ *                                              Receives (Content $content, ContentTranslation $translation).
+ *                                              Use for share buttons, reactions, author bios, related-content teasers.
+ *
+ * ## Core filter hooks
+ *
+ * ### Content
+ * - `contensio/content/body`  — applied to the rendered HTML of a post/page body before output.
+ *                               Use to inject HTML at specific positions (e.g. after paragraph N).
+ *                               Callback signature: fn(string $html, Content $content): string
+ *
+ * ## Core action hooks
+ *
+ * - `contensio/content/published`  — fired when a content item is published or scheduled publish runs.
+ *                                    Callback signature: fn(Content $content): void
+ * - `contensio/content/viewed`     — fired on every public post or page view (frontend only, not admin preview).
+ *                                    Use for view counters, analytics, recently-viewed lists.
+ *                                    Callback signature: fn(Content $content): void
+ * - `contensio/user/login`         — fired after a successful login (password or social).
+ *                                    Callback signature: fn(User $user): void
+ *
  * ### Login / auth
  * - `contensio/admin/login-after-form`     — below the sign-in form
  *

@@ -63,6 +63,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | License Public Key
+    |--------------------------------------------------------------------------
+    |
+    | The Ed25519 public key (base64-encoded, 32 bytes) used to verify
+    | commercial license keys issued by contensio.com.
+    |
+    | Generate a real keypair (run once — keep the secret key ONLY on contensio.com):
+    |
+    |   $pair   = sodium_crypto_sign_keypair();
+    |   $public = base64_encode(sodium_crypto_sign_publickey($pair));   // ← put here
+    |   $secret = base64_encode(sodium_crypto_sign_secretkey($pair));   // ← keep secret
+    |
+    | Sign a license key on contensio.com:
+    |   $payload = base64url(json_encode(['iss'=>'contensio.com', 'sub'=>$domain, ...]));
+    |   $msg     = 'CLK1.' . $payload;
+    |   $sig     = base64url(sodium_crypto_sign_detached($msg, $secretKey));
+    |   $key     = $msg . '.' . $sig;
+    |
+    */
+    'license_public_key' => env('CONTENSIO_LICENSE_PUBLIC_KEY', ''),
+
+    /*
+    |--------------------------------------------------------------------------
     | Version Checking
     |--------------------------------------------------------------------------
     |

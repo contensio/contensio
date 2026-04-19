@@ -420,12 +420,54 @@
     {{-- ── Sidebar ────────────────────────────────────────────────────────── --}}
     <div id="cms-edit-sidebar" class="w-80 shrink-0 space-y-4">
 
+        {{-- Review Status card (when workflow is active and content exists) --}}
+        @if(! $isNew && ($workflowEnabled ?? false) && $content->review_status)
+        @php
+            $rs = $content->review_status;
+            [$rsBg, $rsText, $rsBorder, $rsLabel] = match($rs) {
+                'pending'       => ['bg-amber-50',  'text-amber-800',  'border-amber-200',  'Pending Review'],
+                'approved'      => ['bg-green-50',  'text-green-800',  'border-green-200',  'Approved'],
+                'soft_rejected' => ['bg-orange-50', 'text-orange-800', 'border-orange-200', 'Revision Requested'],
+                'hard_rejected' => ['bg-red-50',    'text-red-800',    'border-red-200',    'Not Accepted'],
+                default         => ['bg-gray-50',   'text-gray-700',   'border-gray-200',   ucfirst($rs)],
+            };
+        @endphp
+        <div class="{{ $rsBg }} border {{ $rsBorder }} rounded-md p-4">
+            <div class="flex items-center gap-2 mb-1.5">
+                <h3 class="text-sm font-bold {{ $rsText }}">{{ $rsLabel }}</h3>
+            </div>
+            @if($rs === 'soft_rejected' && $content->review_notes)
+            <p class="text-xs {{ $rsText }} opacity-80 leading-relaxed mb-1.5">
+                {!! nl2br(e($content->review_notes)) !!}
+            </p>
+            @endif
+            @if($rs === 'hard_rejected')
+            <p class="text-xs {{ $rsText }} opacity-70">This content was permanently rejected and cannot be resubmitted.</p>
+            @elseif($rs === 'pending')
+            <p class="text-xs {{ $rsText }} opacity-70">Awaiting a reviewer's decision.</p>
+            @endif
+            @if($content->reviewer)
+            <p class="text-xs {{ $rsText }} opacity-60 mt-1.5">
+                Reviewed by {{ $content->reviewer->name }}
+                @if($content->reviewed_at)· {{ $content->reviewed_at->format('M d') }}@endif
+            </p>
+            @endif
+        </div>
+        @endif
+
         {{-- Publish --}}
         <div class="bg-white rounded-md border border-gray-200 p-4">
             <h3 class="text-base font-bold text-gray-800 mb-3">Publish</h3>
 
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-600 mb-1.5">Status</label>
+                @if(! $isNew && ($workflowEnabled ?? false) && ! ($canBypassReview ?? true))
+                {{-- Workflow active, user cannot bypass — locked to draft --}}
+                <div class="w-full border border-gray-200 bg-gray-50 rounded px-3 py-2 text-sm text-gray-500">
+                    Draft
+                </div>
+                <input type="hidden" name="status" value="draft">
+                @else
                 <select name="status"
                         x-model="statusVal"
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white
@@ -434,6 +476,7 @@
                     <option value="scheduled"  {{ old('status', $content?->status ?? 'draft') === 'scheduled'  ? 'selected' : '' }}>Scheduled</option>
                     <option value="published"  {{ old('status', $content?->status ?? 'draft') === 'published'  ? 'selected' : '' }}>Published</option>
                 </select>
+                @endif
             </div>
 
             {{-- Publish datetime — only visible when "Scheduled" is selected --}}
@@ -528,6 +571,15 @@
                         class="w-full bg-ember-500 hover:bg-ember-600 text-white text-sm font-semibold px-4 py-2.5 rounded-md transition-colors">
                     {{ $isNew ? "Create {$typeLabel}" : 'Save Changes' }}
                 </button>
+
+                {{-- Submit for Review — shown when workflow active, user can't bypass, and content can be submitted --}}
+                @if(! $isNew && ($workflowEnabled ?? false) && ! ($canBypassReview ?? true) && $content->canBeSubmittedForReview())
+                <button type="submit"
+                        name="_review_action" value="submit_review"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-md transition-colors">
+                    Submit for Review
+                </button>
+                @endif
 
                 @if (! $isNew)
                 <button type="button"

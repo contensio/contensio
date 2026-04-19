@@ -12,6 +12,8 @@
     @endif
 </section>
 
+{!! \Contensio\Support\WidgetArea::render('archive-top') !!}
+
 {{-- Recent posts --}}
 @if($posts->isNotEmpty())
 <section class="theme-container px-4 sm:px-6 pb-16">
