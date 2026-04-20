@@ -26,7 +26,11 @@ use Contensio\Models\Setting;
  * Value storage:   settings table — one row per plugin
  *                  module      = "plugin_options"
  *                  setting_key = vendor/name
+ *                  plugin      = vendor/name (explicit ownership column)
  *                  value       = JSON blob of all values
+ *
+ * The `plugin` column makes ownership explicit and cleanup trivial —
+ * on uninstall, all rows WHERE plugin = 'vendor/name' are deleted.
  *
  * Mirror of ThemeOptions. Same field types, same storage pattern, same API
  * shape — so plugin authors and theme authors work from a single mental model.
@@ -120,7 +124,7 @@ class PluginOptions
 
         Setting::updateOrCreate(
             ['module' => 'plugin_options', 'setting_key' => $plugin],
-            ['value' => json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]
+            ['plugin' => $plugin, 'value' => json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]
         );
 
         unset(static::$cache[$plugin]);
@@ -129,9 +133,7 @@ class PluginOptions
     /** Reset a plugin to declared defaults (delete the saved row). */
     public static function reset(string $plugin): void
     {
-        Setting::where('module', 'plugin_options')
-            ->where('setting_key', $plugin)
-            ->delete();
+        Setting::where('plugin', $plugin)->delete();
         unset(static::$cache[$plugin]);
     }
 }

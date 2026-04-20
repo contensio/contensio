@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('description', 300)->nullable();
             $table->string('category', 30)->default('text'); // text, media, layout, advanced
             $table->boolean('is_core')->default(true);
-            $table->unsignedBigInteger('plugin_id')->nullable(); // no FK — plugin table not built yet
+            $table->string('plugin', 100)->nullable()->index();   // Composer name, e.g. contensio/plugin-faq — NULL for core blocks
             $table->boolean('is_active')->default(true);
             $table->unsignedSmallInteger('sort_order')->default(0);
             $table->timestamps();

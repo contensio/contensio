@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->string('module', 50);                   // core, seo, email, media, permalinks
+            $table->string('module', 50);                   // core, seo, email, media, permalinks, plugin_options, theme_options
+            $table->string('plugin', 100)->nullable()->index(); // vendor/name — NULL for core settings
             $table->string('setting_key', 100);
             $table->longText('value')->nullable();
             $table->boolean('is_translatable')->default(false);

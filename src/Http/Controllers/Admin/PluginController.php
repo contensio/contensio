@@ -28,6 +28,8 @@
 
 namespace Contensio\Http\Controllers\Admin;
 
+use Contensio\Models\BlockType;
+use Contensio\Models\WidgetInstance;
 use Contensio\Services\PluginUpdateChecker;
 use Contensio\Support\AccessControl;
 use Contensio\Support\Activity;
@@ -392,10 +394,14 @@ class PluginController extends Controller
     /** Uninstall a local plugin (Composer-installed plugins can't be removed via admin). */
     public function uninstall(Request $request)
     {
-        $data = $request->validate(['plugin' => 'required|string']);
+        $data = $request->validate([
+            'plugin'      => 'required|string',
+            'drop_tables' => 'nullable|boolean',
+        ]);
 
-        $name   = $data['plugin'];
-        $plugin = PluginRegistry::get($name);
+        $name       = $data['plugin'];
+        $dropTables = (bool) ($data['drop_tables'] ?? false);
+        $plugin     = PluginRegistry::get($name);
 
         if (! $plugin) {
             return back()->withErrors(['plugin' => 'Plugin not found.']);
@@ -409,15 +415,60 @@ class PluginController extends Controller
             return back()->withErrors(['plugin' => 'Disable the plugin first, then uninstall.']);
         }
 
+        // Roll back plugin migrations (drop tables) if requested
+        if ($dropTables) {
+            $this->rollbackPluginMigrations($plugin);
+        }
+
         File::deleteDirectory($plugin['path']);
 
         // Clean up plugin-declared permissions + roles (user assignments to
         // those roles are automatically cascaded by the foreign keys)
         AccessControl::removePluginDefinitions($name);
 
-        // Also drop any stored plugin options
+        // Drop any stored plugin options/settings
         PluginOptions::reset($name);
 
-        return back()->with('success', "Plugin \"{$name}\" removed.");
+        // Remove block types registered by this plugin
+        BlockType::where('plugin', $name)->delete();
+
+        // Deactivate widget instances owned by this plugin
+        // (not deleted — admin may re-install the plugin and want them back)
+        WidgetInstance::where('plugin', $name)->update(['is_active' => false]);
+
+        $message = "Plugin \"{$name}\" removed.";
+        if ($dropTables) {
+            $message .= ' Database tables were also removed.';
+        }
+
+        return back()->with('success', $message);
     }
+
+    /**
+     * Roll back all migrations shipped with a plugin (drops its tables).
+     */
+    protected function rollbackPluginMigrations(array $plugin): void
+    {
+        $migrationsPath = rtrim($plugin['path'] ?? '', '/\\') . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'migrations';
+
+        if (! is_dir($migrationsPath)) {
+            return;
+        }
+
+        $hasFiles = (bool) glob($migrationsPath . DIRECTORY_SEPARATOR . '*.php');
+        if (! $hasFiles) {
+            return;
+        }
+
+        try {
+            Artisan::call('migrate:rollback', [
+                '--path'     => $migrationsPath,
+                '--realpath' => true,
+                '--force'    => true,
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
 }

@@ -68,7 +68,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ContensioServiceProvider extends ServiceProvider
 {
     /** Canonical version — updated on every release. */
-    const VERSION = '2.0.0';
+    const VERSION = '2.3.0';
 
     /**
      * Returns the installed version of the core package.

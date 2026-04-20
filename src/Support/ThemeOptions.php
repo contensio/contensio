@@ -127,7 +127,7 @@ class ThemeOptions
 
         Setting::updateOrCreate(
             ['module' => 'theme_options', 'setting_key' => $theme],
-            ['value' => json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]
+            ['plugin' => $theme, 'value' => json_encode($merged, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]
         );
 
         unset(static::$cache[$theme]);
@@ -136,9 +136,7 @@ class ThemeOptions
     /** Reset a theme to its declared defaults (deletes the saved row). */
     public static function reset(string $theme): void
     {
-        Setting::where('module', 'theme_options')
-            ->where('setting_key', $theme)
-            ->delete();
+        Setting::where('plugin', $theme)->delete();
         unset(static::$cache[$theme]);
     }
 }

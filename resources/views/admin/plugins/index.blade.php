@@ -217,27 +217,81 @@
 
                     {{-- Remove (local, disabled plugins only) --}}
                     @if($removable && ! $isEnabled)
-                    <form id="remove-plugin-{{ md5($name) }}"
-                          method="POST"
-                          action="{{ route('contensio.account.plugins.uninstall') }}"
-                          class="hidden">
-                        @csrf
-                        <input type="hidden" name="plugin" value="{{ $name }}">
-                    </form>
-                    <button type="button"
-                            @click="$dispatch('cms:confirm', {
-                                title: 'Remove plugin',
-                                description: 'Remove &quot;{{ $label }}&quot;? This deletes its files from the server.',
-                                confirmLabel: 'Remove',
-                                formId: 'remove-plugin-{{ md5($name) }}'
-                            })"
-                            class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Remove plugin">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                    </button>
+                    <div x-data="{ showRemove: false }">
+                        <button type="button"
+                                @click="showRemove = true"
+                                class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Remove plugin">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+
+                        {{-- Remove confirmation modal --}}
+                        <template x-teleport="body">
+                            <div x-show="showRemove" x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0"
+                                 x-transition:enter-end="opacity-100"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100"
+                                 x-transition:leave-end="opacity-0"
+                                 class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0">
+                                <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showRemove = false"></div>
+                                <div x-show="showRemove"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95"
+                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95"
+                                     class="relative bg-white rounded-2xl shadow-2xl w-full sm:max-w-sm mx-auto overflow-hidden">
+                                    <div class="h-1 bg-gradient-to-r from-red-400 to-red-600"></div>
+                                    <form method="POST" action="{{ route('contensio.account.plugins.uninstall') }}" class="px-6 pt-7 pb-6">
+                                        @csrf
+                                        <input type="hidden" name="plugin" value="{{ $name }}">
+
+                                        <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-50 ring-8 ring-red-50 mx-auto mb-5">
+                                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </div>
+
+                                        <div class="text-center mb-5">
+                                            <h3 class="text-base font-bold text-gray-900 mb-1.5">Remove plugin</h3>
+                                            <p class="text-sm text-gray-500">Remove "{{ $label }}"? This deletes its files from the server.</p>
+                                        </div>
+
+                                        <label class="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 cursor-pointer">
+                                            <input type="checkbox" name="drop_tables" value="1"
+                                                   class="mt-0.5 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                            <div>
+                                                <span class="text-sm font-medium text-gray-900">Also remove database tables</span>
+                                                <p class="text-xs text-gray-500 mt-0.5">All data stored by this plugin will be permanently deleted.</p>
+                                            </div>
+                                        </label>
+
+                                        <div class="flex gap-3">
+                                            <button type="button" @click="showRemove = false"
+                                                    class="flex-1 inline-flex items-center justify-center border border-gray-300
+                                                           bg-white hover:bg-gray-50 text-gray-700 font-medium text-sm
+                                                           px-4 py-2.5 rounded-xl transition-colors">
+                                                Cancel
+                                            </button>
+                                            <button type="submit"
+                                                    class="flex-1 inline-flex items-center justify-center bg-red-600
+                                                           hover:bg-red-700 text-white font-medium text-sm px-4 py-2.5
+                                                           rounded-xl shadow-sm transition-colors">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                     @endif
                 </div>
             </div>

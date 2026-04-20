@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('area_id', 80);           // e.g. 'sidebar', 'after-post'
             $table->string('widget_type', 80);       // e.g. 'latest-posts', 'tag-cloud'
+            $table->string('plugin', 100)->nullable()->index(); // Composer name — NULL for core widgets
             $table->unsignedSmallInteger('position')->default(0);
             $table->json('config')->nullable();      // instance-specific config
             $table->boolean('is_active')->default(true);
