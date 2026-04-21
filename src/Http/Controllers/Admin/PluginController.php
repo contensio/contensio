@@ -55,6 +55,149 @@ class PluginController extends Controller
         return view('contensio::admin.plugins.index', compact('plugins', 'enabledList', 'updateInfo'));
     }
 
+    /**
+     * Browse available plugins from the Contensio directory (contensio.com API).
+     */
+    public function browse(Request $request)
+    {
+        $search  = $request->query('search', '');
+        $sort    = $request->query('sort', 'popular');
+        $page    = (int) $request->query('page', 1);
+        $plugins = [];
+        $meta    = ['current_page' => 1, 'last_page' => 1, 'total' => 0];
+        $error   = null;
+
+        try {
+            $apiBase  = rtrim(config('contensio.directory_url', 'https://contensio.com'), '/');
+            $response = Http::timeout(10)->get($apiBase . '/api/plugins', [
+                'search'   => $search,
+                'sort'     => $sort,
+                'page'     => $page,
+                'per_page' => 24,
+            ]);
+
+            if ($response->successful()) {
+                $data    = $response->json();
+                $plugins = $data['data'] ?? [];
+                $meta    = $data['meta'] ?? $meta;
+            } else {
+                $error = 'Could not connect to the plugin directory. HTTP ' . $response->status();
+            }
+        } catch (\Throwable $e) {
+            $error = 'Could not connect to contensio.com: ' . $e->getMessage();
+        }
+
+        // Get locally installed plugins to show "Installed" badge
+        $installed = collect(PluginRegistry::all())
+            ->pluck('meta.name')
+            ->filter()
+            ->map(fn ($n) => str_replace('/', '-', str_replace('contensio/plugin-', '', $n)))
+            ->all();
+
+        return view('contensio::admin.plugins.browse',
+            compact('plugins', 'meta', 'search', 'sort', 'error', 'installed'));
+    }
+
+    /**
+     * Install a plugin from the Contensio directory by downloading its ZIP.
+     */
+    public function installFromDirectory(Request $request)
+    {
+        $request->validate(['slug' => 'required|string|max:100']);
+
+        $slug = $request->input('slug');
+
+        try {
+            $apiBase  = rtrim(config('contensio.directory_url', 'https://contensio.com'), '/');
+            $response = Http::timeout(10)->post($apiBase . '/api/plugins/' . $slug . '/download');
+
+            if (! $response->successful()) {
+                return back()->withErrors(['plugin' => 'Could not fetch download info from directory.']);
+            }
+
+            $info        = $response->json();
+            $downloadUrl = $info['download_url'] ?? null;
+
+            if (! $downloadUrl) {
+                return back()->withErrors(['plugin' => 'No download URL available for this plugin.']);
+            }
+
+            // Download the ZIP
+            $zipResponse = Http::timeout(60)->get($downloadUrl);
+            if (! $zipResponse->successful()) {
+                return back()->withErrors(['plugin' => 'Could not download the plugin ZIP.']);
+            }
+
+            $tmpPath = sys_get_temp_dir() . '/contensio_install_' . $slug . '.zip';
+            file_put_contents($tmpPath, $zipResponse->body());
+
+            $zip = new ZipArchive;
+            if ($zip->open($tmpPath) !== true) {
+                @unlink($tmpPath);
+                return back()->withErrors(['plugin' => 'Could not open the downloaded ZIP.']);
+            }
+
+            // Find plugin.json
+            $manifestIndex = $zip->locateName('plugin.json');
+            if ($manifestIndex === false) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $entry = $zip->getNameIndex($i);
+                    if (preg_match('#^[^/]+/plugin\.json$#', $entry)) {
+                        $manifestIndex = $i;
+                        break;
+                    }
+                }
+            }
+
+            if ($manifestIndex === false) {
+                $zip->close();
+                @unlink($tmpPath);
+                return back()->withErrors(['plugin' => 'No plugin.json in the downloaded ZIP.']);
+            }
+
+            $meta = json_decode($zip->getFromIndex($manifestIndex), true);
+            if (empty($meta['name'])) {
+                $zip->close();
+                @unlink($tmpPath);
+                return back()->withErrors(['plugin' => 'Invalid plugin.json.']);
+            }
+
+            $pluginName  = $meta['name'];
+            $pluginsRoot = rtrim(config('contensio.packages_path', base_path('packages')), '/') . '/plugins';
+            $targetPath  = $pluginsRoot . '/' . $pluginName;
+
+            if (is_dir($targetPath)) {
+                File::deleteDirectory($targetPath);
+            }
+
+            File::ensureDirectoryExists($targetPath);
+            $zip->extractTo($targetPath);
+            $zip->close();
+            @unlink($tmpPath);
+
+            // Flatten single wrapper folder
+            $entries = array_diff(scandir($targetPath), ['.', '..']);
+            if (count($entries) === 1) {
+                $inner = $targetPath . '/' . reset($entries);
+                if (is_dir($inner)) {
+                    foreach (scandir($inner) as $item) {
+                        if ($item === '.' || $item === '..') continue;
+                        rename("{$inner}/{$item}", "{$targetPath}/{$item}");
+                    }
+                    rmdir($inner);
+                }
+            }
+
+            Activity::record('plugin_installed', 'plugin', null, "Plugin: {$pluginName} (from directory)");
+
+            return redirect()->route('contensio.account.plugins.index')
+                ->with('success', "Plugin \"{$meta['label']}\" installed. Enable it when ready.");
+
+        } catch (\Throwable $e) {
+            return back()->withErrors(['plugin' => 'Installation failed: ' . $e->getMessage()]);
+        }
+    }
+
     /** Enable a plugin. Also runs its migrations (if any) to spare admins a CLI step. */
     public function enable(Request $request)
     {

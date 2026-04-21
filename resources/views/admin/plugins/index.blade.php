@@ -27,17 +27,25 @@
             <p class="text-sm text-gray-500 mt-0.5">Extend Contensio with plugins. Enable or disable any number at once.</p>
         </div>
 
-        <button type="button"
-                x-data
-                @click="$dispatch('cms:plugin-install-open')"
-                class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white
-                       text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-            </svg>
-            Install Plugin
-        </button>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('contensio.account.plugins.browse') }}"
+               class="inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-lg
+                      border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
+                <i class="bi bi-grid-3x3-gap"></i>
+                Browse Plugins
+            </a>
+            <button type="button"
+                    x-data
+                    @click="$dispatch('cms:plugin-install-open')"
+                    class="inline-flex items-center gap-2 bg-ember-500 hover:bg-ember-600 text-white
+                           text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                Install Plugin
+            </button>
+        </div>
     </div>
 
     {{-- Flash / errors --}}
