@@ -73,6 +73,53 @@ class WhitelabelController extends Controller
         return back()->with('success', 'License key removed. White-label features are now disabled.');
     }
 
+    /**
+     * Refresh the license key by calling contensio.com API.
+     * Gets a new key with a fresh expiry without the user needing to copy/paste.
+     */
+    public function refreshLicense(): RedirectResponse
+    {
+        $currentKey = Setting::where('module', 'whitelabel')
+            ->where('setting_key', 'license_key')
+            ->value('value');
+
+        if (empty($currentKey)) {
+            return back()->withErrors(['license_key' => 'No license key is configured.']);
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(15)
+                ->get('https://contensio.com/api/license/refresh', [
+                    'key' => $currentKey,
+                ]);
+
+            if (! $response->successful()) {
+                $error = $response->json('error') ?? 'Could not refresh license. HTTP ' . $response->status();
+                return back()->withErrors(['license_key' => $error]);
+            }
+
+            $data = $response->json();
+
+            if (empty($data['license_key'])) {
+                return back()->withErrors(['license_key' => 'Invalid response from license server.']);
+            }
+
+            // Verify the new key is valid before storing it
+            $result = LicenseService::parse($data['license_key']);
+            if (! $result['valid']) {
+                return back()->withErrors(['license_key' => 'Received an invalid key from server: ' . $result['error']]);
+            }
+
+            $this->set('license_key', $data['license_key']);
+            WhitelabelService::flush();
+
+            return back()->with('success', 'License key refreshed successfully. Valid until ' . date('M j, Y', $result['payload']['exp']));
+
+        } catch (\Throwable $e) {
+            return back()->withErrors(['license_key' => 'Could not connect to contensio.com: ' . $e->getMessage()]);
+        }
+    }
+
     public function saveBranding(Request $request): RedirectResponse
     {
         $request->validate([

@@ -42,12 +42,23 @@ class LicenseService
     private const PREFIX = 'CLK1';
 
     /**
-     * Ed25519 public key used to verify license signatures (base64-encoded, 32 bytes).
+     * Ed25519 public keys used to verify license signatures (base64-encoded, 32 bytes).
      *
-     * Replace this with the real public key before deploying. The private key
-     * stays ONLY on contensio.com — never commit it to this repository.
+     * Multiple keys are supported for graceful key rotation. The verifier tries
+     * each key in order until one succeeds. When rotating:
+     *   1. Generate a new keypair on contensio.com
+     *   2. Add the new public key as 'current' below
+     *   3. Move the old key to a 'legacy_YYYYMMDD' slot
+     *   4. Deploy CMS update - old and new licenses both verify
+     *   5. Reissue old licenses at your own pace
+     *   6. Eventually remove the legacy key
+     *
+     * The private keys stay ONLY on contensio.com - never commit them here.
      */
-    private const PUBLIC_KEY_B64 = 'CONTENSIO_LICENSE_PUBLIC_KEY_PLACEHOLDER';
+    private const PUBLIC_KEYS = [
+        'current' => 'CONTENSIO_LICENSE_PUBLIC_KEY_PLACEHOLDER',
+        // 'legacy_20260421' => 'old_key_here_after_rotation',
+    ];
 
     /**
      * Parse and verify a license key.
@@ -78,9 +89,9 @@ class LicenseService
             return self::fail('The PHP sodium extension is required to validate license keys. Enable ext-sodium.');
         }
 
-        // ── 3. Decode the public key ──────────────────────────────────────────
-        $rawPublicKey = self::publicKey();
-        if ($rawPublicKey === null) {
+        // ── 3. Decode the public keys ─────────────────────────────────────────
+        $publicKeys = self::publicKeys();
+        if (empty($publicKeys)) {
             return self::fail('License public key is not configured. Contact the Contensio administrator.');
         }
 
@@ -92,13 +103,19 @@ class LicenseService
             return self::fail('Malformed license key (base64 decode error).');
         }
 
-        // ── 5. Verify Ed25519 signature ───────────────────────────────────────
+        // ── 5. Verify Ed25519 signature (try all registered public keys) ─────
         $message = self::PREFIX . '.' . $b64Payload;
+        $valid   = false;
 
-        try {
-            $valid = sodium_crypto_sign_verify_detached($rawSig, $message, $rawPublicKey);
-        } catch (\Throwable $e) {
-            return self::fail('Signature verification failed: ' . $e->getMessage());
+        foreach ($publicKeys as $rawPublicKey) {
+            try {
+                if (sodium_crypto_sign_verify_detached($rawSig, $message, $rawPublicKey)) {
+                    $valid = true;
+                    break;
+                }
+            } catch (\Throwable) {
+                continue;
+            }
         }
 
         if (! $valid) {
@@ -152,21 +169,35 @@ class LicenseService
     }
 
     /**
-     * Return the decoded Ed25519 public key bytes, or null if not configured.
+     * Return all valid decoded Ed25519 public key bytes (32 bytes each).
+     *
+     * @return string[]  Array of raw 32-byte public keys.
      */
-    private static function publicKey(): ?string
+    private static function publicKeys(): array
     {
-        // Allow override via config (useful for testing without touching source).
-        $b64 = config('contensio.license_public_key', self::PUBLIC_KEY_B64);
+        $keys = [];
 
-        if (empty($b64) || $b64 === 'CONTENSIO_LICENSE_PUBLIC_KEY_PLACEHOLDER') {
-            return null;
+        // Config override (single key, useful for testing).
+        $configKey = config('contensio.license_public_key');
+        if ($configKey && $configKey !== 'CONTENSIO_LICENSE_PUBLIC_KEY_PLACEHOLDER') {
+            $raw = base64_decode($configKey, strict: true);
+            if ($raw !== false && strlen($raw) === 32) {
+                $keys[] = $raw;
+            }
         }
 
-        $raw = base64_decode($b64, strict: true);
+        // Built-in keys from the constant (supports rotation).
+        foreach (self::PUBLIC_KEYS as $b64) {
+            if (empty($b64) || $b64 === 'CONTENSIO_LICENSE_PUBLIC_KEY_PLACEHOLDER') {
+                continue;
+            }
+            $raw = base64_decode($b64, strict: true);
+            if ($raw !== false && strlen($raw) === 32) {
+                $keys[] = $raw;
+            }
+        }
 
-        // Ed25519 public keys are exactly 32 bytes.
-        return ($raw !== false && strlen($raw) === 32) ? $raw : null;
+        return $keys;
     }
 
     /**
